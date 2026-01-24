@@ -1,0 +1,246 @@
+import { useState } from 'react';
+import { Card } from '@/components/ui/card';
+import { ChevronDown, ChevronUp, Clock, Flame, Coffee } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import type { Session, ExerciseBlock } from '@/types';
+
+interface SessionCardProps {
+  session: Session;
+  defaultExpanded?: boolean;
+}
+
+// Session type display config
+const SESSION_TYPE_CONFIG: Record<string, { label: string; icon: string; color: string }> = {
+  upper: { label: 'Upper Body', icon: '💪', color: 'bg-blue-500' },
+  lower: { label: 'Lower Body', icon: '🦵', color: 'bg-green-500' },
+  push: { label: 'Push', icon: '🏋️', color: 'bg-red-500' },
+  pull: { label: 'Pull', icon: '🧲', color: 'bg-purple-500' },
+  legs: { label: 'Legs', icon: '🦵', color: 'bg-green-500' },
+  full_body: { label: 'Full Body', icon: '⚡', color: 'bg-yellow-500' },
+  cardio: { label: 'Cardio', icon: '❤️', color: 'bg-pink-500' },
+  mobility: { label: 'Mobility', icon: '🧘', color: 'bg-teal-500' },
+  recovery: { label: 'Rest Day', icon: '😴', color: 'bg-gray-500' },
+  skill: { label: 'Skill', icon: '🎯', color: 'bg-orange-500' },
+  custom: { label: 'Custom', icon: '⚙️', color: 'bg-gray-500' },
+};
+
+function formatDate(dateStr: string | undefined): string {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+}
+
+function ExerciseList({ exercises, title }: { exercises: ExerciseBlock[] | null | undefined; title: string }) {
+  if (!exercises || exercises.length === 0) return null;
+
+  return (
+    <div className="mt-3">
+      <h4 className="text-xs font-medium text-foreground-muted uppercase tracking-wide mb-2">
+        {title}
+      </h4>
+      <div className="space-y-1.5">
+        {exercises.map((exercise, idx) => (
+          <div key={idx} className="flex items-center justify-between text-sm">
+            <span className="text-foreground">{exercise.movement}</span>
+            <span className="text-foreground-muted text-xs">
+              {exercise.sets && (
+                <>
+                  {exercise.sets}×
+                  {exercise.rep_range_min && exercise.rep_range_max
+                    ? `${exercise.rep_range_min}-${exercise.rep_range_max}`
+                    : exercise.duration_seconds
+                    ? `${exercise.duration_seconds}s`
+                    : '—'}
+                </>
+              )}
+              {exercise.target_rpe && (
+                <span className="ml-1 text-primary">@{exercise.target_rpe}</span>
+              )}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export function SessionCard({ session, defaultExpanded = false }: SessionCardProps) {
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
+  const [notesExpanded, setNotesExpanded] = useState(false);
+  
+  const config = SESSION_TYPE_CONFIG[session.session_type] || SESSION_TYPE_CONFIG.custom;
+  const hasContent = session.main && session.main.length > 0;
+  const isRestDay = session.session_type === 'recovery';
+  const isGenerating = !isRestDay && !hasContent;
+  const hasCoachNotes = session.coach_notes && session.coach_notes.length > 0;
+
+  return (
+    <Card variant="grouped"
+      className={cn(
+        "overflow-hidden transition-all",
+        isRestDay && "opacity-60"
+      )}
+    >
+      {/* Header - always visible */}
+      <button
+        onClick={() => hasContent && setIsExpanded(!isExpanded)}
+        className={cn(
+          "w-full p-4 flex items-center gap-3 text-left",
+          hasContent && "cursor-pointer hover:bg-background-secondary"
+        )}
+        disabled={!hasContent}
+      >
+        {/* Day indicator */}
+        <div className={cn(
+          "w-10 h-10 rounded-lg flex items-center justify-center text-lg",
+          config.color,
+          "bg-opacity-20"
+        )}>
+          {config.icon}
+        </div>
+
+        {/* Session info */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <span className="font-medium">{config.label}</span>
+            {isRestDay && <Coffee className="h-3 w-3 text-foreground-muted" />}
+            {isGenerating && (
+              <span className="text-xs text-foreground-muted">Generating…</span>
+            )}
+          </div>
+          <div className="text-xs text-foreground-muted flex items-center gap-2">
+            <span>Day {session.day_number}</span>
+            {session.session_date && (
+              <>
+                <span>•</span>
+                <span>{formatDate(session.session_date)}</span>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Duration & expand */}
+        <div className="flex items-center gap-2">
+          {session.estimated_duration_minutes && (
+            <div className="flex items-center gap-1 text-xs text-foreground-muted">
+              <Clock className="h-3 w-3" />
+              <span>{session.estimated_duration_minutes}m</span>
+            </div>
+          )}
+          {hasContent && (
+            <div className="text-foreground-muted">
+              {isExpanded ? (
+                <ChevronUp className="h-4 w-4" />
+              ) : (
+                <ChevronDown className="h-4 w-4" />
+              )}
+            </div>
+          )}
+        </div>
+      </button>
+
+      {/* Expanded content */}
+      {isExpanded && hasContent && (
+        <div className="px-4 pb-4 border-t border-border/50">
+          {/* Intent tags */}
+          {session.intent_tags && session.intent_tags.length > 0 && (
+            <div className="flex gap-1 flex-wrap mt-3">
+              {session.intent_tags.map((tag) => (
+                <span
+                  key={tag}
+                  className="text-xs px-2 py-0.5 bg-background-input rounded text-foreground-muted"
+                >
+                  {tag.replace('_', ' ')}
+                </span>
+              ))}
+            </div>
+          )}
+
+          {/* Exercise sections */}
+          <ExerciseList exercises={session.warmup} title="Warmup" />
+          <ExerciseList exercises={session.main} title="Main" />
+          <ExerciseList exercises={session.accessory} title="Accessory" />
+          
+          {/* Finisher */}
+          {session.finisher && (
+            <div className="mt-3">
+              <h4 className="text-xs font-medium text-foreground-muted uppercase tracking-wide mb-2 flex items-center gap-1">
+                <Flame className="h-3 w-3" />
+                Finisher
+              </h4>
+              <div className="flex items-center justify-between text-sm mb-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-primary font-medium uppercase">
+                    {session.finisher.circuit_type || session.finisher.type}
+                  </span>
+                  {session.finisher.duration_minutes && (
+                    <span className="text-foreground-muted text-xs bg-background-input px-1.5 py-0.5 rounded">
+                      {session.finisher.duration_minutes} min
+                    </span>
+                  )}
+                </div>
+                {session.finisher.rounds && (
+                  <span className="text-xs text-foreground-muted font-medium bg-background-input px-2 py-0.5 rounded">
+                    {session.finisher.rounds}
+                  </span>
+                )}
+              </div>
+
+              {session.finisher.exercises && session.finisher.exercises.length > 0 && (
+                <div className="space-y-1.5 border-l-2 border-background-input pl-3">
+                  {session.finisher.exercises.map((ex, idx) => (
+                    <div key={idx} className="flex items-center justify-between text-sm">
+                      <span className="text-foreground">{ex.movement}</span>
+                      <span className="text-foreground-muted text-xs font-mono">
+                        {ex.reps 
+                          ? `${ex.reps} reps`
+                          : ex.duration_seconds 
+                            ? `${ex.duration_seconds}s`
+                            : ex.rep_range_min && ex.rep_range_max
+                              ? `${ex.rep_range_min}-${ex.rep_range_max}`
+                              : ''}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          <ExerciseList exercises={session.cooldown} title="Cooldown" />
+
+          {/* Coach notes */}
+          {hasCoachNotes && session.coach_notes && (
+            <div className="mt-3 p-2 bg-background-input rounded text-xs text-foreground-muted">
+              <div className="flex items-start justify-between">
+                <span className="font-medium">Jerome's Notes:</span>
+              </div>
+              <div className={cn(
+                "mt-1",
+                !notesExpanded && "line-clamp-3"
+              )}>
+                {session.coach_notes}
+              </div>
+              {session.coach_notes.length > 150 && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setNotesExpanded(!notesExpanded);
+                  }}
+                  className="mt-2 flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-colors"
+                >
+                  {notesExpanded ? 'Show less' : 'See more'}
+                  {notesExpanded ? (
+                    <ChevronUp className="h-3 w-3" />
+                  ) : (
+                    <ChevronDown className="h-3 w-3" />
+                  )}
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+    </Card>
+  );
+}

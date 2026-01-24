@@ -1,0 +1,556 @@
+"""API routes for program management."""
+from datetime import date
+import logging
+
+from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
+from sqlalchemy import select, and_
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
+
+from app.db.database import get_db
+from app.config import activity_distribution as activity_distribution_config
+from app.config.settings import get_settings
+from app.models import (
+    Program,
+    Microcycle,
+    Session,
+    User,
+    UserProfile,
+    UserMovementRule,
+    UserEnjoyableActivity,
+    MicrocycleStatus,
+    EnjoyableActivity,
+    SessionExercise,
+)
+from app.schemas.program import (
+    ProgramCreate,
+    ProgramResponse,
+    MicrocycleResponse,
+    MicrocycleWithSessionsResponse,
+    SessionResponse,
+    ProgramWithMicrocycleResponse,
+    ProgramUpdate,
+)
+from app.services.program import program_service
+from app.services.interference import interference_service
+from app.services.time_estimation import time_estimation_service
+
+router = APIRouter()
+settings = get_settings()
+logger = logging.getLogger(__name__)
+
+
+def get_current_user_id() -> int:
+    """Get current user ID (MVP: hardcoded default user)."""
+    return settings.default_user_id
+
+
+def _normalize_enjoyable_activity(activity_type: str, custom_name: str | None) -> tuple[EnjoyableActivity, str | None]:
+    if not activity_type:
+        return EnjoyableActivity.OTHER, custom_name
+    if activity_type == "custom":
+        return EnjoyableActivity.OTHER, custom_name or "custom"
+    try:
+        return EnjoyableActivity(activity_type), custom_name
+    except ValueError:
+        return EnjoyableActivity.OTHER, custom_name or activity_type
+
+
+@router.post("", response_model=ProgramResponse, status_code=status.HTTP_201_CREATED)
+async def create_program(
+    program_data: ProgramCreate,
+    background_tasks: BackgroundTasks,
+    db: AsyncSession = Depends(get_db),
+    user_id: int = Depends(get_current_user_id),
+):
+    """
+    Create a new training program.
+    
+    Requires:
+    - 1-3 goals with weights summing to 10
+    - Duration of 8-12 weeks
+    - Split template selection
+    - Progression style selection
+    
+    Optional:
+    - Name (for historic tracking)
+    - Persona overrides
+    - Movement rules
+    - Enjoyable activities
+    """
+    logger.info("Starting program creation for user_id=%s, data=%s", user_id, program_data.model_dump())
+    
+    # Get user for persona defaults
+    user = await db.get(User, user_id)
+    if not user:
+        logger.error("User not found for user_id=%s", user_id)
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Validate goals before creation (only if multiple goals provided)
+    if len(program_data.goals) >= 2:
+        # Pad goals to 3 for validation if needed
+        goals_for_validation = [g.goal for g in program_data.goals]
+        while len(goals_for_validation) < 3:
+            goals_for_validation.append(goals_for_validation[0])  # Duplicate first goal
+        
+        is_valid, warnings = await interference_service.validate_goals(
+            db,
+            goals_for_validation[0],
+            goals_for_validation[1],
+            goals_for_validation[2],
+        )
+        if not is_valid:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Goal validation failed: {', '.join(warnings)}"
+            )
+    
+    try:
+        logger.info("Calling ProgramService.create_program")
+        # Use ProgramService to create program with microcycles and sessions
+        program = await program_service.create_program(db, user_id, program_data)
+        logger.info("Program created successfully with id=%s", program.id)
+        
+        # Refresh program to load program_disciplines relationship
+        await db.refresh(program)
+        
+        # Explicitly load program_disciplines relationship
+        logger.info("Loading program_disciplines for program_id=%s", program.id)
+        result = await db.execute(
+            select(Program)
+            .options(selectinload(Program.program_disciplines))
+            .where(Program.id == program.id)
+        )
+        program = result.scalar_one()
+        logger.info("Program disciplines loaded successfully")
+        
+    except ValueError as e:
+        logger.error("ValueError during program creation: %s", str(e))
+        await db.rollback()
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.exception("Unhandled error while creating program")
+        await db.rollback()
+        raise HTTPException(status_code=500, detail="Internal server error")
+    
+    # Create movement rules if provided (post-program creation)
+    if program_data.movement_rules:
+        for rule in program_data.movement_rules:
+            user_rule = UserMovementRule(
+                user_id=user_id,
+                movement_id=rule.movement_id,
+                rule_type=rule.rule_type,
+                cadence=rule.cadence,
+                notes=rule.notes,
+            )
+            db.add(user_rule)
+    
+    # Create enjoyable activities if provided
+    if program_data.enjoyable_activities:
+        for activity in program_data.enjoyable_activities:
+            activity_enum, normalized_custom_name = _normalize_enjoyable_activity(
+                activity.activity_type,
+                activity.custom_name,
+            )
+            user_activity = UserEnjoyableActivity(
+                user_id=user_id,
+                activity_type=activity_enum,
+                custom_name=normalized_custom_name,
+                recommend_every_days=activity.recommend_every_days,
+                enabled=True,
+            )
+            db.add(user_activity)
+    
+    if program_data.movement_rules or program_data.enjoyable_activities:
+        try:
+            await db.commit()
+        except Exception as e:
+            await db.rollback()
+            logger.exception("Unhandled error while saving program preferences")
+            raise HTTPException(status_code=500, detail="Internal server error")
+
+    background_tasks.add_task(
+        program_service.generate_active_microcycle_sessions,
+        program.id,
+    )
+
+    return program
+
+
+@router.get("/{program_id}", response_model=ProgramWithMicrocycleResponse)
+async def get_program(
+    program_id: int,
+    db: AsyncSession = Depends(get_db),
+    user_id: int = Depends(get_current_user_id),
+):
+    """Get program with active microcycle, upcoming sessions, and per-week sessions."""
+    print(f"DEBUG: get_program called with program_id={program_id}, user_id={user_id}")
+    try:
+        result = await db.execute(
+            select(Program)
+            .options(selectinload(Program.program_disciplines))
+            .where(Program.id == program_id)
+        )
+        program = result.scalar_one_or_none()
+        
+        if not program:
+            raise HTTPException(status_code=404, detail="Program not found")
+        
+        if program.user_id != user_id:
+            raise HTTPException(status_code=403, detail="Not authorized to view this program")
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception("Error fetching program %s: %s", program_id, e)
+        raise HTTPException(status_code=500, detail="Internal server error") from e
+    
+    # Get active microcycle
+    try:
+        active_microcycle_result = await db.execute(
+            select(Microcycle)
+            .where(
+                and_(
+                    Microcycle.program_id == program_id,
+                    Microcycle.status == MicrocycleStatus.ACTIVE
+                )
+            )
+            .options(
+                selectinload(Microcycle.sessions)
+                .options(
+                    selectinload(Session.exercises).selectinload(SessionExercise.movement),
+                    selectinload(Session.main_circuit),
+                    selectinload(Session.finisher_circuit)
+                )
+            )
+        )
+        active_microcycle = active_microcycle_result.scalar_one_or_none()
+    except Exception as e:
+        logger.exception("Error fetching active microcycle for program %s: %s", program_id, e)
+        raise HTTPException(status_code=500, detail="Internal server error") from e
+
+    # Get all microcycles with their sessions
+    try:
+        microcycles_result = await db.execute(
+            select(Microcycle)
+            .where(Microcycle.program_id == program_id)
+            .options(
+                selectinload(Microcycle.sessions)
+                .options(
+                    selectinload(Session.exercises).selectinload(SessionExercise.movement),
+                    selectinload(Session.main_circuit),
+                    selectinload(Session.finisher_circuit)
+                )
+            )
+            .order_by(Microcycle.sequence_number)
+        )
+        microcycles = list(microcycles_result.scalars().unique().all())
+    except Exception as e:
+        logger.exception("Error fetching microcycles for program %s: %s", program_id, e)
+        raise HTTPException(status_code=500, detail="Internal server error") from e
+
+    # Get upcoming sessions (rest of active microcycle)
+    upcoming_sessions = []
+    print(f"DEBUG: active_microcycle = {active_microcycle}")
+    if active_microcycle:
+        today = date.today()
+        from datetime import timedelta
+        microcycle_end = active_microcycle.start_date + timedelta(days=active_microcycle.length_days)
+        print(f"DEBUG: Fetching sessions from {today} to {microcycle_end}")
+        try:
+            sessions_result = await db.execute(
+                select(Session)
+                .where(
+                    and_(
+                        Session.microcycle_id == active_microcycle.id,
+                        Session.date >= today,
+                        Session.date < microcycle_end,
+                    )
+                )
+                .options(
+                    selectinload(Session.exercises).selectinload(SessionExercise.movement),
+                    selectinload(Session.main_circuit),
+                    selectinload(Session.finisher_circuit)
+                )
+                .order_by(Session.date)
+            )
+            upcoming_sessions = list(sessions_result.scalars().all())
+            print(f"DEBUG: Found {len(upcoming_sessions)} upcoming sessions")
+        except Exception as e:
+            logger.exception("Error fetching upcoming sessions for microcycle %s: %s", active_microcycle.id, e)
+            raise HTTPException(status_code=500, detail="Internal server error") from e
+    
+    # Convert upcoming sessions to response format with duration estimates
+    # Use simple estimation to avoid N+1 query problem
+    session_responses = []
+    for session in upcoming_sessions:
+        if not session.estimated_duration_minutes:
+            try:
+                breakdown = time_estimation_service.calculate_session_duration(session)
+                session.estimated_duration_minutes = breakdown.total_minutes
+                session.warmup_duration_minutes = breakdown.warmup_minutes
+                session.main_duration_minutes = breakdown.main_minutes
+                session.accessory_duration_minutes = breakdown.accessory_minutes
+                session.finisher_duration_minutes = breakdown.finisher_minutes
+                session.cooldown_duration_minutes = breakdown.cooldown_minutes
+            except Exception as e:
+                logger.warning("Error calculating duration for session %s: %s", session.id, e)
+                # Simple estimation: 4 mins per exercise + 10 mins warmup
+                exercise_count = len(session.exercises) if session.exercises else 0
+                session.estimated_duration_minutes = 10 + (exercise_count * 4)
+        
+        try:
+            print(f"DEBUG: Validating session {session.id}")
+            session_responses.append(SessionResponse.model_validate(session))
+        except Exception as e:
+            print(f"ERROR validating session {session.id}: {e}")
+            import traceback
+            traceback.print_exc()
+            logger.exception("Error validating session %s to response model: %s", session.id, e)
+            raise HTTPException(status_code=500, detail="Internal server error") from e
+
+    # Build per-microcycle session views
+    microcycle_responses: list[MicrocycleWithSessionsResponse] = []
+    print(f"DEBUG: Processing {len(microcycles)} microcycles")
+    for microcycle in microcycles:
+        microcycle_sessions: list[SessionResponse] = []
+        # Ensure sessions are ordered by day_number
+        ordered_sessions = sorted(
+            microcycle.sessions or [],
+            key=lambda s: (s.day_number, s.date or date.min),
+        )
+        print(f"DEBUG: Microcycle {microcycle.id} has {len(ordered_sessions)} sessions")
+        for session in ordered_sessions:
+            if not session.estimated_duration_minutes:
+                try:
+                    # Attempt calculation if not set
+                    breakdown = time_estimation_service.calculate_session_duration(session)
+                    session.estimated_duration_minutes = breakdown.total_minutes
+                except Exception as e:
+                    logger.warning("Error calculating duration for microcycle session %s: %s", session.id, e)
+                    # Simple estimation: 4 mins per exercise + 10 mins warmup
+                    exercise_count = len(session.exercises) if session.exercises else 0
+                    session.estimated_duration_minutes = 10 + (exercise_count * 4)
+
+            try:
+                print(f"DEBUG: Validating microcycle session {session.id}")
+                microcycle_sessions.append(SessionResponse.model_validate(session))
+            except Exception as e:
+                print(f"ERROR validating microcycle session {session.id}: {e}")
+                import traceback
+                traceback.print_exc()
+                logger.exception("Error validating microcycle session %s to response model: %s", session.id, e)
+                raise HTTPException(status_code=500, detail="Internal server error") from e
+
+        microcycle_responses.append(
+            MicrocycleWithSessionsResponse(
+                id=microcycle.id,
+                program_id=microcycle.program_id,
+                micro_start_date=microcycle.start_date,
+                length_days=microcycle.length_days,
+                sequence_number=microcycle.sequence_number,
+                status=microcycle.status,
+                is_deload=microcycle.is_deload,
+                sessions=microcycle_sessions,
+            )
+        )
+
+    print(f"DEBUG: Constructing ProgramWithMicrocycleResponse")
+    print(f"DEBUG: program={program}, active_microcycle={active_microcycle}")
+    print(f"DEBUG: upcoming_sessions count={len(session_responses)}, microcycles count={len(microcycle_responses)}")
+    
+    try:
+        response = ProgramWithMicrocycleResponse(
+            program=program,
+            active_microcycle=active_microcycle,
+            upcoming_sessions=session_responses,
+            microcycles=microcycle_responses,
+        )
+        print(f"DEBUG: ProgramWithMicrocycleResponse constructed successfully")
+        return response
+    except Exception as e:
+        print(f"ERROR: Failed to construct ProgramWithMicrocycleResponse: {e}")
+        import traceback
+        traceback.print_exc()
+        logger.exception("Error constructing ProgramWithMicrocycleResponse: %s", e)
+        raise HTTPException(status_code=500, detail="Internal server error") from e
+
+
+@router.get("", response_model=list[ProgramResponse])
+async def list_programs(
+    active_only: bool = False,
+    db: AsyncSession = Depends(get_db),
+    user_id: int = Depends(get_current_user_id),
+):
+    """List all programs for the current user."""
+    logger.info("list_programs called: user_id=%s, active_only=%s", user_id, active_only)
+    
+    query = select(Program).options(selectinload(Program.program_disciplines)).where(Program.user_id == user_id)
+    
+    if active_only:
+        query = query.where(Program.is_active == True)
+    
+    query = query.order_by(Program.is_active.desc(), Program.created_at.desc())
+    
+    result = await db.execute(query)
+    programs = list(result.scalars().unique().all())
+    
+    logger.info("list_programs: found %d programs for user_id=%s", len(programs), user_id)
+    for prog in programs:
+        logger.info("  Program id=%s, name=%s, is_active=%s, created_at=%s", prog.id, prog.name, prog.is_active, prog.created_at)
+    
+    return programs
+
+
+@router.post("/{program_id}/microcycles/generate-next", response_model=MicrocycleResponse)
+async def generate_next_microcycle(
+    program_id: int,
+    db: AsyncSession = Depends(get_db),
+    user_id: int = Depends(get_current_user_id),
+):
+    """
+    Generate the next microcycle for a program.
+    
+    This will:
+    1. Mark the current active microcycle as complete
+    2. Create a new microcycle
+    3. Generate sessions for the new microcycle using LLM
+    """
+    program = await db.get(Program, program_id)
+    
+    if not program:
+        raise HTTPException(status_code=404, detail="Program not found")
+    
+    if program.user_id != user_id:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Get current active microcycle
+    active_result = await db.execute(
+        select(Microcycle)
+        .where(
+            and_(
+                Microcycle.program_id == program_id,
+                Microcycle.status == MicrocycleStatus.ACTIVE
+            )
+        )
+    )
+    current_microcycle = active_result.scalar_one_or_none()
+    
+    # Determine sequence number and start date
+    if current_microcycle:
+        current_microcycle.status = MicrocycleStatus.COMPLETE
+        next_seq = current_microcycle.sequence_number + 1
+        next_start = current_microcycle.start_date
+        # Add current microcycle length
+        from datetime import timedelta
+        next_start = next_start + timedelta(days=current_microcycle.length_days)
+    else:
+        next_seq = 1
+        next_start = program.start_date
+    
+    # Determine if this is a deload week
+    is_deload = (next_seq % program.deload_every_n_microcycles == 0)
+
+    user_profile = await db.scalar(select(UserProfile).where(UserProfile.user_id == user_id))
+    scheduling_prefs = user_profile.scheduling_preferences if user_profile else {}
+    pref_length = (scheduling_prefs or {}).get("microcycle_length_days")
+    if isinstance(pref_length, int) and 7 <= pref_length <= 14:
+        length_days = pref_length
+    else:
+        length_days = activity_distribution_config.default_microcycle_length_days
+    
+    # Create new microcycle
+    new_microcycle = Microcycle(
+        program_id=program_id,
+        start_date=next_start,
+        length_days=length_days,
+        sequence_number=next_seq,
+        status=MicrocycleStatus.ACTIVE,
+        is_deload=is_deload,
+    )
+    db.add(new_microcycle)
+    
+    # TODO: Generate sessions using LLM
+    # For now, just create the microcycle structure
+    # Session generation will be implemented in a service
+    
+    await db.commit()
+    await db.refresh(new_microcycle)
+    
+    return new_microcycle
+
+
+@router.delete("/{program_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_program(
+    program_id: int,
+    db: AsyncSession = Depends(get_db),
+    user_id: int = Depends(get_current_user_id),
+):
+    """Delete a program."""
+    program = await db.get(Program, program_id)
+    
+    if not program:
+        raise HTTPException(status_code=404, detail="Program not found")
+    
+    if program.user_id != user_id:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    await db.delete(program)
+    await db.commit()
+
+
+@router.patch("/{program_id}", response_model=ProgramResponse)
+async def update_program(
+    program_id: int,
+    program_update: ProgramUpdate,
+    db: AsyncSession = Depends(get_db),
+    user_id: int = Depends(get_current_user_id),
+):
+    """Update program details (name, status)."""
+    program = await db.get(Program, program_id)
+    if not program:
+        raise HTTPException(status_code=404, detail="Program not found")
+    if program.user_id != user_id:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    update_data = program_update.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(program, field, value)
+    
+    await db.commit()
+    await db.refresh(program)
+    return program
+
+
+@router.post("/{program_id}/activate", response_model=ProgramResponse)
+async def activate_program(
+    program_id: int,
+    db: AsyncSession = Depends(get_db),
+    user_id: int = Depends(get_current_user_id),
+):
+    """Activate a program (deactivates any other active programs)."""
+    program = await db.get(Program, program_id)
+    
+    if not program:
+        raise HTTPException(status_code=404, detail="Program not found")
+    
+    if program.user_id != user_id:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Deactivate other programs
+    other_active = await db.execute(
+        select(Program).where(
+            and_(
+                Program.user_id == user_id,
+                Program.is_active == True,
+                Program.id != program_id
+            )
+        )
+    )
+    for prog in other_active.scalars():
+        prog.is_active = False
+    
+    program.is_active = True
+    await db.commit()
+    await db.refresh(program, ['program_disciplines'])
+    
+    return program

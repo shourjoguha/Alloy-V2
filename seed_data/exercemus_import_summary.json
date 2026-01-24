@@ -1,0 +1,10 @@
+{
+  "total_source_exercises": 872,
+  "valid_candidates": 872,
+  "invalid_candidates": 0,
+  "duplicate_candidates": 741,
+  "ambiguous_candidates": 82,
+  "likely_new_candidates": 49,
+  "threshold_hi": 0.55,
+  "threshold_lo": 0.45
+}

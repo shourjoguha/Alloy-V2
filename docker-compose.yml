@@ -1,0 +1,16 @@
+services:
+  db:
+    container_name: alloy
+    image: pgvector/pgvector:pg16
+    restart: always
+    environment:
+      POSTGRES_USER: gainsly
+      POSTGRES_PASSWORD: gainslypass
+      POSTGRES_DB: gainslydb
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gainsly -d gainslydb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5

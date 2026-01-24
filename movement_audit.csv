@@ -1,0 +1,490 @@
+name,pattern,fatigue,stimulus,risk,recovery
+Back Squat,squat,1.0,0.95,0.4,72
+Front Squat,squat,0.7999999999999999,0.95,0.6,48
+Goblet Squat,squat,0.6,0.8,0.2,48
+Pistol Squat,squat,0.6,0.8,0.9,48
+Bulgarian Split Squat,lunge,0.6,0.8,0.5,48
+Walking Lunge,lunge,0.6,0.8,0.30000000000000004,48
+Conventional Deadlift,hinge,1.0,0.95,0.4,72
+Romanian Deadlift,hinge,0.7999999999999999,0.95,0.4,48
+Single Leg Romanian Deadlift,hinge,0.6,0.8,0.5,48
+Hip Thrust,hinge,0.6,0.8,0.2,48
+Good Morning,hinge,0.7999999999999999,0.95,0.6,48
+Kettlebell Swing,hinge,0.6,0.8,0.4,48
+Barbell Bench Press,horizontal_push,0.7999999999999999,0.95,0.4,48
+Incline Bench Press,horizontal_push,0.7999999999999999,0.95,0.4,48
+Dumbbell Chest Press,horizontal_push,0.6,0.8,0.2,48
+Push-Up,horizontal_push,0.4,0.8,0.2,24
+Dip,horizontal_push,0.6,0.8,0.4,48
+Overhead Press,vertical_push,0.7999999999999999,0.95,0.4,48
+Dumbbell Shoulder Press,vertical_push,0.6,0.8,0.2,48
+Pike Push-Up,vertical_push,0.4,0.8,0.4,24
+Handstand Push-Up,vertical_push,0.6,0.8500000000000001,1.0,48
+Barbell Row,horizontal_pull,0.7999999999999999,0.95,0.4,48
+Single Arm Row,horizontal_pull,0.6,0.8,0.30000000000000004,48
+Seated Cable Row,horizontal_pull,0.6,0.8,0.2,48
+Inverted Row,horizontal_pull,0.4,0.8,0.2,24
+Pull-Up,vertical_pull,0.6,0.8,0.4,48
+Chin-Up,vertical_pull,0.6,0.8,0.4,48
+Lat Pulldown,vertical_pull,0.4,0.8,0.2,24
+Muscle-Up,vertical_pull,0.7999999999999999,1.0,1.0,48
+farmers carry,carry,0.6,0.8,0.4,48
+GHD sit ups,core,0.6,0.8,0.4,48
+L sit hold,isometric,0.6,0.8,0.4,48
+Rowing Machine,cardio,0.6,0.8,0.4,48
+Farmer's Carry,carry,0.6,0.8,0.2,48
+Suitcase Carry,carry,0.6,0.8,0.30000000000000004,48
+Overhead Carry,carry,0.6,0.8,0.4,48
+Plank,isometric,0.1,0.5,0.2,12
+Side Plank,isometric,0.1,0.5,0.30000000000000004,12
+Dead Bug,core,0.1,0.5,0.2,12
+box step ups,lunge,0.6,0.8,0.4,48
+Pallof Press,rotation,0.19999999999999998,0.5,0.30000000000000004,12
+Hanging Leg Raise,core,0.19999999999999998,0.5,0.4,12
+Ab Wheel Rollout,core,0.19999999999999998,0.5,0.4,12
+Box Jump,plyometric,0.7999999999999999,0.95,0.4,48
+Broad Jump,plyometric,0.7999999999999999,0.95,0.4,48
+Depth Jump,plyometric,1.0,0.95,0.6,72
+Medicine Ball Slam,plyometric,0.6,0.8,0.2,48
+chest to bar pull ups,vertical_pull,0.6,0.8,0.4,48
+double unders,plyometric,0.6,0.8,0.4,48
+hand release push ups,horizontal_push,0.6,0.8,0.4,48
+handstand push ups,vertical_push,0.6,0.8,0.4,48
+kettlebell Turkish get ups,isolation,0.6,0.8,0.5,48
+knees to elbows,core,0.6,0.8,0.4,48
+Wall Ball,squat,0.6,0.8,0.4,48
+pull ups,vertical_pull,0.6,0.8,0.4,48
+push ups,horizontal_push,0.6,0.8,0.4,48
+ring push ups,horizontal_push,0.6,0.8,0.4,48
+sandbag bear hug carry,carry,0.6,0.8,0.4,48
+pistols,squat,0.6,0.8,0.5,48
+L-Sit Hold,isometric,0.6,0.8,0.8,48
+Front Lever Hold,isometric,0.7999999999999999,1.0,1.0,48
+Wall Sit,isometric,0.4,0.8,0.2,24
+Sprint,plyometric,1.0,0.95,0.4,72
+Sled Push,carry,0.7999999999999999,0.95,0.2,48
+Battle Rope Wave,core,0.6,0.8,0.2,48
+Turkish Get-Up,core,0.6,0.8,0.7,48
+sit ups,core,0.6,0.8,0.4,48
+Machine Crunch,core,0.4,0.6,0.4,24
+toes to bars,core,0.6,0.8,0.4,48
+Single Leg Glute Bridge,hinge,0.4,0.6,0.5,24
+200/Row,horizontal_pull,0.6,0.8,0.4,48
+Backward Drag,lunge,0.4,0.6,0.4,24
+Balance Board,lunge,0.4,0.6,0.4,24
+4 Rope Climbs To,conditioning,0.6,0.8,0.4,48
+Alternating Dumbbell Snatches,hinge,0.6,0.8,0.4,48
+Barbell Glute Bridge,hinge,0.4,0.6,0.4,24
+Back Squats Are Not The Enemy,squat,0.6,0.8,0.4,48
+Barbell Step Ups,lunge,0.4,0.6,0.4,24
+Build To A 1  Max Snatch,hinge,0.6,0.8,0.4,48
+Bear Crawl Sled Drags,lunge,0.4,0.6,0.4,24
+Echo Bike,cardio,0.6,0.8,0.4,48
+Find A Gym Near You:,conditioning,0.6,0.8,0.4,48
+Friday 251219,conditioning,0.6,0.8,0.4,48
+Friday 251226,conditioning,0.6,0.8,0.4,48
+Friday 260102,conditioning,0.6,0.8,0.4,48
+Friday 260109,conditioning,0.6,0.8,0.4,48
+Friday 260116,conditioning,0.6,0.8,0.4,48
+Monday 251222,conditioning,0.6,0.8,0.4,48
+Monday 251229,conditioning,0.6,0.8,0.4,48
+Monday 260105,conditioning,0.6,0.8,0.4,48
+Monday 260112,conditioning,0.6,0.8,0.4,48
+Open Workout 20.2,conditioning,0.6,0.8,0.4,48
+Push Press 5 5 3 3 3 1 1 1 1,vertical_push,0.6,0.8,0.4,48
+Rest,conditioning,0.6,0.8,0.4,48
+Rest Day,conditioning,0.6,0.8,0.4,48
+Run 2 Miles,cardio,0.6,0.8,0.4,48
+Russian Kettlebell Swings,conditioning,0.6,0.8,0.4,48
+Saturday 251220,conditioning,0.6,0.8,0.4,48
+Saturday 251227,conditioning,0.6,0.8,0.4,48
+Saturday 260103,conditioning,0.6,0.8,0.4,48
+Saturday 260110,conditioning,0.6,0.8,0.4,48
+Saturday 260117,conditioning,0.6,0.8,0.4,48
+Sunday 251221,conditioning,0.6,0.8,0.4,48
+Sunday 251228,conditioning,0.6,0.8,0.4,48
+Sunday 260104,conditioning,0.6,0.8,0.4,48
+Sunday 260111,conditioning,0.6,0.8,0.4,48
+"Then, On A Clock, Complete:",conditioning,0.6,0.8,0.4,48
+Thursday 251218,conditioning,0.6,0.8,0.4,48
+Thursday 251225,conditioning,0.6,0.8,0.4,48
+Bent Over Dumbbell Rear Delt Raise With Head On Bench,horizontal_push,0.4,0.6,0.4,24
+Bicycling,cardio,0.19999999999999998,0.5,0.4,12
+"Bicycling, Stationary",cardio,0.19999999999999998,0.5,0.4,12
+Thursday 260101,conditioning,0.6,0.8,0.4,48
+Bosu Ball Cable Crunch With Side Bends,core,0.4,0.6,0.4,24
+Thursday 260108,conditioning,0.6,0.8,0.4,48
+Thursday 260115,conditioning,0.6,0.8,0.4,48
+Tuesday 251223,conditioning,0.6,0.8,0.4,48
+Tuesday 251230,conditioning,0.6,0.8,0.4,48
+Tuesday 260106,conditioning,0.6,0.8,0.4,48
+Tuesday 260113,conditioning,0.6,0.8,0.4,48
+View The Crossfit Map,conditioning,0.6,0.8,0.4,48
+Wednesday 251224,conditioning,0.6,0.8,0.4,48
+Wednesday 251231,conditioning,0.6,0.8,0.4,48
+Wednesday 260107,conditioning,0.6,0.8,0.4,48
+Wednesday 260114,conditioning,0.6,0.8,0.4,48
+"Barbell, 20 Inch Box, 25 Lb Plate",conditioning,0.6,0.8,0.4,48
+"Barbell, 24 Inch Box, 45 Lb Plate",conditioning,0.6,0.8,0.4,48
+Box Jump Overs,conditioning,0.6,0.8,0.4,48
+Box Jumps,conditioning,0.6,0.8,0.4,48
+Broad Jumps,conditioning,0.6,0.8,0.4,48
+Clean And Jerks,hinge,0.6,0.8,0.4,48
+Dumbbell Farmers Carry,conditioning,0.6,0.8,0.4,48
+Dumbbells And A 20 Inch Box,conditioning,0.6,0.8,0.4,48
+Dumbbells And A 24 Inch Box,conditioning,0.6,0.8,0.4,48
+Handstand Walk,vertical_push,0.6,0.8,0.4,48
+"Kettlebell Turkish Get Ups, Left Arm",conditioning,0.6,0.8,0.4,48
+"Kettlebell Turkish Get Ups, Right Arm",conditioning,0.6,0.8,0.4,48
+Kettlebell Goblet Squats,squat,0.6,0.8,0.4,48
+Medicine Ball To A Target,conditioning,0.6,0.8,0.4,48
+Of Double Unders,conditioning,0.6,0.8,0.4,48
+Overhead Walking Lunges With A Plate,conditioning,0.6,0.8,0.4,48
+Plank Hold,conditioning,0.6,0.8,0.4,48
+Row,horizontal_pull,0.6,0.8,0.4,48
+Butt Lift (Bridge),lunge,0.4,0.6,0.4,24
+Row*,horizontal_pull,0.6,0.8,0.4,48
+Cable Crunch,core,0.4,0.6,0.4,24
+Cable Deadlifts,hinge,0.7999999999999999,1.0,0.6000000000000001,48
+Single Leg Squats,squat,0.6,0.8,0.4,48
+Snatches,hinge,0.6,0.8,0.4,48
+Squat Cleans,squat,0.6,0.8,0.4,48
+Strict Handstand Push Ups,vertical_push,0.6,0.8,0.4,48
+Cable Reverse Crunch,core,0.4,0.6,0.4,24
+Strict Ring Dips,conditioning,0.6,0.8,0.4,48
+Walking Lunges,conditioning,0.6,0.8,0.4,48
+Wall Ball Shots,conditioning,0.6,0.8,0.4,48
+♀ 20 Inch Box,conditioning,0.6,0.8,0.4,48
+♂ 24 Inch Box,conditioning,0.6,0.8,0.4,48
+Cable Rope Rear-Delt Rows,horizontal_pull,0.6,0.8,0.4,48
+Cable Seated Crunch,core,0.4,0.6,0.4,24
+Catch and Overhead Throw,horizontal_pull,0.6,0.8,0.4,48
+Conan's Wheel,lunge,0.4,0.6,0.4,24
+Cross-Body Crunch,core,0.4,0.6,0.4,24
+Crunch - Hands Overhead,core,0.4,0.6,0.4,24
+Crunch - Legs On Exercise Ball,core,0.4,0.6,0.4,24
+Crunches,core,0.4,0.6,0.4,24
+Decline Crunch,core,0.4,0.6,0.4,24
+Decline Oblique Crunch,core,0.4,0.6,0.4,24
+Decline Reverse Crunch,core,0.4,0.6,0.4,24
+Downward Facing Balance,lunge,0.4,0.6,0.4,24
+Dumbbell Step Ups,lunge,0.4,0.6,0.4,24
+Elliptical Trainer,cardio,0.19999999999999998,0.5,0.4,12
+Fast Skipping,lunge,0.4,0.6,0.4,24
+Flutter Kicks,lunge,0.4,0.6,0.4,24
+Glute Kickback,lunge,0.4,0.6,0.4,24
+Gorilla Chin/Crunch,core,0.4,0.6,0.4,24
+Hip Flexion with Band,lunge,0.4,0.6,0.4,24
+Hurdle Hops,hinge,0.4,0.6,0.4,24
+Hyperextensions With No Hyperextension Bench,horizontal_push,0.4,0.6,0.4,24
+"Jogging, Treadmill",cardio,0.19999999999999998,0.5,0.4,12
+Kneeling Cable Crunch With Alternating Oblique Twists,core,0.4,0.6,0.4,24
+Linear 3-Part Start Technique,lunge,0.4,0.6,0.4,24
+Linear Acceleration Wall Drill,lunge,0.4,0.6,0.4,24
+Mountain Climbers,lunge,0.4,0.6,0.4,24
+Moving Claw Series,lunge,0.4,0.6,0.4,24
+Oblique Crunches,core,0.4,0.6,0.4,24
+Oblique Crunches - On The Floor,core,0.4,0.6,0.4,24
+One-Arm Kettlebell Military Press To The Side,vertical_push,0.6,0.8,0.4,48
+One-Arm Kettlebell Swings,lunge,0.4,0.6,0.4,24
+One-Legged Cable Kickback,lunge,0.4,0.6,0.4,24
+Platform Hamstring Slides,lunge,0.4,0.6,0.4,24
+Plyo Kettlebell Pushups,plyometric,0.4,0.6,0.4,24
+Prone Manual Hamstring,lunge,0.4,0.6,0.4,24
+Quick Leap,lunge,0.4,0.6,0.4,24
+Recumbent Bike,cardio,0.19999999999999998,0.5,0.4,12
+Reverse Crunch,core,0.4,0.6,0.4,24
+Reverse Grip Bent-Over Rows,horizontal_pull,0.6,0.8,0.4,48
+Face Pull,isolation,0.1,0.5,0.2,12
+Rope Jumping,plyometric,0.19999999999999998,0.5,0.4,12
+"Rowing, Stationary",horizontal_pull,0.4,0.8,0.4,24
+"Running, Treadmill",cardio,0.19999999999999998,0.5,0.4,12
+Sandbag Load,lunge,0.4,0.6,0.4,24
+Seated One-arm Cable Pulley Rows,horizontal_pull,0.6,0.8,0.4,48
+Single-Cone Sprint Drill,lunge,0.4,0.6,0.4,24
+Single Leg Butt Kick,lunge,0.4,0.6,0.5,24
+Calf Raise,isolation,0.1,0.5,0.2,12
+Skating,cardio,0.19999999999999998,0.5,0.4,12
+Sled Drag - Harness,lunge,0.4,0.6,0.4,24
+Squats - With Bands,squat,0.6,0.8,0.4,48
+Stairmaster,cardio,0.19999999999999998,0.5,0.4,12
+Leg Curl,isolation,0.19999999999999998,0.5,0.2,12
+Leg Extension,isolation,0.19999999999999998,0.5,0.2,12
+Standing Two-Arm Overhead Throw,horizontal_pull,0.6,0.8,0.4,48
+Step Mill,cardio,0.19999999999999998,0.5,0.4,12
+Hip Flexor Stretch,mobility,0.1,0.5,0.30000000000000004,12
+Pigeon Stretch,mobility,0.1,0.5,0.30000000000000004,12
+Supine Chest Throw,horizontal_pull,0.6,0.8,0.4,48
+Supine One-Arm Overhead Throw,horizontal_pull,0.6,0.8,0.4,48
+Supine Two-Arm Overhead Throw,horizontal_pull,0.6,0.8,0.4,48
+Suspended Reverse Crunch,core,0.4,0.6,0.4,24
+Tire Flip,lunge,0.4,0.6,0.4,24
+Tuck Crunch,core,0.4,0.6,0.4,24
+Weighted Crunches,core,0.4,0.6,0.4,24
+Weighted Sit-Ups - With Bands,core,0.4,0.6,0.4,24
+Wide Stance Stiff Legs,lunge,0.4,0.6,0.4,24
+Cat-Cow,mobility,0.1,0.5,0.2,12
+Yoke Walk,lunge,0.4,0.6,0.4,24
+3/4 Sit-Up,core,0.4,0.6,0.4,24
+Alternate Leg Diagonal Bound,lunge,0.4,0.6,0.4,24
+Box Skip,lunge,0.4,0.6,0.4,24
+Thoracic Rotation,mobility,0.1,0.5,0.30000000000000004,12
+Dumbbell Lunges,lunge,0.6,0.8,0.4,48
+Flat Bench Leg Pull-In,horizontal_push,0.4,0.6,0.4,24
+Knee Tuck Jump,plyometric,0.4,0.6,0.4,24
+Lunge Pass Through,lunge,0.6,0.8,0.4,48
+Palms-Down Dumbbell Wrist Curl Over A Bench,horizontal_push,0.4,0.6,0.4,24
+Palms-Down Wrist Curl Over A Bench,horizontal_push,0.4,0.6,0.4,24
+Palms-Up Barbell Wrist Curl Over A Bench,horizontal_push,0.4,0.6,0.4,24
+Palms-Up Dumbbell Wrist Curl Over A Bench,horizontal_push,0.4,0.6,0.4,24
+Power Stairs,lunge,0.4,0.6,0.4,24
+Wall Slide,mobility,0.1,0.5,0.2,12
+Seated Flat Bench Leg Pull-In,horizontal_push,0.4,0.6,0.4,24
+Split Squats,squat,0.6,0.8,0.4,48
+Straight Bar Bench Mid Rows,horizontal_push,0.6,0.8,0.4,48
+90/90 Hamstring,mobility,0.4,0.6,0.4,24
+Adductor,mobility,0.4,0.6,0.4,24
+Underhand Cable Pulldowns,vertical_pull,0.4,0.6,0.4,24
+Clean,olympic,1.0,1.0,1.0,72
+Power Clean,olympic,1.0,1.0,0.8,72
+Snatch,olympic,1.0,1.0,1.0,72
+Clean and Jerk,olympic,1.0,1.0,1.0,72
+Bicep Curl,isolation,0.1,0.5,0.2,12
+Tricep Extension,isolation,0.1,0.5,0.2,12
+Lateral Raise,isolation,0.1,0.5,0.2,12
+Adductor/Groin,mobility,0.4,0.6,0.4,24
+Advanced Kettlebell Windmill,isolation,0.4,0.6,0.4,24
+Air Bike,isolation,0.4,0.6,0.4,24
+Alternate Heel Touchers,isolation,0.4,0.6,0.4,24
+Ankle Circles,mobility,0.4,0.6,0.4,24
+Ankle On The Knee,mobility,0.4,0.6,0.4,24
+Anterior Tibialis-SMR,mobility,0.4,0.6,0.4,24
+Arm Circles,mobility,0.4,0.6,0.4,24
+Around The Worlds,isolation,0.4,0.6,0.4,24
+Atlas Stone Trainer,isolation,0.4,0.6,0.4,24
+Bottoms-Up Clean From The Hang Position,olympic,0.6,0.8500000000000001,0.6000000000000001,48
+Atlas Stones,isolation,0.4,0.6,0.4,24
+Back Flyes - With Bands,isolation,0.4,0.6,0.4,24
+Band Skullcrusher,isolation,0.4,0.6,0.4,24
+Dumbbell Skullcrusher,isolation,0.4,0.6,0.4,24
+Barbell Shrug,isolation,0.4,0.6,0.4,24
+Battling Ropes,isolation,0.4,0.6,0.4,24
+Bent-Arm Barbell Pullover,isolation,0.4,0.6,0.4,24
+Bent-Arm Dumbbell Pullover,isolation,0.4,0.6,0.4,24
+Bodyweight Flyes,isolation,0.4,0.6,0.4,24
+Brachialis-SMR,mobility,0.4,0.6,0.4,24
+Bradford/Rocky Presses,isolation,0.6,0.8,0.4,48
+Butt-Ups,isolation,0.4,0.6,0.4,24
+Cable Crossover,isolation,0.4,0.6,0.4,24
+Cable Incline Pushdown,isolation,0.4,0.6,0.4,24
+Cable Iron Cross,isolation,0.4,0.6,0.4,24
+Cable Judo Flip,isolation,0.4,0.6,0.4,24
+Cable Rear Delt Fly,isolation,0.4,0.6,0.4,24
+Cable Russian Twists,isolation,0.4,0.6,0.4,24
+Cocoons,isolation,0.4,0.6,0.4,24
+Cable Shrugs,isolation,0.4,0.6,0.4,24
+Calf Stretch Elbows Against Wall,mobility,0.4,0.6,0.4,24
+Calf Stretch Hands Against Wall,mobility,0.4,0.6,0.4,24
+Calves-SMR,mobility,0.4,0.6,0.4,24
+Car Drivers,isolation,0.4,0.6,0.4,24
+Carioca Quick Step,isolation,0.4,0.6,0.4,24
+Chest And Front Of Shoulder Stretch,mobility,0.4,0.6,0.4,24
+Chest Push from 3 point stance,isolation,0.4,0.6,0.4,24
+Chest Stretch on Stability Ball,mobility,0.4,0.6,0.4,24
+Child's Pose,mobility,0.4,0.6,0.4,24
+Circus Bell,isolation,0.4,0.6,0.4,24
+Close-Grip EZ-Bar Press,isolation,0.6,0.8,0.4,48
+Cross Over - With Bands,isolation,0.4,0.6,0.4,24
+Crucifix,isolation,0.4,0.6,0.4,24
+Decline Dumbbell Flyes,isolation,0.4,0.6,0.4,24
+Machine Dips,isolation,0.4,0.6,0.4,24
+Dips (Chest Focus),isolation,0.4,0.6,0.4,24
+Dips (Triceps Focus),isolation,0.4,0.6,0.4,24
+Double Kettlebell Windmill,isolation,0.4,0.6,0.4,24
+Dumbbell Flyes,isolation,0.4,0.6,0.4,24
+Dumbbell Lying Pronation,isolation,0.4,0.6,0.4,24
+Dumbbell Lying Supination,isolation,0.4,0.6,0.4,24
+Dumbbell Scaption,isolation,0.4,0.6,0.4,24
+Dumbbell Shrug,isolation,0.4,0.6,0.4,24
+EZ-Bar Skullcrusher,isolation,0.4,0.6,0.4,24
+Elbow Circles,mobility,0.4,0.6,0.4,24
+Elbow to Knee,isolation,0.4,0.6,0.4,24
+Extended Range One-Arm Kettlebell Floor Press,isolation,0.6,0.8,0.4,48
+Finger Curls,isolation,0.4,0.6,0.4,24
+Foot-SMR,mobility,0.4,0.6,0.4,24
+Frog Hops,mobility,0.4,0.6,0.4,24
+Gironda Sternum Chins,isolation,0.4,0.6,0.4,24
+Groiners,mobility,0.4,0.6,0.4,24
+Hamstring-SMR,mobility,0.4,0.6,0.4,24
+Hug A Ball,mobility,0.4,0.6,0.4,24
+Hug Knees To Chest,mobility,0.4,0.6,0.4,24
+Hyperextensions (Back Extensions),isolation,0.4,0.6,0.4,24
+Iliotibial Tract-SMR,mobility,0.4,0.6,0.4,24
+Inchworm,mobility,0.4,0.6,0.4,24
+Incline Cable Flye,isolation,0.4,0.6,0.4,24
+Kettlebell Pirate Ships,isolation,0.4,0.6,0.4,24
+Incline Dumbbell Flyes,isolation,0.4,0.6,0.4,24
+Incline Dumbbell Flyes - With A Twist,isolation,0.4,0.6,0.4,24
+Iron Cross,isolation,0.4,0.6,0.4,24
+Iron Crosses (stretch),mobility,0.4,0.6,0.4,24
+Isometric Neck Exercise - Front And Back,isolation,0.4,0.6,0.4,24
+Isometric Neck Exercise - Sides,isolation,0.4,0.6,0.4,24
+Isometric Wipers,isolation,0.4,0.6,0.4,24
+Keg Load,isolation,0.4,0.6,0.4,24
+Kettlebell Figure 8,isolation,0.4,0.6,0.4,24
+Kettlebell Pass Between The Legs,isolation,0.4,0.6,0.4,24
+Rhomboids-SMR,mobility,0.4,0.6,0.4,24
+Kettlebell Thruster,isolation,0.4,0.6,0.4,24
+Kettlebell Windmill,isolation,0.4,0.6,0.4,24
+Knee Across The Body,mobility,0.4,0.6,0.4,24
+Knee Circles,mobility,0.4,0.6,0.4,24
+Knee/Hip Raise On Parallel Bars,isolation,0.4,0.6,0.4,24
+Kneeling Arm Drill,isolation,0.4,0.6,0.4,24
+Landmine 180's,isolation,0.4,0.6,0.4,24
+Landmine Linear Jammer,isolation,0.4,0.6,0.4,24
+Latissimus Dorsi-SMR,mobility,0.4,0.6,0.4,24
+Leverage Shrug,isolation,0.4,0.6,0.4,24
+Log Lift,isolation,0.4,0.6,0.4,24
+London Bridges,isolation,0.4,0.6,0.4,24
+Looking At Ceiling,mobility,0.4,0.6,0.4,24
+Low Cable Crossover,isolation,0.4,0.6,0.4,24
+Lying Bent Leg Groin,mobility,0.4,0.6,0.4,24
+Lying Close-Grip Barbell Triceps Press To Chin,isolation,0.6,0.8,0.4,48
+Lying Crossover,mobility,0.4,0.6,0.4,24
+Lying Face Down Plate Neck Resistance,isolation,0.4,0.6,0.4,24
+Lying Face Up Plate Neck Resistance,isolation,0.4,0.6,0.4,24
+Lying Glute,mobility,0.4,0.6,0.4,24
+Lying Hamstring,mobility,0.4,0.6,0.4,24
+Lying Prone Quadriceps,mobility,0.4,0.6,0.4,24
+Machine Preacher Curls,isolation,0.4,0.6,0.4,24
+Mixed Grip Chin,isolation,0.4,0.6,0.4,24
+Monster Walk,isolation,0.4,0.6,0.4,24
+Neck-SMR,mobility,0.4,0.6,0.4,24
+One-Arm High-Pulley Cable Side Bends,isolation,0.4,0.6,0.4,24
+One-Arm Kettlebell Para Press,isolation,0.6,0.8,0.4,48
+One-Arm Kettlebell Push Press,isolation,0.6,0.8,0.4,48
+Ring Dips,isolation,0.4,0.6,0.4,24
+One-Arm Side Laterals,isolation,0.4,0.6,0.4,24
+One Half Locust,mobility,0.4,0.6,0.4,24
+One Handed Hang,mobility,0.4,0.6,0.4,24
+One Knee To Chest,mobility,0.4,0.6,0.4,24
+Pelvic Tilt Into Bridge,mobility,0.4,0.6,0.4,24
+Peroneals-SMR,mobility,0.4,0.6,0.4,24
+Pin Presses,isolation,0.6,0.8,0.4,48
+Piriformis-SMR,mobility,0.4,0.6,0.4,24
+Plate Pinch,isolation,0.4,0.6,0.4,24
+Plate Twist,isolation,0.4,0.6,0.4,24
+Kettlebell Sumo High Pull,isolation,0.4,0.6,0.4,24
+Pullups,isolation,0.4,0.6,0.4,24
+Push-Ups - Close Triceps Position,isolation,0.4,0.6,0.4,24
+Push-Ups With Feet Elevated,isolation,0.4,0.6,0.4,24
+Push-Ups With Feet On An Exercise Ball,isolation,0.4,0.6,0.4,24
+Push Press - Behind the Neck,isolation,0.6,0.8,0.4,48
+Pushups,isolation,0.4,0.6,0.4,24
+Pushups (Close and Wide Hand Positions),isolation,0.4,0.6,0.4,24
+Pyramid,mobility,0.4,0.6,0.4,24
+Quadriceps-SMR,mobility,0.4,0.6,0.4,24
+Kneeling Forearm Stretch,mobility,0.4,0.6,0.4,24
+Rack Delivery,isolation,0.4,0.6,0.4,24
+Rack Pulls,isolation,0.4,0.6,0.4,24
+Return Push from Stance,isolation,0.4,0.6,0.4,24
+Reverse Barbell Preacher Curls,isolation,0.4,0.6,0.4,24
+Reverse Flyes,isolation,0.4,0.6,0.4,24
+Reverse Flyes With External Rotation,isolation,0.4,0.6,0.4,24
+Reverse Hyperextension,isolation,0.4,0.6,0.4,24
+Reverse Machine Flyes,isolation,0.4,0.6,0.4,24
+Reverse Plate Curls,isolation,0.4,0.6,0.4,24
+Rope Climb,isolation,0.4,0.6,0.4,24
+Russian Twist,isolation,0.4,0.6,0.4,24
+Scissor Kick,mobility,0.4,0.6,0.4,24
+Seated Barbell Twist,isolation,0.4,0.6,0.4,24
+Seated Biceps,mobility,0.4,0.6,0.4,24
+Seated Glute,mobility,0.4,0.6,0.4,24
+Seated Hamstring,mobility,0.4,0.6,0.4,24
+Seated Head Harness Neck Resistance,isolation,0.4,0.6,0.4,24
+Standing Cable Lift,isolation,0.4,0.6,0.4,24
+Side To Side Chins,isolation,0.4,0.6,0.4,24
+Single-Arm Cable Crossover,isolation,0.4,0.6,0.5,24
+Single-Arm Linear Jammer,isolation,0.4,0.6,0.5,24
+Sled Reverse Flye,isolation,0.4,0.6,0.4,24
+Sledgehammer Swings,isolation,0.4,0.6,0.4,24
+Smith Machine Behind the Back Shrug,isolation,0.4,0.6,0.4,24
+Smith Machine One-Arm Upright Row,isolation,0.6,0.8,0.4,48
+Spell Caster,isolation,0.4,0.6,0.4,24
+Spider Crawl,isolation,0.4,0.6,0.4,24
+Standing Cable Wood Chop,isolation,0.4,0.6,0.4,24
+Standing Olympic Plate Hand Squeeze,isolation,0.4,0.6,0.4,24
+Standing Pelvic Tilt,mobility,0.4,0.6,0.4,24
+Standing Toe Touches,mobility,0.4,0.6,0.4,24
+Stomach Vacuum,mobility,0.4,0.6,0.4,24
+Straight-Arm Dumbbell Pullover,isolation,0.4,0.6,0.4,24
+Superman,mobility,0.4,0.6,0.4,24
+Suspended Fallout,isolation,0.4,0.6,0.4,24
+The Straddle,mobility,0.4,0.6,0.4,24
+Thigh Abductor,isolation,0.4,0.6,0.4,24
+Thigh Adductor,isolation,0.4,0.6,0.4,24
+Toe Touchers,mobility,0.4,0.6,0.4,24
+V-Bar Pullup,isolation,0.4,0.6,0.4,24
+Weighted Ball Hyperextension,isolation,0.4,0.6,0.4,24
+Wide-Grip Decline Barbell Pullover,isolation,0.4,0.6,0.4,24
+Wind Sprints,isolation,0.4,0.6,0.4,24
+Windmills,mobility,0.4,0.6,0.4,24
+Wrist Circles,mobility,0.4,0.6,0.4,24
+Intermediate Groin Stretch,mobility,0.4,0.6,0.4,24
+Wrist Roller,isolation,0.4,0.6,0.4,24
+Wrist Rotations with Straight Bar,isolation,0.4,0.6,0.4,24
+All Fours Quad Stretch,mobility,0.4,0.6,0.4,24
+Band Hip Adductions,isolation,0.4,0.6,0.4,24
+Body-Up,isolation,0.4,0.6,0.4,24
+Bottoms Up,isolation,0.4,0.6,0.4,24
+Chair Leg Extended Stretch,mobility,0.4,0.6,0.4,24
+Chair Lower Back Stretch,mobility,0.4,0.6,0.4,24
+Chair Upper Body Stretch,mobility,0.4,0.6,0.4,24
+Dynamic Back Stretch,mobility,0.4,0.6,0.4,24
+Elbows Back,mobility,0.4,0.6,0.4,24
+Floor Press with Chains,isolation,0.6,0.8,0.4,48
+Heavy Bag Thrust,isolation,0.4,0.6,0.4,24
+Lateral Cone Hops,isolation,0.4,0.6,0.4,24
+Leg Pull-In,isolation,0.4,0.6,0.4,24
+Lower Back Curl,isolation,0.4,0.6,0.4,24
+Middle Back Stretch,mobility,0.4,0.6,0.4,24
+On-Your-Back Quad Stretch,mobility,0.4,0.6,0.4,24
+On Your Side Quad Stretch,mobility,0.4,0.6,0.4,24
+Otis-Up,isolation,0.4,0.6,0.4,24
+Runner's Stretch,mobility,0.4,0.6,0.4,24
+Seated Front Deltoid,mobility,0.4,0.6,0.4,24
+Seated Two-Arm Palms-Up Low-Pulley Wrist Curl,isolation,0.4,0.6,0.4,24
+Side Jackknife,isolation,0.4,0.6,0.4,24
+Side Leg Raises,isolation,0.4,0.6,0.4,24
+Sled Overhead Backward Walk,isolation,0.4,0.6,0.4,24
+Speed Band Overhead Triceps,isolation,0.4,0.6,0.4,24
+Standing Elevated Quad Stretch,mobility,0.4,0.6,0.4,24
+Step-up with Knee Raise,isolation,0.4,0.6,0.4,24
+Upper Back-Leg Grab,mobility,0.4,0.6,0.4,24
+Upper Back Stretch,mobility,0.4,0.6,0.4,24
+World's Greatest Stretch,mobility,0.4,0.6,0.4,24
+Calorie Row,horizontal_pull,0.6,0.8,0.4,48
+Ghd Sit-Ups,conditioning,0.6,0.8,0.4,48
+Lateral Burpees Over The Rower,horizontal_pull,0.6,0.8,0.4,48
+Knees-To-Elbows,conditioning,0.6,0.8,0.4,48
+Air Squats,squat,0.6,0.8,0.4,48
+Back-Rack Barbell Carry,conditioning,0.6,0.8,0.4,48
+Box Step-Ups,conditioning,0.6,0.8,0.4,48
+Burpees,plyometric,0.6,0.8,0.4,48
+Calorie Echo Bike,cardio,0.6,0.8,0.4,48
+Candlestick Rocks,conditioning,0.6,0.8,0.4,48
+Deadlifts,hinge,0.6,0.8,0.4,48
+Double-Unders,plyometric,0.6,0.8,0.4,48
+Dumbbell Bench Presses,vertical_push,0.6,0.8,0.4,48
+Dumbbell Thrusters,squat,0.6,0.8,0.4,48
+Foot Handstand Walk,vertical_push,0.6,0.8,0.4,48
+Jumping Lunges,conditioning,0.6,0.8,0.4,48
+Jumping Squats,squat,0.6,0.8,0.4,48
+Run,cardio,0.6,0.8,0.4,48
+Handstand Hold,vertical_push,0.6,0.8,0.4,48
+Single-Leg Squats,squat,0.6,0.8,0.4,48
+Sit-Ups,conditioning,0.6,0.8,0.4,48
+Thrusters,squat,0.6,0.8,0.4,48
+Toes-To-Bars,conditioning,0.6,0.8,0.4,48
+Wall Walk,conditioning,0.6,0.8,0.4,48
+Wall-Ball Shots,squat,0.6,0.8,0.4,48

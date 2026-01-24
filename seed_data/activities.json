@@ -1,0 +1,135 @@
+[
+  {
+    "name": "City Run",
+    "category": "cardio",
+    "default_metric_type": "distance",
+    "default_equipment_tags": [],
+    "cns_impact": 0.4
+  },
+  {
+    "name": "Trail Run",
+    "category": "cardio",
+    "default_metric_type": "distance",
+    "default_equipment_tags": [],
+    "cns_impact": 0.6
+  },
+  {
+    "name": "Cycling",
+    "category": "cardio",
+    "default_metric_type": "time",
+    "default_equipment_tags": ["bike"],
+    "cns_impact": 0.3
+  },
+  {
+    "name": "Swimming",
+    "category": "cardio",
+    "default_metric_type": "time",
+    "default_equipment_tags": [],
+    "cns_impact": 0.4
+  },
+  {
+    "name": "Rucking",
+    "category": "cardio",
+    "default_metric_type": "distance",
+    "default_equipment_tags": ["backpack"],
+    "cns_impact": 0.5
+  },
+  {
+    "name": "Tennis",
+    "category": "sport",
+    "default_metric_type": "time",
+    "default_equipment_tags": ["racket"],
+    "cns_impact": 0.6
+  },
+  {
+    "name": "Padel",
+    "category": "sport",
+    "default_metric_type": "time",
+    "default_equipment_tags": ["racket"],
+    "cns_impact": 0.5
+  },
+  {
+    "name": "Pickleball",
+    "category": "sport",
+    "default_metric_type": "time",
+    "default_equipment_tags": ["racket"],
+    "cns_impact": 0.4
+  },
+  {
+    "name": "Squash",
+    "category": "sport",
+    "default_metric_type": "time",
+    "default_equipment_tags": ["racket"],
+    "cns_impact": 0.7
+  },
+  {
+    "name": "Badminton",
+    "category": "sport",
+    "default_metric_type": "time",
+    "default_equipment_tags": ["racket"],
+    "cns_impact": 0.5
+  },
+  {
+    "name": "Golf",
+    "category": "sport",
+    "default_metric_type": "time",
+    "default_equipment_tags": ["clubs"],
+    "cns_impact": 0.2
+  },
+  {
+    "name": "Bouldering",
+    "category": "sport",
+    "default_metric_type": "time",
+    "default_equipment_tags": [],
+    "cns_impact": 0.6
+  },
+  {
+    "name": "Basketball",
+    "category": "sport",
+    "default_metric_type": "time",
+    "default_equipment_tags": ["ball"],
+    "cns_impact": 0.7
+  },
+  {
+    "name": "Indoor Football (6-a-side)",
+    "category": "sport",
+    "default_metric_type": "time",
+    "default_equipment_tags": [],
+    "cns_impact": 0.7
+  },
+  {
+    "name": "Football (11-a-side)",
+    "category": "sport",
+    "default_metric_type": "time",
+    "default_equipment_tags": [],
+    "cns_impact": 0.8
+  },
+  {
+    "name": "Surfing",
+    "category": "sport",
+    "default_metric_type": "time",
+    "default_equipment_tags": ["board"],
+    "cns_impact": 0.5
+  },
+  {
+    "name": "Kayaking",
+    "category": "sport",
+    "default_metric_type": "time",
+    "default_equipment_tags": ["kayak"],
+    "cns_impact": 0.5
+  },
+  {
+    "name": "Pilates",
+    "category": "mobility",
+    "default_metric_type": "time",
+    "default_equipment_tags": [],
+    "cns_impact": 0.3
+  },
+  {
+    "name": "Yoga",
+    "category": "mobility",
+    "default_metric_type": "time",
+    "default_equipment_tags": ["mat"],
+    "cns_impact": 0.2
+  }
+]

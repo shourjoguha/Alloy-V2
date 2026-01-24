@@ -1,0 +1,5108 @@
+[
+  {
+    "candidate": {
+      "source_name": "Alternating Deltoid Raise",
+      "source_aliases": [],
+      "canonical_base_name": "Alternating Deltoid Raise",
+      "canonical_name_key": "alternating_deltoid_raise",
+      "pattern": "isolation",
+      "primary_muscle": "full_body",
+      "secondary_muscles": [],
+      "primary_region": "full body",
+      "discipline_tags": [
+        "strength"
+      ],
+      "equipment_tags": [
+        "dumbbell"
+      ],
+      "metric_type": "reps",
+      "skill_level": "intermediate",
+      "cns_load": "moderate",
+      "compound": false,
+      "is_complex_lift": false,
+      "is_unilateral": false,
+      "description": null,
+      "coaching_cues": [
+        "In a standing position, hold a pair of dumbbells at your side.",
+        "Keeping your elbows slightly bent, raise the weights directly in front of you to shoulder height, avoiding any swinging or cheating.",
+        "Return the weights to your side.",
+        "On the next repetition, raise the weights laterally, raising them out to your side to about shoulder height.",
+        "Return the weights to the starting position and continue alternating to the front and side."
+      ],
+      "substitution_group": "alternating_deltoid_raise",
+      "variation_on_names": [],
+      "source_category": "strength",
+      "source_primary_muscles_raw": [
+        "shoulders"
+      ],
+      "source_secondary_muscles_raw": [],
+      "source_equipment_raw": [
+        "dumbbell"
+      ],
+      "source_id": "14",
+      "license_author": null,
+      "license_meta": null
+    },
+    "best_match": {
+      "id": 49,
+      "name": "Lateral Raise",
+      "canonical_base_name": "Lateral Raise",
+      "canonical_name_key": "lateral_raise",
+      "pattern": "isolation",
+      "primary_muscle": "side_delts",
+      "primary_region": "shoulder",
+      "equipment_tags": [
+        "dumbbell",
+        "cable"
+      ]
+    },
+    "score": 0.5368421052631579
+  },
+  {
+    "candidate": {
+      "source_name": "Anti-Gravity Press",
+      "source_aliases": [],
+      "canonical_base_name": "Anti Gravity Press",
+      "canonical_name_key": "anti_gravity_press",
+      "pattern": "isolation",
+      "primary_muscle": "full_body",
+      "secondary_muscles": [
+        "full_body",
+        "upper_back",
+        "triceps"
+      ],
+      "primary_region": "full body",
+      "discipline_tags": [
+        "strength"
+      ],
+      "equipment_tags": [
+        "barbell"
+      ],
+      "metric_type": "reps",
+      "skill_level": "intermediate",
+      "cns_load": "moderate",
+      "compound": true,
+      "is_complex_lift": false,
+      "is_unilateral": false,
+      "description": null,
+      "coaching_cues": [
+        "Place a bar on the ground behind the head of an incline bench.",
+        "Lay on the bench face down. With a pronated grip, pick the barbell up from the floor. Flex the elbows, performing a reverse curl to bring the bar near your chest. This will be your starting position.",
+        "To begin, press the barbell out in front of your head by extending your elbows. Keep your arms parallel to the ground throughout the movement.",
+        "Return to the starting position and repeat to complete the set."
+      ],
+      "substitution_group": "anti_gravity_press",
+      "variation_on_names": [],
+      "source_category": "strength",
+      "source_primary_muscles_raw": [
+        "shoulders"
+      ],
+      "source_secondary_muscles_raw": [
+        "middle back",
+        "traps",
+        "triceps"
+      ],
+      "source_equipment_raw": [
+        "barbell"
+      ],
+      "source_id": "23",
+      "license_author": null,
+      "license_meta": null
+    },
+    "best_match": {
+      "id": 241,
+      "name": "Push Press - Behind the Neck",
+      "canonical_base_name": "Push Press Behind The Neck",
+      "canonical_name_key": "push_press_behind_the_neck",
+      "pattern": "isolation",
+      "primary_muscle": "full_body",
+      "primary_region": "full body",
+      "equipment_tags": [
+        "barbell"
+      ]
+    },
+    "score": 0.5337662337662338
+  },
+  {
+    "candidate": {
+      "source_name": "Arnold Dumbbell Press",
+      "source_aliases": [],
+      "canonical_base_name": "Arnold Press",
+      "canonical_name_key": "arnold_press",
+      "pattern": "isolation",
+      "primary_muscle": "full_body",
+      "secondary_muscles": [
+        "triceps"
+      ],
+      "primary_region": "full body",
+      "discipline_tags": [
+        "strength"
+      ],
+      "equipment_tags": [
+        "dumbbell"
+      ],
+      "metric_type": "reps",
+      "skill_level": "intermediate",
+      "cns_load": "moderate",
+      "compound": true,
+      "is_complex_lift": false,
+      "is_unilateral": false,
+      "description": null,
+      "coaching_cues": [
+        "Sit on an exercise bench with back support and hold two dumbbells in front of you at about upper chest level with your palms facing your body and your elbows bent. Tip: Your arms should be next to your torso. The starting position should look like the contracted portion of a dumbbell curl.",
+        "Now to perform the movement, raise the dumbbells as you rotate the palms of your hands until they are facing forward.",
+        "Continue lifting the dumbbells until your arms are extended above you in straight arm position. Breathe out as you perform this portion of the movement.",
+        "After a second pause at the top, begin to lower the dumbbells to the original position by rotating the palms of your hands towards you. Tip: The left arm will be rotated in a counter clockwise manner while the right one will be rotated clockwise. Breathe in as you perform this portion of the movement.",
+        "Repeat for the recommended amount of repetitions."
+      ],
+      "substitution_group": "arnold_press",
+      "variation_on_names": [],
+      "source_category": "strength",
+      "source_primary_muscles_raw": [
+        "shoulders"
+      ],
+      "source_secondary_muscles_raw": [
+        "triceps"
+      ],
+      "source_equipment_raw": [
+        "dumbbell"
+      ],
+      "source_id": "25",
+      "license_author": null,
+      "license_meta": null
+    },
+    "best_match": {
+      "id": 19,
+      "name": "Dumbbell Shoulder Press",
+      "canonical_base_name": "Shoulder Press",
+      "canonical_name_key": "shoulder_press",
+      "pattern": "vertical_push",
+      "primary_muscle": "front_delts",
+      "primary_region": "shoulder",
+      "equipment_tags": [
+        "dumbbell"
+      ]
+    },
+    "score": 0.5371794871794872
+  },
+  {
+    "candidate": {
+      "source_name": "Axle Deadlift",
+      "source_aliases": [],
+      "canonical_base_name": "Axle Deadlift",
+      "canonical_name_key": "axle_deadlift",
+      "pattern": "hinge",
+      "primary_muscle": "lower_back",
+      "secondary_muscles": [
+        "forearms",
+        "glutes",
+        "hamstrings",
+        "full_body",
+        "quadriceps",
+        "upper_back"
+      ],
+      "primary_region": "posterior lower",
+      "discipline_tags": [
+        "strongman",
+        "powerlifting"
+      ],
+      "equipment_tags": [
+        "other"
+      ],
+      "metric_type": "reps",
+      "skill_level": "intermediate",
+      "cns_load": "high",
+      "compound": true,
+      "is_complex_lift": true,
+      "is_unilateral": false,
+      "description": null,
+      "coaching_cues": [
+        "Approach the bar so that it is centered over your feet. You feet should be about hip width apart. Bend at the hip to grip the bar at shoulder width, allowing your shoulder blades to protract. Typically, you would use an over/under grip.",
+        "With your feet and your grip set, take a big breath and then lower your hips and flex the knees until your shins contact the bar. Look forward with your head, keep your chest up and your back arched, and begin driving through the heels to move the weight upward.",
+        "After the bar passes the knees, aggressively pull the bar back, pulling your shoulder blades together as you drive your hips forward into the bar.",
+        "Lower the bar by bending at the hips and guiding it to the floor."
+      ],
+      "substitution_group": "axle_deadlift",
+      "variation_on_names": [
+        "deadlift"
+      ],
+      "source_category": "strongman",
+      "source_primary_muscles_raw": [
+        "lower back"
+      ],
+      "source_secondary_muscles_raw": [
+        "forearms",
+        "glutes",
+        "hamstrings",
+        "middle back",
+        "quads",
+        "traps"
+      ],
+      "source_equipment_raw": [
+        "other"
+      ],
+      "source_id": "29",
+      "license_author": null,
+      "license_meta": null
+    },
+    "best_match": {
+      "id": 8,
+      "name": "Romanian Deadlift",
+      "canonical_base_name": "Romanian Deadlift",
+      "canonical_name_key": "romanian_deadlift",
+      "pattern": "hinge",
+      "primary_muscle": "hamstrings",
+      "primary_region": "posterior lower",
+      "equipment_tags": [
+        "barbell",
+        "dumbbell"
+      ]
+    },
+    "score": 0.5233333333333333
+  },
+  {
+    "candidate": {
+      "source_name": "Backward Medicine Ball Throw",
+      "source_aliases": [],
+      "canonical_base_name": "Backward Medicine Ball Throw",
+      "canonical_name_key": "backward_medicine_ball_throw",
+      "pattern": "horizontal_pull",
+      "primary_muscle": "full_body",
+      "secondary_muscles": [],
+      "primary_region": "full body",
+      "discipline_tags": [
+        "plyometrics"
+      ],
+      "equipment_tags": [
+        "medicine ball"
+      ],
+      "metric_type": "time",
+      "skill_level": "intermediate",
+      "cns_load": "moderate",
+      "compound": true,
+      "is_complex_lift": false,
+      "is_unilateral": false,
+      "description": null,
+      "coaching_cues": [
+        "This exercise is best done with a partner. If you lack a partner, the ball can be thrown and retrieved or thrown against a wall.",
+        "Begin standing a few meters in front of your partner, both facing the same direction. Begin holding the ball between your legs.",
+        "Squat down and then forcefully reverse direction, coming to full extension and you toss the ball over your head to your partner.",
+        "Your partner can then roll the ball back to you. Repeat for the desired number of repetitions."
+      ],
+      "substitution_group": "backward_medicine_ball_throw",
+      "variation_on_names": [],
+      "source_category": "plyometrics",
+      "source_primary_muscles_raw": [
+        "shoulders"
+      ],
+      "source_secondary_muscles_raw": [],
+      "source_equipment_raw": [
+        "medicine ball"
+      ],
+      "source_id": "32",
+      "license_author": null,
+      "license_meta": null
+    },
+    "best_match": {
+      "id": 295,
+      "name": "Standing Two-Arm Overhead Throw",
+      "canonical_base_name": "Two Arm Overhead Throw",
+      "canonical_name_key": "two_arm_overhead_throw",
+      "pattern": "horizontal_pull",
+      "primary_muscle": "full_body",
+      "primary_region": "full body",
+      "equipment_tags": [
+        "medicine ball"
+      ]
+    },
+    "score": 0.5408571428571428
+  },
+  {
+    "candidate": {
+      "source_name": "Band Pull Apart",
+      "source_aliases": [],
+      "canonical_base_name": "Pull Apart",
+      "canonical_name_key": "pull_apart",
+      "pattern": "isolation",
+      "primary_muscle": "full_body",
+      "secondary_muscles": [
+        "full_body",
+        "upper_back"
+      ],
+      "primary_region": "full body",
+      "discipline_tags": [
+        "strength"
+      ],
+      "equipment_tags": [
+        "bands"
+      ],
+      "metric_type": "reps",
+      "skill_level": "intermediate",
+      "cns_load": "moderate",
+      "compound": false,
+      "is_complex_lift": false,
+      "is_unilateral": false,
+      "description": null,
+      "coaching_cues": [
+        "Begin with your arms extended straight out in front of you, holding the band with both hands.",
+        "Initiate the movement by performing a reverse fly motion, moving your hands out laterally to your sides.",
+        "Keep your elbows extended as you perform the movement, bringing the band to your chest. Ensure that you keep your shoulders back during the exercise.",
+        "Pause as you complete the movement, returning to the starting position under control."
+      ],
+      "substitution_group": "pull_apart",
+      "variation_on_names": [],
+      "source_category": "strength",
+      "source_primary_muscles_raw": [
+        "shoulders"
+      ],
+      "source_secondary_muscles_raw": [
+        "middle back",
+        "traps"
+      ],
+      "source_equipment_raw": [
+        "bands"
+      ],
+      "source_id": "39",
+      "license_author": null,
+      "license_meta": null
+    },
+    "best_match": {
+      "id": 50,
+      "name": "Face Pull",
+      "canonical_base_name": "Face Pull",
+      "canonical_name_key": "face_pull",
+      "pattern": "isolation",
+      "primary_muscle": "rear_delts",
+      "primary_region": "posterior upper",
+      "equipment_tags": [
+        "cable",
+        "band"
+      ]
+    },
+    "score": 0.4964912280701754
+  },
+  {
+    "candidate": {
+      "source_name": "Barbell Curls Lying Against An Incline",
+      "source_aliases": [],
+      "canonical_base_name": "Curls Lying Against An",
+      "canonical_name_key": "curls_lying_against_an",
+      "pattern": "isolation",
+      "primary_muscle": "biceps",
+      "secondary_muscles": [],
+      "primary_region": "anterior upper",
+      "discipline_tags": [
+        "strength"
+      ],
+      "equipment_tags": [
+        "barbell"
+      ],
+      "metric_type": "reps",
+      "skill_level": "intermediate",
+      "cns_load": "moderate",
+      "compound": false,
+      "is_complex_lift": false,
+      "is_unilateral": false,
+      "description": null,
+      "coaching_cues": [
+        "Lie against an incline bench, with your arms holding a barbell and hanging down in a horizontal line. This will be your starting position.",
+        "While keeping the upper arms stationary, curl the weight up as high as you can while squeezing the biceps. Breathe out as you perform this portion of the movement. Tip: Only the forearms should move. Do not swing the arms.",
+        "After a second contraction, slowly go back to the starting position as you inhale. Tip: Make sure that you go all of the way down.",
+        "Repeat for the recommended amount of repetitions."
+      ],
+      "substitution_group": "curls_lying_against_an",
+      "variation_on_names": [],
+      "source_category": "strength",
+      "source_primary_muscles_raw": [
+        "biceps"
+      ],
+      "source_secondary_muscles_raw": [],
+      "source_equipment_raw": [
+        "barbell"
+      ],
+      "source_id": "46",
+      "license_author": null,
+      "license_meta": null
+    },
+    "best_match": {
+      "id": 210,
+      "name": "Machine Preacher Curls",
+      "canonical_base_name": "Preacher Curls",
+      "canonical_name_key": "preacher_curls",
+      "pattern": "isolation",
+      "primary_muscle": "biceps",
+      "primary_region": "anterior upper",
+      "equipment_tags": [
+        "machine"
+      ]
+    },
+    "score": 0.4916666666666667
+  },
+  {
+    "candidate": {
+      "source_name": "Barbell Incline Shoulder Raise",
+      "source_aliases": [],
+      "canonical_base_name": "Shoulder Raise",
+      "canonical_name_key": "shoulder_raise",
+      "pattern": "isolation",
+      "primary_muscle": "full_body",
+      "secondary_muscles": [
+        "chest"
+      ],
+      "primary_region": "full body",
+      "discipline_tags": [
+        "strength"
+      ],
+      "equipment_tags": [
+        "barbell"
+      ],
+      "metric_type": "reps",
+      "skill_level": "intermediate",
+      "cns_load": "moderate",
+      "compound": false,
+      "is_complex_lift": false,
+      "is_unilateral": false,
+      "description": null,
+      "coaching_cues": [
+        "Lie back on an Incline Bench. Using a medium width grip (a grip that is slightly wider than shoulder width), lift the bar from the rack and hold it straight over you with your arms straight. This will be your starting position.",
+        "While keeping the arms straight, lift the bar by protracting your shoulder blades, raising the shoulders from the bench as you breathe out.",
+        "Bring back the bar to the starting position as you breathe in.",
+        "Repeat for the recommended amount of repetitions."
+      ],
+      "substitution_group": "shoulder_raise",
+      "variation_on_names": [],
+      "source_category": "strength",
+      "source_primary_muscles_raw": [
+        "shoulders"
+      ],
+      "source_secondary_muscles_raw": [
+        "chest"
+      ],
+      "source_equipment_raw": [
+        "barbell"
+      ],
+      "source_id": "54",
+      "license_author": null,
+      "license_meta": null
+    },
+    "best_match": {
+      "id": 49,
+      "name": "Lateral Raise",
+      "canonical_base_name": "Lateral Raise",
+      "canonical_name_key": "lateral_raise",
+      "pattern": "isolation",
+      "primary_muscle": "side_delts",
+      "primary_region": "shoulder",
+      "equipment_tags": [
+        "dumbbell",
+        "cable"
+      ]
+    },
+    "score": 0.5222222222222221
+  },
+  {
+    "candidate": {
+      "source_name": "Barbell Rollout from Bench",
+      "source_aliases": [],
+      "canonical_base_name": "Rollout From Bench",
+      "canonical_name_key": "rollout_from_bench",
+      "pattern": "horizontal_push",
+      "primary_muscle": "core",
+      "secondary_muscles": [
+        "glutes",
+        "hamstrings",
+        "lats",
+        "full_body"
+      ],
+      "primary_region": "full body",
+      "discipline_tags": [
+        "strength"
+      ],
+      "equipment_tags": [
+        "barbell"
+      ],
+      "metric_type": "reps",
+      "skill_level": "intermediate",
+      "cns_load": "moderate",
+      "compound": false,
+      "is_complex_lift": false,
+      "is_unilateral": false,
+      "description": null,
+      "coaching_cues": [
+        "Place a loaded barbell on the ground, near the end of a bench. Kneel with both legs on the bench, and take a medium to narrow grip on the barbell. This will be your starting position.",
+        "To begin, extend through the hips to slowly roll the bar forward. As you roll out, flex the shoulder to roll the bar above your head. Ensure that your arms remain extended throughout the movement.",
+        "When the bar has been moved as far forward as possible, return to the starting position."
+      ],
+      "substitution_group": "rollout_from_bench",
+      "variation_on_names": [],
+      "source_category": "strength",
+      "source_primary_muscles_raw": [
+        "abs"
+      ],
+      "source_secondary_muscles_raw": [
+        "glutes",
+        "hamstrings",
+        "lats",
+        "shoulders"
+      ],
+      "source_equipment_raw": [
+        "barbell"
+      ],
+      "source_id": "57",
+      "license_author": null,
+      "license_meta": null
+    },
+    "best_match": {
+      "id": 13,
+      "name": "Barbell Bench Press",
+      "canonical_base_name": "Bench Press",
+      "canonical_name_key": "bench_press",
+      "pattern": "horizontal_push",
+      "primary_muscle": "chest",
+      "primary_region": "anterior upper",
+      "equipment_tags": [
+        "barbell",
+        "bench"
+      ]
+    },
+    "score": 0.5017241379310344
+  },
+  {
+    "candidate": {
+      "source_name": "Bent Over Low-Pulley Side Lateral",
+      "source_aliases": [],
+      "canonical_base_name": "Bent Over Low Pulley Side Lateral",
+      "canonical_name_key": "bent_over_low_pulley_side_lateral",
+      "pattern": "isolation",
+      "primary_muscle": "full_body",
+      "secondary_muscles": [
+        "lower_back",
+        "full_body",
+        "upper_back"
+      ],
+      "primary_region": "full body",
+      "discipline_tags": [
+        "strength"
+      ],
+      "equipment_tags": [
+        "cable"
+      ],
+      "metric_type": "reps",
+      "skill_level": "intermediate",
+      "cns_load": "moderate",
+      "compound": false,
+      "is_complex_lift": false,
+      "is_unilateral": false,
+      "description": null,
+      "coaching_cues": [
+        "Select a weight and hold the handle of the low pulley with your right hand.",
+        "Bend at the waist until your torso is nearly parallel to the floor. Your legs should be slightly bent with your left hand placed on your lower left thigh. Your right arm should be hanging from your shoulder in front of you and with a slight bend at the elbow. This will be your starting position.",
+        "Raise your right arm, elbow slightly bent, to the side until the arm is parallel to the floor and in line with your right ear. Breathe out as you perform this step.",
+        "Slowly lower the weight back to the starting position as you breathe in.",
+        "Repeat for the recommended amount of repetitions and repeat the movement with the other arm."
+      ],
+      "substitution_group": "bent_over_low_pulley_side_lateral",
+      "variation_on_names": [],
+      "source_category": "strength",
+      "source_primary_muscles_raw": [
+        "shoulders"
+      ],
+      "source_secondary_muscles_raw": [
+        "lower back",
+        "middle back",
+        "traps"
+      ],
+      "source_equipment_raw": [
+        "cable"
+      ],
+      "source_id": "81",
+      "license_author": null,
+      "license_meta": null
+    },
+    "best_match": {
+      "id": 218,
+      "name": "One-Arm High-Pulley Cable Side Bends",
+      "canonical_base_name": "One Arm High Pulley Side Bends",
+      "canonical_name_key": "one_arm_high_pulley_side_bends",
+      "pattern": "isolation",
+      "primary_muscle": "core",
+      "primary_region": "full body",
+      "equipment_tags": [
+        "cable"
+      ]
+    },
+    "score": 0.48571428571428565
+  },
+  {
+    "candidate": {
+      "source_name": "Board Press",
+      "source_aliases": [],
+      "canonical_base_name": "Board Press",
+      "canonical_name_key": "board_press",
+      "pattern": "isolation",
+      "primary_muscle": "triceps",
+      "secondary_muscles": [
+        "chest",
+        "forearms",
+        "lats",
+        "full_body"
+      ],
+      "primary_region": "posterior upper",
+      "discipline_tags": [
+        "strength"
+      ],
+      "equipment_tags": [
+        "barbell"
+      ],
+      "metric_type": "reps",
+      "skill_level": "intermediate",
+      "cns_load": "moderate",
+      "compound": true,
+      "is_complex_lift": false,
+      "is_unilateral": false,
+      "description": null,
+      "coaching_cues": [
+        "Begin by lying on the bench, getting your head beyond the bar if possible. One to five boards, made out of 2x6's, can be screwed together and held in place by a training partner, bands, or just tucked under your shirt.",
+        "Tuck your feet underneath you and arch your back. Using the bar to help support your weight, lift your shoulder off the bench and retract them, squeezing the shoulder blades together. Use your feet to drive your traps into the bench. Maintain this tight body position throughout the movement.",
+        "You can take a standard bench grip, or shoulder width to focus on the triceps. Pull the bar out of the rack without protracting your shoulders. The bar, wrist, and elbow should stay in line at all times. Focus on squeezing the bar and trying to pull it apart.",
+        "Lower the bar to the boards, and then drive the bar up with as much force as possible. The elbows should be tucked in until lockout."
+      ],
+      "substitution_group": "board_press",
+      "variation_on_names": [],
+      "source_category": "strength",
+      "source_primary_muscles_raw": [
+        "triceps"
+      ],
+      "source_secondary_muscles_raw": [
+        "chest",
+        "forearms",
+        "lats",
+        "shoulders"
+      ],
+      "source_equipment_raw": [
+        "barbell"
+      ],
+      "source_id": "89",
+      "license_author": null,
+      "license_meta": null
+    },
+    "best_match": {
+      "id": 18,
+      "name": "Overhead Press",
+      "canonical_base_name": "Overhead Press",
+      "canonical_name_key": "overhead_press",
+      "pattern": "vertical_push",
+      "primary_muscle": "front_delts",
+      "primary_region": "shoulder",
+      "equipment_tags": [
+        "barbell"
+      ]
+    },
+    "score": 0.5293333333333333
+  },
+  {
+    "candidate": {
+      "source_name": "Cable Internal Rotation",
+      "source_aliases": [],
+      "canonical_base_name": "Internal Rotation",
+      "canonical_name_key": "internal_rotation",
+      "pattern": "isolation",
+      "primary_muscle": "full_body",
+      "secondary_muscles": [],
+      "primary_region": "full body",
+      "discipline_tags": [
+        "strength"
+      ],
+      "equipment_tags": [
+        "cable"
+      ],
+      "metric_type": "reps",
+      "skill_level": "intermediate",
+      "cns_load": "moderate",
+      "compound": false,
+      "is_complex_lift": false,
+      "is_unilateral": false,
+      "description": null,
+      "coaching_cues": [
+        "Sit next to a low pulley sideways (with legs stretched in front of you or crossed) and grasp the single hand cable attachment with the arm nearest to the cable. Tip: If you can adjust the pulley height, you can use a flat bench to sit on instead.",
+        "Position the elbow against your side with the elbow bent at 90 and the arm pointing towards the pulley. This will be your starting position.",
+        "Pull the single hand cable attachment toward your body by internally rotating your shoulder until your forearm is across your abs. You will be creating an imaginary semi-circle. Tip: The forearm should be perpendicular to your torso at all times.",
+        "Slowly go back to the initial position.",
+        "Repeat for the recommended amount of repetitions and then repeat the movement with the next arm."
+      ],
+      "substitution_group": "internal_rotation",
+      "variation_on_names": [],
+      "source_category": "strength",
+      "source_primary_muscles_raw": [
+        "shoulders"
+      ],
+      "source_secondary_muscles_raw": [],
+      "source_equipment_raw": [
+        "cable"
+      ],
+      "source_id": "117",
+      "license_author": null,
+      "license_meta": null
+    },
+    "best_match": {
+      "id": 254,
+      "name": "Reverse Flyes With External Rotation",
+      "canonical_base_name": "Reverse Flyes With External Rotation",
+      "canonical_name_key": "reverse_flyes_with_external_rotation",
+      "pattern": "isolation",
+      "primary_muscle": "full_body",
+      "primary_region": "full body",
+      "equipment_tags": [
+        "dumbbell"
+      ]
+    },
+    "score": 0.5015723270440252
+  },
+  {
+    "candidate": {
+      "source_name": "Calf Press On The Leg Press Machine",
+      "source_aliases": [],
+      "canonical_base_name": "Calf Press On The Leg Press",
+      "canonical_name_key": "calf_press_on_the_leg_press",
+      "pattern": "lunge",
+      "primary_muscle": "calves",
+      "secondary_muscles": [
+        "full_body"
+      ],
+      "primary_region": "posterior lower",
+      "discipline_tags": [
+        "strength"
+      ],
+      "equipment_tags": [
+        "machine"
+      ],
+      "metric_type": "reps",
+      "skill_level": "intermediate",
+      "cns_load": "moderate",
+      "compound": true,
+      "is_complex_lift": false,
+      "is_unilateral": false,
+      "description": null,
+      "coaching_cues": [
+        "Using a leg press machine, sit down on the machine and place your legs on the platform directly in front of you at a medium (shoulder width) foot stance.",
+        "Lower the safety bars holding the weighted platform in place and press the platform all the way up until your legs are fully extended in front of you without locking your knees. (Note: In some leg press units you can leave the safety bars on for increased safety. If your leg press unit allows for this, then this is the preferred method of performing the exercise.) Your torso and the legs should make perfect 90-degree angle. Now carefully place your toes and balls of your feet on the lower portion of the platform with the heels extending off. Toes should be facing forward, outwards or inwards as described at the beginning of the chapter. This will be your starting position.",
+        "Press on the platform by raising your heels as you breathe out by extending your ankles as high as possible and flexing your calf. Ensure that the knee is kept stationary at all times. There should be no bending at any time. Hold the contracted position by a second before you start to go back down.",
+        "Go back slowly to the starting position as you breathe in by lowering your heels as you bend the ankles until calves are stretched.",
+        "Repeat for the recommended amount of repetitions."
+      ],
+      "substitution_group": "calf_press_on_the_leg_press",
+      "variation_on_names": [
+        "calf raise"
+      ],
+      "source_category": "strength",
+      "source_primary_muscles_raw": [
+        "calves"
+      ],
+      "source_secondary_muscles_raw": [
+        "soleus"
+      ],
+      "source_equipment_raw": [
+        "machine"
+      ],
+      "source_id": "135",
+      "license_author": null,
+      "license_meta": null
+    },
+    "best_match": {
+      "id": 51,
+      "name": "Calf Raise",
+      "canonical_base_name": "Calf Raise",
+      "canonical_name_key": "calf_raise",
+      "pattern": "isolation",
+      "primary_muscle": "calves",
+      "primary_region": "anterior lower",
+      "equipment_tags": [
+        "machine",
+        "dumbbell",
+        "bodyweight"
+      ]
+    },
+    "score": 0.46531531531531534
+  },
+  {
+    "candidate": {
+      "source_name": "Car Deadlift",
+      "source_aliases": [],
+      "canonical_base_name": "Car Deadlift",
+      "canonical_name_key": "car_deadlift",
+      "pattern": "hinge",
+      "primary_muscle": "quadriceps",
+      "secondary_muscles": [
+        "forearms",
+        "glutes",
+        "hamstrings",
+        "lower_back",
+        "upper_back"
+      ],
+      "primary_region": "anterior lower",
+      "discipline_tags": [
+        "strongman",
+        "powerlifting"
+      ],
+      "equipment_tags": [
+        "other"
+      ],
+      "metric_type": "reps",
+      "skill_level": "intermediate",
+      "cns_load": "high",
+      "compound": true,
+      "is_complex_lift": true,
+      "is_unilateral": false,
+      "description": null,
+      "coaching_cues": [
+        "This event apparatus typically has neutral grip handles, however some have a straight bar that you can approach like a normal deadlift. The apparatus can be loaded with a vehicle or other heavy objects such as tractor tires or kegs.",
+        "Center yourself between the handles if you are a strong squatter, or back a couple inches if you are a strong deadlifter. You feet should be about hip width apart. Bend at the hip to grip the handles. With your feet and your grip set, take a big breath and then lower your hips and flex the knees.",
+        "Look forward with your head, keep your chest up and your back arched, and begin driving through the heels to move the weight upward. As the weight comes up, pull your shoulder blades together as you drive your hips forward.",
+        "Lower the weight by bending at the hips and guiding it to the floor."
+      ],
+      "substitution_group": "car_deadlift",
+      "variation_on_names": [
+        "deadlift"
+      ],
+      "source_category": "strongman",
+      "source_primary_muscles_raw": [
+        "quads"
+      ],
+      "source_secondary_muscles_raw": [
+        "forearms",
+        "glutes",
+        "hamstrings",
+        "lower back",
+        "traps"
+      ],
+      "source_equipment_raw": [
+        "other"
+      ],
+      "source_id": "141",
+      "license_author": null,
+      "license_meta": null
+    },
+    "best_match": {
+      "id": 8,
+      "name": "Romanian Deadlift",
+      "canonical_base_name": "Romanian Deadlift",
+      "canonical_name_key": "romanian_deadlift",
+      "pattern": "hinge",
+      "primary_muscle": "hamstrings",
+      "primary_region": "posterior lower",
+      "equipment_tags": [
+        "barbell",
+        "dumbbell"
+      ]
+    },
+    "score": 0.5367816091954023
+  },
+  {
+    "candidate": {
+      "source_name": "Crossover Reverse Lunge",
+      "source_aliases": [],
+      "canonical_base_name": "Crossover Reverse Lunge",
+      "canonical_name_key": "crossover_reverse_lunge",
+      "pattern": "lunge",
+      "primary_muscle": "lower_back",
+      "secondary_muscles": [
+        "core",
+        "adductors",
+        "glutes",
+        "hamstrings",
+        "quadriceps"
+      ],
+      "primary_region": "posterior lower",
+      "discipline_tags": [
+        "stretching"
+      ],
+      "equipment_tags": [
+        "none"
+      ],
+      "metric_type": "reps",
+      "skill_level": "intermediate",
+      "cns_load": "moderate",
+      "compound": true,
+      "is_complex_lift": false,
+      "is_unilateral": false,
+      "description": null,
+      "coaching_cues": [
+        "Stand with your feet shoulder width apart. This will be your starting position.",
+        "Perform a rear lunge by stepping back with one foot and flexing the hips and front knee. As you do so, rotate your torso across the front leg.",
+        "After a brief pause, return to the starting position and repeat on the other side, continuing in an alternating fashion."
+      ],
+      "substitution_group": "crossover_reverse_lunge",
+      "variation_on_names": [],
+      "source_category": "stretching",
+      "source_primary_muscles_raw": [
+        "lower back"
+      ],
+      "source_secondary_muscles_raw": [
+        "abs",
+        "abductors",
+        "glutes",
+        "hamstrings",
+        "quads"
+      ],
+      "source_equipment_raw": [
+        "none"
+      ],
+      "source_id": "184",
+      "license_author": null,
+      "license_meta": null
+    },
+    "best_match": {
+      "id": 102,
+      "name": "Cable Crossover",
+      "canonical_base_name": "Crossover",
+      "canonical_name_key": "crossover",
+      "pattern": "isolation",
+      "primary_muscle": "chest",
+      "primary_region": "anterior upper",
+      "equipment_tags": [
+        "cable"
+      ]
+    },
+    "score": 0.5177083333333333
+  },
+  {
+    "candidate": {
+      "source_name": "Cuban Press",
+      "source_aliases": [],
+      "canonical_base_name": "Cuban Press",
+      "canonical_name_key": "cuban_press",
+      "pattern": "isolation",
+      "primary_muscle": "full_body",
+      "secondary_muscles": [
+        "upper_back"
+      ],
+      "primary_region": "full body",
+      "discipline_tags": [
+        "strength"
+      ],
+      "equipment_tags": [
+        "dumbbell"
+      ],
+      "metric_type": "reps",
+      "skill_level": "intermediate",
+      "cns_load": "moderate",
+      "compound": true,
+      "is_complex_lift": false,
+      "is_unilateral": false,
+      "description": null,
+      "coaching_cues": [
+        "Take a dumbbell in each hand with a pronated grip in a standing position. Raise your upper arms so that they are parallel to the floor, allowing your lower arms to hang in the scarecrow position. This will be your starting position.",
+        "To initiate the movement, externally rotate the shoulders to move the upper arm 180 degrees. Keep the upper arms in place, rotating the upper arms until the wrists are directly above the elbows, the forearms perpendicular to the floor.",
+        "Now press the dumbbells by extending at the elbows, straightening your arms overhead.",
+        "Return to the starting position as you breathe in by reversing the steps.",
+        "Repeat for the recommended amount of repetitions."
+      ],
+      "substitution_group": "cuban_press",
+      "variation_on_names": [],
+      "source_category": "strength",
+      "source_primary_muscles_raw": [
+        "shoulders"
+      ],
+      "source_secondary_muscles_raw": [
+        "traps"
+      ],
+      "source_equipment_raw": [
+        "dumbbell"
+      ],
+      "source_id": "189",
+      "license_author": null,
+      "license_meta": null
+    },
+    "best_match": {
+      "id": 14,
+      "name": "Incline Bench Press",
+      "canonical_base_name": "Bench Press",
+      "canonical_name_key": "bench_press",
+      "pattern": "horizontal_push",
+      "primary_muscle": "chest",
+      "primary_region": "anterior upper",
+      "equipment_tags": [
+        "barbell",
+        "dumbbell",
+        "bench"
+      ]
+    },
+    "score": 0.5287878787878788
+  },
+  {
+    "candidate": {
+      "source_name": "Deadlift with Chains",
+      "source_aliases": [],
+      "canonical_base_name": "Deadlift With Chains",
+      "canonical_name_key": "deadlift_with_chains",
+      "pattern": "hinge",
+      "primary_muscle": "lower_back",
+      "secondary_muscles": [
+        "forearms",
+        "glutes",
+        "hamstrings",
+        "full_body",
+        "quadriceps",
+        "upper_back"
+      ],
+      "primary_region": "posterior lower",
+      "discipline_tags": [
+        "strength"
+      ],
+      "equipment_tags": [
+        "barbell"
+      ],
+      "metric_type": "reps",
+      "skill_level": "intermediate",
+      "cns_load": "high",
+      "compound": true,
+      "is_complex_lift": true,
+      "is_unilateral": false,
+      "description": null,
+      "coaching_cues": [
+        "You can attach the chains to the sleeves of the bar, or just drape the middle over the bar so there is a greater weight increase as you lift.",
+        "Approach the bar so that it is centered over your feet. You feet should be about hip width apart. Bend at the hip to grip the bar at shoulder width, allowing your shoulder blades to protract. Typically, you would use an overhand grip or an over/under grip on heavier sets. With your feet, and your grip set, take a big breath and then lower your hips and bend the knees until your shins contact the bar.",
+        "Look forward with your head, keep your chest up and your back arched, and begin driving through the heels to move the weight upward. After the bar passes the knees, aggressively pull the bar back, pulling your shoulder blades together as you drive your hips forward into the bar.",
+        "Lower the bar by bending at the hips and guiding it to the floor."
+      ],
+      "substitution_group": "deadlift_with_chains",
+      "variation_on_names": [
+        "deadlift"
+      ],
+      "source_category": "strength",
+      "source_primary_muscles_raw": [
+        "lower back"
+      ],
+      "source_secondary_muscles_raw": [
+        "forearms",
+        "glutes",
+        "hamstrings",
+        "middle back",
+        "quads",
+        "traps"
+      ],
+      "source_equipment_raw": [
+        "barbell"
+      ],
+      "source_id": "193",
+      "license_author": null,
+      "license_meta": null
+    },
+    "best_match": {
+      "id": 8,
+      "name": "Romanian Deadlift",
+      "canonical_base_name": "Romanian Deadlift",
+      "canonical_name_key": "romanian_deadlift",
+      "pattern": "hinge",
+      "primary_muscle": "hamstrings",
+      "primary_region": "posterior lower",
+      "equipment_tags": [
+        "barbell",
+        "dumbbell"
+      ]
+    },
+    "score": 0.5148648648648648
+  },
+  {
+    "candidate": {
+      "source_name": "Decline Close-Grip Bench To Skull Crusher",
+      "source_aliases": [],
+      "canonical_base_name": "Close Grip Bench To Skull Crusher",
+      "canonical_name_key": "close_grip_bench_to_skull_crusher",
+      "pattern": "horizontal_push",
+      "primary_muscle": "triceps",
+      "secondary_muscles": [
+        "chest",
+        "full_body"
+      ],
+      "primary_region": "posterior upper",
+      "discipline_tags": [
+        "strength"
+      ],
+      "equipment_tags": [
+        "barbell"
+      ],
+      "metric_type": "reps",
+      "skill_level": "intermediate",
+      "cns_load": "moderate",
+      "compound": false,
+      "is_complex_lift": false,
+      "is_unilateral": false,
+      "description": null,
+      "coaching_cues": [
+        "Secure your legs at the end of the decline bench and slowly lay down on the bench.",
+        "Using a close grip (a grip that is slightly less than shoulder width), lift the bar from the rack and hold it straight over you with your arms locked and elbows in. The arms should be perpendicular to the floor. This will be your starting position. Tip: In order to protect your rotator cuff, it is best if you have a spotter help you lift the barbell off the rack.",
+        "Now lower the bar down to your lower chest as you breathe in. Keep the elbows in as you perform this movement.",
+        "Using the triceps to push the bar back up, press it back to the starting position as you exhale.",
+        "As you breathe in and you keep the upper arms stationary, bring the bar down slowly by moving your forearms in a semicircular motion towards you until you feel the bar slightly touch your forehead. Breathe in as you perform this portion of the movement.",
+        "Lift the bar back to the starting position by contracting the triceps and exhaling.",
+        "Repeat steps 3-6 until the recommended amount of repetitions is performed."
+      ],
+      "substitution_group": "close_grip_bench_to_skull_crusher",
+      "variation_on_names": [],
+      "source_category": "strength",
+      "source_primary_muscles_raw": [
+        "triceps"
+      ],
+      "source_secondary_muscles_raw": [
+        "chest",
+        "shoulders"
+      ],
+      "source_equipment_raw": [
+        "barbell"
+      ],
+      "source_id": "195",
+      "license_author": null,
+      "license_meta": null
+    },
+    "best_match": {
+      "id": 203,
+      "name": "Lying Close-Grip Barbell Triceps Press To Chin",
+      "canonical_base_name": "Lying Close Grip Triceps Press To Chin",
+      "canonical_name_key": "lying_close_grip_triceps_press_to_chin",
+      "pattern": "isolation",
+      "primary_muscle": "triceps",
+      "primary_region": "posterior upper",
+      "equipment_tags": [
+        "ez curl bar"
+      ]
+    },
+    "score": 0.526056338028169
+  },
+  {
+    "candidate": {
+      "source_name": "Double Kettlebell Alternating Hang Clean",
+      "source_aliases": [],
+      "canonical_base_name": "Double Alternating Hang Clean",
+      "canonical_name_key": "double_alternating_hang_clean",
+      "pattern": "olympic",
+      "primary_muscle": "hamstrings",
+      "secondary_muscles": [
+        "biceps",
+        "calves",
+        "forearms",
+        "glutes",
+        "lower_back",
+        "quadriceps",
+        "upper_back"
+      ],
+      "primary_region": "posterior lower",
+      "discipline_tags": [
+        "strength"
+      ],
+      "equipment_tags": [
+        "kettlebell"
+      ],
+      "metric_type": "reps",
+      "skill_level": "intermediate",
+      "cns_load": "moderate",
+      "compound": true,
+      "is_complex_lift": true,
+      "is_unilateral": false,
+      "description": null,
+      "coaching_cues": [
+        "Place two kettlebells between your feet. To get in the starting position, push your butt back and look straight ahead.",
+        "Clean one kettlebell to your shoulder and hold on to the other kettlebell.",
+        "With a fluid motion, lower the top kettlebell while driving the bottom kettlebell up."
+      ],
+      "substitution_group": "double_alternating_hang_clean",
+      "variation_on_names": [],
+      "source_category": "strength",
+      "source_primary_muscles_raw": [
+        "hamstrings"
+      ],
+      "source_secondary_muscles_raw": [
+        "biceps",
+        "calves",
+        "forearms",
+        "glutes",
+        "lower back",
+        "quads",
+        "traps"
+      ],
+      "source_equipment_raw": [
+        "kettlebell"
+      ],
+      "source_id": "211",
+      "license_author": null,
+      "license_meta": null
+    },
+    "best_match": {
+      "id": 30,
+      "name": "Clean",
+      "canonical_base_name": "Clean",
+      "canonical_name_key": "clean",
+      "pattern": "olympic",
+      "primary_muscle": "full_body",
+      "primary_region": "full body",
+      "equipment_tags": [
+        "barbell"
+      ]
+    },
+    "score": 0.49411764705882355
+  },
+  {
+    "candidate": {
+      "source_name": "Elevated Cable Rows",
+      "source_aliases": [],
+      "canonical_base_name": "Elevated Rows",
+      "canonical_name_key": "elevated_rows",
+      "pattern": "horizontal_pull",
+      "primary_muscle": "lats",
+      "secondary_muscles": [
+        "full_body",
+        "upper_back"
+      ],
+      "primary_region": "posterior upper",
+      "discipline_tags": [
+        "strength"
+      ],
+      "equipment_tags": [
+        "cable"
+      ],
+      "metric_type": "time",
+      "skill_level": "intermediate",
+      "cns_load": "moderate",
+      "compound": true,
+      "is_complex_lift": false,
+      "is_unilateral": false,
+      "description": null,
+      "coaching_cues": [
+        "Get a platform of some sort (it can be an aerobics or calf raise platform) that is around 4-6 inches in height.",
+        "Place it on the seat of the cable row machine.",
+        "Sit down on the machine and place your feet on the front platform or crossbar provided making sure that your knees are slightly bent and not locked.",
+        "Lean over as you keep the natural alignment of your back and grab the V-bar handles.",
+        "With your arms extended pull back until your torso is at a 90-degree angle from your legs. Your back should be slightly arched and your chest should be sticking out. You should be feeling a nice stretch on your lats as you hold the bar in front of you. This is the starting position of the exercise.",
+        "Keeping the torso stationary, pull the handles back towards your torso while keeping the arms close to it until you touch the abdominals. Breathe out as you perform that movement. At that point you should be squeezing your back muscles hard. Hold that contraction for a second and slowly go back to the original position while breathing in.",
+        "Repeat for the recommended amount of repetitions."
+      ],
+      "substitution_group": "elevated_rows",
+      "variation_on_names": [],
+      "source_category": "strength",
+      "source_primary_muscles_raw": [
+        "lats"
+      ],
+      "source_secondary_muscles_raw": [
+        "middle back",
+        "traps"
+      ],
+      "source_equipment_raw": [
+        "cable"
+      ],
+      "source_id": "258",
+      "license_author": null,
+      "license_meta": null
+    },
+    "best_match": {
+      "id": 23,
+      "name": "Single Arm Row",
+      "canonical_base_name": "Row",
+      "canonical_name_key": "row",
+      "pattern": "horizontal_pull",
+      "primary_muscle": "lats",
+      "primary_region": "posterior upper",
+      "equipment_tags": [
+        "dumbbell",
+        "cable",
+        "kettlebell"
+      ]
+    },
+    "score": 0.50625
+  },
+  {
+    "candidate": {
+      "source_name": "Exercise Ball Pull-In",
+      "source_aliases": [],
+      "canonical_base_name": "Exercise Ball Pull In",
+      "canonical_name_key": "exercise_ball_pull_in",
+      "pattern": "isolation",
+      "primary_muscle": "core",
+      "secondary_muscles": [],
+      "primary_region": "full body",
+      "discipline_tags": [
+        "strength"
+      ],
+      "equipment_tags": [
+        "exercise ball"
+      ],
+      "metric_type": "reps",
+      "skill_level": "intermediate",
+      "cns_load": "moderate",
+      "compound": false,
+      "is_complex_lift": false,
+      "is_unilateral": false,
+      "description": null,
+      "coaching_cues": [
+        "Place an exercise ball nearby and lay on the floor in front of it with your hands on the floor shoulder width apart in a push-up position.",
+        "Now place your lower shins on top of an exercise ball. Tip: At this point your legs should be fully extended with the shins on top of the ball and the upper body should be in a push-up type of position being supported by your two extended arms in front of you. This will be your starting position.",
+        "While keeping your back completely straight and the upper body stationary, pull your knees in towards your chest as you exhale, allowing the ball to roll forward under your ankles. Squeeze your abs and hold that position for a second.",
+        "Now slowly straighten your legs, rolling the ball back to the starting position as you inhale.",
+        "Repeat for the recommended amount of repetitions."
+      ],
+      "substitution_group": "exercise_ball_pull_in",
+      "variation_on_names": [],
+      "source_category": "strength",
+      "source_primary_muscles_raw": [
+        "abs"
+      ],
+      "source_secondary_muscles_raw": [],
+      "source_equipment_raw": [
+        "exercise ball"
+      ],
+      "source_id": "261",
+      "license_author": null,
+      "license_meta": null
+    },
+    "best_match": {
+      "id": 132,
+      "name": "Crunch - Legs On Exercise Ball",
+      "canonical_base_name": "Crunch Legs On Exercise Ball",
+      "canonical_name_key": "crunch_legs_on_exercise_ball",
+      "pattern": "core",
+      "primary_muscle": "core",
+      "primary_region": "full body",
+      "equipment_tags": [
+        "none"
+      ]
+    },
+    "score": 0.5153061224489796
+  },
+  {
+    "candidate": {
+      "source_name": "Floor Glute-Ham Raise",
+      "source_aliases": [],
+      "canonical_base_name": "Floor Glute Ham Raise",
+      "canonical_name_key": "floor_glute_ham_raise",
+      "pattern": "isolation",
+      "primary_muscle": "hamstrings",
+      "secondary_muscles": [
+        "calves",
+        "glutes"
+      ],
+      "primary_region": "posterior lower",
+      "discipline_tags": [
+        "strength"
+      ],
+      "equipment_tags": [
+        "none"
+      ],
+      "metric_type": "reps",
+      "skill_level": "intermediate",
+      "cns_load": "moderate",
+      "compound": false,
+      "is_complex_lift": false,
+      "is_unilateral": false,
+      "description": null,
+      "coaching_cues": [
+        "You can use a partner for this exercise or brace your feet under something stable.",
+        "Begin on your knees with your upper legs and torso upright. If using a partner, they will firmly hold your feet to keep you in position. This will be your starting position.",
+        "Lower yourself by extending at the knee, taking care to NOT flex the hips as you go forward.",
+        "Place your hands in front of you as you reach the floor. This movement is very difficult and you may be unable to do it unaided. Use your arms to lightly push off the floor to aid your return to the starting position."
+      ],
+      "substitution_group": "floor_glute_ham_raise",
+      "variation_on_names": [],
+      "source_category": "strength",
+      "source_primary_muscles_raw": [
+        "hamstrings"
+      ],
+      "source_secondary_muscles_raw": [
+        "calves",
+        "glutes"
+      ],
+      "source_equipment_raw": [
+        "none"
+      ],
+      "source_id": "274",
+      "license_author": null,
+      "license_meta": null
+    },
+    "best_match": {
+      "id": 270,
+      "name": "Seated Glute",
+      "canonical_base_name": "Glute",
+      "canonical_name_key": "glute",
+      "pattern": "mobility",
+      "primary_muscle": "glutes",
+      "primary_region": "posterior lower",
+      "equipment_tags": [
+        "none"
+      ]
+    },
+    "score": 0.5076923076923077
+  },
+  {
+    "candidate": {
+      "source_name": "Forward Drag with Press",
+      "source_aliases": [],
+      "canonical_base_name": "Forward Drag With Press",
+      "canonical_name_key": "forward_drag_with_press",
+      "pattern": "isolation",
+      "primary_muscle": "chest",
+      "secondary_muscles": [
+        "calves",
+        "glutes",
+        "hamstrings",
+        "quadriceps",
+        "full_body",
+        "triceps"
+      ],
+      "primary_region": "anterior upper",
+      "discipline_tags": [
+        "strongman",
+        "powerlifting"
+      ],
+      "equipment_tags": [
+        "other"
+      ],
+      "metric_type": "reps",
+      "skill_level": "intermediate",
+      "cns_load": "moderate",
+      "compound": true,
+      "is_complex_lift": false,
+      "is_unilateral": false,
+      "description": null,
+      "coaching_cues": [
+        "Attach a dual handled chain or rope attachment to the sled. You should be facing away from the sled, holding a handle in each hand.",
+        "Begin the movement by moving forward for one step. Leaning forward, extend through the legs and hips to move, pausing with each step to extend through the elbows, pressing your hands forward. Step forward until you return to the start position prepared to press."
+      ],
+      "substitution_group": "forward_drag_with_press",
+      "variation_on_names": [],
+      "source_category": "strongman",
+      "source_primary_muscles_raw": [
+        "chest"
+      ],
+      "source_secondary_muscles_raw": [
+        "calves",
+        "glutes",
+        "hamstrings",
+        "quads",
+        "shoulders",
+        "triceps"
+      ],
+      "source_equipment_raw": [
+        "other"
+      ],
+      "source_id": "279",
+      "license_author": null,
+      "license_meta": null
+    },
+    "best_match": {
+      "id": 129,
+      "name": "Cross Over - With Bands",
+      "canonical_base_name": "Cross Over With S",
+      "canonical_name_key": "cross_over_with_s",
+      "pattern": "isolation",
+      "primary_muscle": "chest",
+      "primary_region": "anterior upper",
+      "equipment_tags": [
+        "bands"
+      ]
+    },
+    "score": 0.45285714285714285
+  },
+  {
+    "candidate": {
+      "source_name": "Front Two-Dumbbell Raise",
+      "source_aliases": [],
+      "canonical_base_name": "Front Two Raise",
+      "canonical_name_key": "front_two_raise",
+      "pattern": "isolation",
+      "primary_muscle": "full_body",
+      "secondary_muscles": [],
+      "primary_region": "full body",
+      "discipline_tags": [
+        "strength"
+      ],
+      "equipment_tags": [
+        "dumbbell"
+      ],
+      "metric_type": "reps",
+      "skill_level": "intermediate",
+      "cns_load": "moderate",
+      "compound": false,
+      "is_complex_lift": false,
+      "is_unilateral": false,
+      "description": null,
+      "coaching_cues": [
+        "Pick a couple of dumbbells and stand with a straight torso and the dumbbells on front of your thighs at arms length with the palms of the hand facing your thighs. This will be your starting position.",
+        "While maintaining the torso stationary (no swinging), lift the dumbbells to the front with a slight bend on the elbow and the palms of the hands always facing down. Continue to go up until you arms are slightly above parallel to the floor. Exhale as you execute this portion of the movement and pause for a second at the top.",
+        "As you inhale, lower the dumbbells back down slowly to the starting position.",
+        "Repeat for the recommended amount of repetitions."
+      ],
+      "substitution_group": "front_two_raise",
+      "variation_on_names": [],
+      "source_category": "strength",
+      "source_primary_muscles_raw": [
+        "shoulders"
+      ],
+      "source_secondary_muscles_raw": [],
+      "source_equipment_raw": [
+        "dumbbell"
+      ],
+      "source_id": "296",
+      "license_author": null,
+      "license_meta": null
+    },
+    "best_match": {
+      "id": 49,
+      "name": "Lateral Raise",
+      "canonical_base_name": "Lateral Raise",
+      "canonical_name_key": "lateral_raise",
+      "pattern": "isolation",
+      "primary_muscle": "side_delts",
+      "primary_region": "shoulder",
+      "equipment_tags": [
+        "dumbbell",
+        "cable"
+      ]
+    },
+    "score": 0.525
+  },
+  {
+    "candidate": {
+      "source_name": "Glute Ham Raise",
+      "source_aliases": [],
+      "canonical_base_name": "Glute Ham Raise",
+      "canonical_name_key": "glute_ham_raise",
+      "pattern": "isolation",
+      "primary_muscle": "hamstrings",
+      "secondary_muscles": [
+        "calves",
+        "glutes"
+      ],
+      "primary_region": "posterior lower",
+      "discipline_tags": [
+        "strength"
+      ],
+      "equipment_tags": [
+        "machine"
+      ],
+      "metric_type": "reps",
+      "skill_level": "intermediate",
+      "cns_load": "moderate",
+      "compound": false,
+      "is_complex_lift": false,
+      "is_unilateral": false,
+      "description": null,
+      "coaching_cues": [
+        "Begin by adjusting the equipment to fit your body. Place your feet against the footplate in between the rollers as you lie facedown. Your knees should be just behind the pad.",
+        "Start from the bottom of the movement. Keep your back arched as you begin the movement by flexing the knees. Drive your toes into the foot plate as you do so. Keep your upper body straight, and continue until your body is upright.",
+        "Return to the starting position, keeping your descent under control."
+      ],
+      "substitution_group": "glute_ham_raise",
+      "variation_on_names": [],
+      "source_category": "strength",
+      "source_primary_muscles_raw": [
+        "hamstrings"
+      ],
+      "source_secondary_muscles_raw": [
+        "calves",
+        "glutes"
+      ],
+      "source_equipment_raw": [
+        "machine"
+      ],
+      "source_id": "299",
+      "license_author": null,
+      "license_meta": null
+    },
+    "best_match": {
+      "id": 51,
+      "name": "Calf Raise",
+      "canonical_base_name": "Calf Raise",
+      "canonical_name_key": "calf_raise",
+      "pattern": "isolation",
+      "primary_muscle": "calves",
+      "primary_region": "anterior lower",
+      "equipment_tags": [
+        "machine",
+        "dumbbell",
+        "bodyweight"
+      ]
+    },
+    "score": 0.534
+  },
+  {
+    "candidate": {
+      "source_name": "Hang Clean - Below the Knees",
+      "source_aliases": [],
+      "canonical_base_name": "Hang Clean Below The Knees",
+      "canonical_name_key": "hang_clean_below_the_knees",
+      "pattern": "olympic",
+      "primary_muscle": "quadriceps",
+      "secondary_muscles": [
+        "calves",
+        "forearms",
+        "glutes",
+        "hamstrings",
+        "lower_back",
+        "full_body",
+        "upper_back"
+      ],
+      "primary_region": "anterior lower",
+      "discipline_tags": [
+        "olympic weightlifting"
+      ],
+      "equipment_tags": [
+        "barbell"
+      ],
+      "metric_type": "reps",
+      "skill_level": "intermediate",
+      "cns_load": "moderate",
+      "compound": true,
+      "is_complex_lift": true,
+      "is_unilateral": false,
+      "description": null,
+      "coaching_cues": [
+        "Begin with a shoulder width, double overhand or hook grip, with the bar hanging just below the knees. Your back should be straight and inclined slightly forward.",
+        "Begin by aggressively extending through the hips, knees and ankles, driving the weight upward. As you do so, shrug your shoulders towards your ears. As full extension is achieved, transition into the third pull by aggressively shrugging and flexing the arms with the elbows up and out.",
+        "At peak extension, aggressively pull yourself down, rotating your elbows under the bar as you do so. Receive the bar in a front squat position, the depth of which is dependent upon the height of the bar at the end of the third pull. The bar should be racked onto the protracted shoulders, lightly touching the throat with the hands relaxed. Continue to descend to the bottom squat position, which will help in the recovery.",
+        "Immediately recover by driving through the heels, keeping the torso upright and elbows up. Continue until you have risen to a standing position."
+      ],
+      "substitution_group": "hang_clean_below_the_knees",
+      "variation_on_names": [],
+      "source_category": "olympic weightlifting",
+      "source_primary_muscles_raw": [
+        "quads"
+      ],
+      "source_secondary_muscles_raw": [
+        "calves",
+        "forearms",
+        "glutes",
+        "hamstrings",
+        "lower back",
+        "shoulders",
+        "traps"
+      ],
+      "source_equipment_raw": [
+        "barbell"
+      ],
+      "source_id": "314",
+      "license_author": null,
+      "license_meta": null
+    },
+    "best_match": {
+      "id": 30,
+      "name": "Clean",
+      "canonical_base_name": "Clean",
+      "canonical_name_key": "clean",
+      "pattern": "olympic",
+      "primary_muscle": "full_body",
+      "primary_region": "full body",
+      "equipment_tags": [
+        "barbell"
+      ]
+    },
+    "score": 0.5483870967741935
+  },
+  {
+    "candidate": {
+      "source_name": "Hanging Pike",
+      "source_aliases": [],
+      "canonical_base_name": "Hanging Pike",
+      "canonical_name_key": "hanging_pike",
+      "pattern": "isolation",
+      "primary_muscle": "core",
+      "secondary_muscles": [],
+      "primary_region": "full body",
+      "discipline_tags": [
+        "strength"
+      ],
+      "equipment_tags": [
+        "none"
+      ],
+      "metric_type": "reps",
+      "skill_level": "intermediate",
+      "cns_load": "moderate",
+      "compound": false,
+      "is_complex_lift": false,
+      "is_unilateral": false,
+      "description": null,
+      "coaching_cues": [
+        "Hang from a chin-up bar with your legs and feet together using an overhand grip (palms facing away from you) that is slightly wider than shoulder width. Tip: You may use wrist wraps in order to facilitate holding on to the bar.",
+        "Now bend your knees at a 90 degree angle and bring the upper legs forward so that the calves are perpendicular to the floor while the thighs remain parallel to it. This will be your starting position.",
+        "Pull your legs up as you exhale until you almost touch your shins with the bar above you. Tip: Try to straighten your legs as much as possible while at the top.",
+        "Lower your legs as slowly as possible until you reach the starting position. Tip: Avoid swinging and using momentum at all times.",
+        "Repeat for the recommended amount of repetitions."
+      ],
+      "substitution_group": "hanging_pike",
+      "variation_on_names": [],
+      "source_category": "strength",
+      "source_primary_muscles_raw": [
+        "abs"
+      ],
+      "source_secondary_muscles_raw": [],
+      "source_equipment_raw": [
+        "none"
+      ],
+      "source_id": "319",
+      "license_author": null,
+      "license_meta": null
+    },
+    "best_match": {
+      "id": 41,
+      "name": "Hanging Leg Raise",
+      "canonical_base_name": "Hanging Leg Raise",
+      "canonical_name_key": "hanging_leg_raise",
+      "pattern": "core",
+      "primary_muscle": "core",
+      "primary_region": "anterior upper",
+      "equipment_tags": [
+        "pull_up_bar"
+      ]
+    },
+    "score": 0.503448275862069
+  },
+  {
+    "candidate": {
+      "source_name": "IT Band and Glute Stretch",
+      "source_aliases": [],
+      "canonical_base_name": "It And Glute Stretch",
+      "canonical_name_key": "it_and_glute_stretch",
+      "pattern": "mobility",
+      "primary_muscle": "adductors",
+      "secondary_muscles": [],
+      "primary_region": "lower body",
+      "discipline_tags": [
+        "stretching"
+      ],
+      "equipment_tags": [
+        "other"
+      ],
+      "metric_type": "reps",
+      "skill_level": "intermediate",
+      "cns_load": "moderate",
+      "compound": false,
+      "is_complex_lift": false,
+      "is_unilateral": false,
+      "description": null,
+      "coaching_cues": [
+        "Loop a belt, rope, or band around one of your feet, and swing that leg across your body to the opposite side, keeping the leg extended as you lay on the ground. This will be your starting position.",
+        "Keeping your foot off of the floor, pull on the belt, using the tension to pull the toes up. Hold for 10-20 seconds, and repeat on the other side."
+      ],
+      "substitution_group": "it_and_glute_stretch",
+      "variation_on_names": [],
+      "source_category": "stretching",
+      "source_primary_muscles_raw": [
+        "abductors"
+      ],
+      "source_secondary_muscles_raw": [],
+      "source_equipment_raw": [
+        "other"
+      ],
+      "source_id": "332",
+      "license_author": null,
+      "license_meta": null
+    },
+    "best_match": {
+      "id": 120,
+      "name": "Chest And Front Of Shoulder Stretch",
+      "canonical_base_name": "Chest And Front Of Shoulder Stretch",
+      "canonical_name_key": "chest_and_front_of_shoulder_stretch",
+      "pattern": "mobility",
+      "primary_muscle": "chest",
+      "primary_region": "anterior upper",
+      "equipment_tags": [
+        "other"
+      ]
+    },
+    "score": 0.5372727272727272
+  },
+  {
+    "candidate": {
+      "source_name": "JM Press",
+      "source_aliases": [],
+      "canonical_base_name": "Jm Press",
+      "canonical_name_key": "jm_press",
+      "pattern": "isolation",
+      "primary_muscle": "triceps",
+      "secondary_muscles": [
+        "chest",
+        "full_body"
+      ],
+      "primary_region": "posterior upper",
+      "discipline_tags": [
+        "strength"
+      ],
+      "equipment_tags": [
+        "barbell"
+      ],
+      "metric_type": "reps",
+      "skill_level": "intermediate",
+      "cns_load": "moderate",
+      "compound": true,
+      "is_complex_lift": false,
+      "is_unilateral": false,
+      "description": null,
+      "coaching_cues": [
+        "Start the exercise the same way you would a close grip bench press. You will lie on a flat bench while holding a barbell at arms length (fully extended) with the elbows in. However, instead of having the arms perpendicular to the torso, make sure the bar is set in a direct line above the upper chest. This will be your starting position.",
+        "Now beginning from a fully extended position lower the bar down as if performing a lying triceps extension. Inhale as you perform this movement. When you reach the half way point, let the bar roll back about one inch by moving the upper arms towards your legs until they are perpendicular to the torso. Tip: Keep the bend at the elbows constant as you bring the upper arms forward.",
+        "As you exhale, press the bar back up by using the triceps to perform a close grip bench press.",
+        "Now go back to the starting position and start over.",
+        "Repeat for the recommended amount of repetitions."
+      ],
+      "substitution_group": "jm_press",
+      "variation_on_names": [],
+      "source_category": "strength",
+      "source_primary_muscles_raw": [
+        "triceps"
+      ],
+      "source_secondary_muscles_raw": [
+        "chest",
+        "shoulders"
+      ],
+      "source_equipment_raw": [
+        "barbell"
+      ],
+      "source_id": "363",
+      "license_author": null,
+      "license_meta": null
+    },
+    "best_match": {
+      "id": 13,
+      "name": "Barbell Bench Press",
+      "canonical_base_name": "Bench Press",
+      "canonical_name_key": "bench_press",
+      "pattern": "horizontal_push",
+      "primary_muscle": "chest",
+      "primary_region": "anterior upper",
+      "equipment_tags": [
+        "barbell",
+        "bench"
+      ]
+    },
+    "score": 0.5280701754385965
+  },
+  {
+    "candidate": {
+      "source_name": "Jackknife Sit-Up",
+      "source_aliases": [],
+      "canonical_base_name": "Jackknife Sit Up",
+      "canonical_name_key": "jackknife_sit_up",
+      "pattern": "core",
+      "primary_muscle": "core",
+      "secondary_muscles": [],
+      "primary_region": "full body",
+      "discipline_tags": [
+        "strength"
+      ],
+      "equipment_tags": [
+        "none"
+      ],
+      "metric_type": "reps",
+      "skill_level": "intermediate",
+      "cns_load": "moderate",
+      "compound": false,
+      "is_complex_lift": false,
+      "is_unilateral": false,
+      "description": null,
+      "coaching_cues": [
+        "Lie flat on the floor (or exercise mat) on your back with your arms extended straight back behind your head and your legs extended also. This will be your starting position.",
+        "As you exhale, bend at the waist while simultaneously raising your legs and arms to meet in a jackknife position. Tip: The legs should be extended and lifted at approximately a 35-45 degree angle from the floor and the arms should be extended and parallel to your legs. The upper torso should be off the floor.",
+        "While inhaling, lower your arms and legs back to the starting position.",
+        "Repeat for the recommended amount of repetitions."
+      ],
+      "substitution_group": "jackknife_sit_up",
+      "variation_on_names": [],
+      "source_category": "strength",
+      "source_primary_muscles_raw": [
+        "abs"
+      ],
+      "source_secondary_muscles_raw": [],
+      "source_equipment_raw": [
+        "none"
+      ],
+      "source_id": "364",
+      "license_author": null,
+      "license_meta": null
+    },
+    "best_match": {
+      "id": 314,
+      "name": "Weighted Sit-Ups - With Bands",
+      "canonical_base_name": "Weighted Sit Ups With S",
+      "canonical_name_key": "weighted_sit_ups_with_s",
+      "pattern": "core",
+      "primary_muscle": "core",
+      "primary_region": "full body",
+      "equipment_tags": [
+        "other"
+      ]
+    },
+    "score": 0.4620879120879121
+  },
+  {
+    "candidate": {
+      "source_name": "Janda Sit-Up",
+      "source_aliases": [],
+      "canonical_base_name": "Janda Sit Up",
+      "canonical_name_key": "janda_sit_up",
+      "pattern": "core",
+      "primary_muscle": "core",
+      "secondary_muscles": [],
+      "primary_region": "full body",
+      "discipline_tags": [
+        "strength"
+      ],
+      "equipment_tags": [
+        "none"
+      ],
+      "metric_type": "reps",
+      "skill_level": "intermediate",
+      "cns_load": "moderate",
+      "compound": false,
+      "is_complex_lift": false,
+      "is_unilateral": false,
+      "description": null,
+      "coaching_cues": [
+        "Position your body on the floor in the basic sit-up position; knees to a ninety degree angle with feet flat on the floor and arms either crossed over your chest or to the sides. This will be your starting position.",
+        "As you strongly tighten your glutes and hamstrings, fill your lungs with air and in a slow (three to six second count) ascent, slowly exhale. Tip: It is important to tighten the glutes and hamstrings as this will cause the hip flexors to be inactivated in a process called reciprocal inhibition, which basically means that opposite muscles to the contracted ones will relax.",
+        "As you inhale, slowly go back in a controlled manner to the starting position.",
+        "Repeat for the recommended amount of repetitions."
+      ],
+      "substitution_group": "janda_sit_up",
+      "variation_on_names": [],
+      "source_category": "strength",
+      "source_primary_muscles_raw": [
+        "abs"
+      ],
+      "source_secondary_muscles_raw": [],
+      "source_equipment_raw": [
+        "none"
+      ],
+      "source_id": "365",
+      "license_author": null,
+      "license_meta": null
+    },
+    "best_match": {
+      "id": 314,
+      "name": "Weighted Sit-Ups - With Bands",
+      "canonical_base_name": "Weighted Sit Ups With S",
+      "canonical_name_key": "weighted_sit_ups_with_s",
+      "pattern": "core",
+      "primary_muscle": "core",
+      "primary_region": "full body",
+      "equipment_tags": [
+        "other"
+      ]
+    },
+    "score": 0.4614285714285714
+  },
+  {
+    "candidate": {
+      "source_name": "Kneeling Jump Squat",
+      "source_aliases": [],
+      "canonical_base_name": "Kneeling Jump Squat",
+      "canonical_name_key": "kneeling_jump_squat",
+      "pattern": "squat",
+      "primary_muscle": "glutes",
+      "secondary_muscles": [
+        "calves",
+        "hamstrings",
+        "quadriceps"
+      ],
+      "primary_region": "posterior lower",
+      "discipline_tags": [
+        "olympic weightlifting"
+      ],
+      "equipment_tags": [
+        "barbell"
+      ],
+      "metric_type": "reps",
+      "skill_level": "intermediate",
+      "cns_load": "moderate",
+      "compound": true,
+      "is_complex_lift": false,
+      "is_unilateral": false,
+      "description": null,
+      "coaching_cues": [
+        "Begin kneeling on the floor with a barbell racked across the back of your shoulders, or you can use your body weight for this exercise. This can be done inside of a power rack to make unracking easier.",
+        "Sit back with your hips until your glutes touch your feet, keeping your head and chest up.",
+        "Explode up with your hips, generating enough power to land with your feet flat on the floor.",
+        "Continue with the squat by driving through your heels and extending the knees to come to a standing position."
+      ],
+      "substitution_group": "kneeling_jump_squat",
+      "variation_on_names": [],
+      "source_category": "olympic weightlifting",
+      "source_primary_muscles_raw": [
+        "glutes"
+      ],
+      "source_secondary_muscles_raw": [
+        "calves",
+        "hamstrings",
+        "quads"
+      ],
+      "source_equipment_raw": [
+        "barbell"
+      ],
+      "source_id": "397",
+      "license_author": null,
+      "license_meta": null
+    },
+    "best_match": {
+      "id": 2,
+      "name": "Front Squat",
+      "canonical_base_name": "Front Squat",
+      "canonical_name_key": "front_squat",
+      "pattern": "squat",
+      "primary_muscle": "quadriceps",
+      "primary_region": "anterior lower",
+      "equipment_tags": [
+        "barbell",
+        "rack"
+      ]
+    },
+    "score": 0.52
+  },
+  {
+    "candidate": {
+      "source_name": "Lateral Bound",
+      "source_aliases": [],
+      "canonical_base_name": "Lateral Bound",
+      "canonical_name_key": "lateral_bound",
+      "pattern": "isolation",
+      "primary_muscle": "adductors",
+      "secondary_muscles": [
+        "adductors",
+        "calves",
+        "glutes",
+        "hamstrings",
+        "quadriceps"
+      ],
+      "primary_region": "lower body",
+      "discipline_tags": [
+        "plyometrics"
+      ],
+      "equipment_tags": [
+        "none"
+      ],
+      "metric_type": "reps",
+      "skill_level": "intermediate",
+      "cns_load": "moderate",
+      "compound": false,
+      "is_complex_lift": false,
+      "is_unilateral": false,
+      "description": null,
+      "coaching_cues": [
+        "Assume a half squat position facing 90 degrees from your direction of travel. This will be your starting position.",
+        "Allow your lead leg to do a countermovement inward as you shift your weight to the outside leg.",
+        "Immediately push off and extend, attempting to bound to the side as far as possible.",
+        "Upon landing, immediately push off in the opposite direction, returning to your original start position.",
+        "Continue back and forth for several repetitions."
+      ],
+      "substitution_group": "lateral_bound",
+      "variation_on_names": [],
+      "source_category": "plyometrics",
+      "source_primary_muscles_raw": [
+        "adductors"
+      ],
+      "source_secondary_muscles_raw": [
+        "abductors",
+        "calves",
+        "glutes",
+        "hamstrings",
+        "quads"
+      ],
+      "source_equipment_raw": [
+        "none"
+      ],
+      "source_id": "402",
+      "license_author": null,
+      "license_meta": null
+    },
+    "best_match": {
+      "id": 49,
+      "name": "Lateral Raise",
+      "canonical_base_name": "Lateral Raise",
+      "canonical_name_key": "lateral_raise",
+      "pattern": "isolation",
+      "primary_muscle": "side_delts",
+      "primary_region": "shoulder",
+      "equipment_tags": [
+        "dumbbell",
+        "cable"
+      ]
+    },
+    "score": 0.5256410256410257
+  },
+  {
+    "candidate": {
+      "source_name": "Leverage Deadlift",
+      "source_aliases": [],
+      "canonical_base_name": "Age Deadlift",
+      "canonical_name_key": "age_deadlift",
+      "pattern": "hinge",
+      "primary_muscle": "quadriceps",
+      "secondary_muscles": [
+        "glutes",
+        "hamstrings"
+      ],
+      "primary_region": "anterior lower",
+      "discipline_tags": [
+        "strength"
+      ],
+      "equipment_tags": [
+        "machine"
+      ],
+      "metric_type": "reps",
+      "skill_level": "intermediate",
+      "cns_load": "high",
+      "compound": true,
+      "is_complex_lift": true,
+      "is_unilateral": false,
+      "description": null,
+      "coaching_cues": [
+        "Load the pins to an appropriate weight. Position yourself directly between the handles. Grasp the bottom handles with a comfortable grip, and then lower your hips as you take a breath. Look forward with your head and keep your chest up. This will be your starting position.",
+        "Return the weight to the starting position."
+      ],
+      "substitution_group": "age_deadlift",
+      "variation_on_names": [
+        "deadlift"
+      ],
+      "source_category": "strength",
+      "source_primary_muscles_raw": [
+        "quads"
+      ],
+      "source_secondary_muscles_raw": [
+        "glutes",
+        "hamstrings"
+      ],
+      "source_equipment_raw": [
+        "machine"
+      ],
+      "source_id": "414",
+      "license_author": null,
+      "license_meta": null
+    },
+    "best_match": {
+      "id": 8,
+      "name": "Romanian Deadlift",
+      "canonical_base_name": "Romanian Deadlift",
+      "canonical_name_key": "romanian_deadlift",
+      "pattern": "hinge",
+      "primary_muscle": "hamstrings",
+      "primary_region": "posterior lower",
+      "equipment_tags": [
+        "barbell",
+        "dumbbell"
+      ]
+    },
+    "score": 0.5264367816091954
+  },
+  {
+    "candidate": {
+      "source_name": "Lower Back-SMR",
+      "source_aliases": [],
+      "canonical_base_name": "Lower Back Smr",
+      "canonical_name_key": "lower_back_smr",
+      "pattern": "mobility",
+      "primary_muscle": "lower_back",
+      "secondary_muscles": [],
+      "primary_region": "posterior lower",
+      "discipline_tags": [
+        "stretching"
+      ],
+      "equipment_tags": [
+        "foam roll"
+      ],
+      "metric_type": "reps",
+      "skill_level": "intermediate",
+      "cns_load": "moderate",
+      "compound": false,
+      "is_complex_lift": false,
+      "is_unilateral": false,
+      "description": null,
+      "coaching_cues": [
+        "In a seated position, place a foam roll under your lower back. Cross your arms in front of you and protract your shoulders. This will be your starting position.",
+        "Raise your hips off of the floor and lean back, keeping your weight on your lower back. Now shift your weight slightly to one side, keeping your weight off of the spine and on the muscles to the side of it. Roll over your lower back, holding points of tension for 10-30 seconds. Repeat on the other side."
+      ],
+      "substitution_group": "lower_back_smr",
+      "variation_on_names": [],
+      "source_category": "stretching",
+      "source_primary_muscles_raw": [
+        "lower back"
+      ],
+      "source_secondary_muscles_raw": [],
+      "source_equipment_raw": [
+        "foam roll"
+      ],
+      "source_id": "430",
+      "license_author": null,
+      "license_meta": null
+    },
+    "best_match": {
+      "id": 229,
+      "name": "Peroneals-SMR",
+      "canonical_base_name": "Peroneals Smr",
+      "canonical_name_key": "peroneals_smr",
+      "pattern": "mobility",
+      "primary_muscle": "calves",
+      "primary_region": "posterior lower",
+      "equipment_tags": [
+        "foam roll"
+      ]
+    },
+    "score": 0.5277777777777778
+  },
+  {
+    "candidate": {
+      "source_name": "Lying Close-Grip Bar Curl On High Pulley",
+      "source_aliases": [],
+      "canonical_base_name": "Lying Close Grip Bar Curl On High Pulley",
+      "canonical_name_key": "lying_close_grip_bar_curl_on_high_pulley",
+      "pattern": "isolation",
+      "primary_muscle": "biceps",
+      "secondary_muscles": [],
+      "primary_region": "anterior upper",
+      "discipline_tags": [
+        "strength"
+      ],
+      "equipment_tags": [
+        "cable"
+      ],
+      "metric_type": "reps",
+      "skill_level": "intermediate",
+      "cns_load": "moderate",
+      "compound": false,
+      "is_complex_lift": false,
+      "is_unilateral": false,
+      "description": null,
+      "coaching_cues": [
+        "Place a flat bench in front of a high pulley or lat pulldown machine.",
+        "Hold the straight bar attachment using an underhand grip (palms up) that is about shoulder width.",
+        "Lie on your back with your head over the end of the bench.",
+        "Now extend your arms straight above your shoulders. Your torso and your arms should make a 90-degree angle and the elbows should be in. This will be your starting position.",
+        "As you breathe out, curl the bar down in a semicircular motion until it touches your chin. Squeeze the biceps for a second at the top contracted position. Tip: As you execute this motion only the forearms should move. At no time should the upper arms be moving at all. They are to remain perpendicular throughout the movement.",
+        "Return to starting position slowly.",
+        "Repeat for the recommended amount of repetitions."
+      ],
+      "substitution_group": "lying_close_grip_bar_curl_on_high_pulley",
+      "variation_on_names": [],
+      "source_category": "strength",
+      "source_primary_muscles_raw": [
+        "biceps"
+      ],
+      "source_secondary_muscles_raw": [],
+      "source_equipment_raw": [
+        "cable"
+      ],
+      "source_id": "437",
+      "license_author": null,
+      "license_meta": null
+    },
+    "best_match": {
+      "id": 47,
+      "name": "Bicep Curl",
+      "canonical_base_name": "Bicep Curl",
+      "canonical_name_key": "bicep_curl",
+      "pattern": "isolation",
+      "primary_muscle": "biceps",
+      "primary_region": "anterior upper",
+      "equipment_tags": [
+        "dumbbell",
+        "barbell",
+        "cable"
+      ]
+    },
+    "score": 0.5091111111111111
+  },
+  {
+    "candidate": {
+      "source_name": "Lying High Bench Barbell Curl",
+      "source_aliases": [],
+      "canonical_base_name": "Lying High Bench Curl",
+      "canonical_name_key": "lying_high_bench_curl",
+      "pattern": "horizontal_push",
+      "primary_muscle": "biceps",
+      "secondary_muscles": [],
+      "primary_region": "anterior upper",
+      "discipline_tags": [
+        "strength"
+      ],
+      "equipment_tags": [
+        "barbell"
+      ],
+      "metric_type": "reps",
+      "skill_level": "intermediate",
+      "cns_load": "moderate",
+      "compound": false,
+      "is_complex_lift": false,
+      "is_unilateral": false,
+      "description": null,
+      "coaching_cues": [
+        "Lie face forward on a tall flat bench while holding a barbell with a supinated grip (palms facing up). Tip: If you are holding a barbell grab it using a shoulder-width grip and if you are using an E-Z Bar grab it on the inner handles. Your upper body should be positioned in a way that the upper chest is over the end of the bench and the barbell is hanging in front of you with the arms extended and perpendicular to the floor. This will be your starting position.",
+        "While keeping the elbows in and the upper arms stationary, curl the weight up in a semi-circular motion as you contract the biceps and exhale. Hold at the top of the movement for a second.",
+        "As you inhale, slowly go back to the starting position. Tip: Maintain full control of the weight at all times and avoid any swinging. Remember, only the forearms should move throughout the movement.",
+        "Repeat for the recommended amount of repetitions."
+      ],
+      "substitution_group": "lying_high_bench_curl",
+      "variation_on_names": [],
+      "source_category": "strength",
+      "source_primary_muscles_raw": [
+        "biceps"
+      ],
+      "source_secondary_muscles_raw": [],
+      "source_equipment_raw": [
+        "barbell"
+      ],
+      "source_id": "446",
+      "license_author": null,
+      "license_meta": null
+    },
+    "best_match": {
+      "id": 47,
+      "name": "Bicep Curl",
+      "canonical_base_name": "Bicep Curl",
+      "canonical_name_key": "bicep_curl",
+      "pattern": "isolation",
+      "primary_muscle": "biceps",
+      "primary_region": "anterior upper",
+      "equipment_tags": [
+        "dumbbell",
+        "barbell",
+        "cable"
+      ]
+    },
+    "score": 0.5177419354838709
+  },
+  {
+    "candidate": {
+      "source_name": "Lying T-Bar Row",
+      "source_aliases": [],
+      "canonical_base_name": "Lying T Bar Row",
+      "canonical_name_key": "lying_t_bar_row",
+      "pattern": "horizontal_pull",
+      "primary_muscle": "full_body",
+      "secondary_muscles": [
+        "biceps",
+        "lats"
+      ],
+      "primary_region": "full body",
+      "discipline_tags": [
+        "strength"
+      ],
+      "equipment_tags": [
+        "machine"
+      ],
+      "metric_type": "time",
+      "skill_level": "intermediate",
+      "cns_load": "moderate",
+      "compound": true,
+      "is_complex_lift": false,
+      "is_unilateral": false,
+      "description": null,
+      "coaching_cues": [
+        "Load up the T-bar Row Machine with the desired weight and adjust the leg height so that your upper chest is at the top of the pad. Tip: In some machines all you can do is stand on the appropriate step that allows you to be at a height that has the upper chest at the top of the pad.",
+        "Lay face down on the pad and grab the handles. You can either use a palms down, palms up, or palms in position depending on what part of your back you want to emphasize.",
+        "Lift the bar off the rack and extend your arms in front of you. This will be your starting position.",
+        "As you exhale slowly pull the weight up and squeeze your back at the top of the movement. Tip: Keep the upper arms as close to the torso as possible throughout the movement in order to better engage the back muscles. Also, do not lift your body off of the pad at any time and refrain from using the biceps to lift the weight.",
+        "After a second contraction at the top of the movement, as you inhale, slowly go back down to the starting position.",
+        "Repeat for the recommended amount of repetitions."
+      ],
+      "substitution_group": "lying_t_bar_row",
+      "variation_on_names": [],
+      "source_category": "strength",
+      "source_primary_muscles_raw": [
+        "middle back"
+      ],
+      "source_secondary_muscles_raw": [
+        "biceps",
+        "lats"
+      ],
+      "source_equipment_raw": [
+        "machine"
+      ],
+      "source_id": "453",
+      "license_author": null,
+      "license_meta": null
+    },
+    "best_match": {
+      "id": 22,
+      "name": "Barbell Row",
+      "canonical_base_name": "Row",
+      "canonical_name_key": "row",
+      "pattern": "horizontal_pull",
+      "primary_muscle": "lats",
+      "primary_region": "posterior upper",
+      "equipment_tags": [
+        "barbell"
+      ]
+    },
+    "score": 0.5
+  },
+  {
+    "candidate": {
+      "source_name": "Medicine Ball Chest Pass",
+      "source_aliases": [],
+      "canonical_base_name": "Medicine Ball Chest Pass",
+      "canonical_name_key": "medicine_ball_chest_pass",
+      "pattern": "isolation",
+      "primary_muscle": "chest",
+      "secondary_muscles": [
+        "full_body",
+        "triceps"
+      ],
+      "primary_region": "anterior upper",
+      "discipline_tags": [
+        "plyometrics"
+      ],
+      "equipment_tags": [
+        "medicine ball"
+      ],
+      "metric_type": "reps",
+      "skill_level": "intermediate",
+      "cns_load": "moderate",
+      "compound": false,
+      "is_complex_lift": false,
+      "is_unilateral": false,
+      "description": null,
+      "coaching_cues": [
+        "You will need a partner for this exercise. Lacking one, this movement can be performed against a wall.",
+        "Begin facing your partner holding the medicine ball at your torso with both hands.",
+        "Pull the ball to your chest, and reverse the motion by extending through the elbows. For sports applications, you can take a step as you throw.",
+        "Your partner should catch the ball, and throw it back to you.",
+        "Receive the throw with both hands at chest height."
+      ],
+      "substitution_group": "medicine_ball_chest_pass",
+      "variation_on_names": [],
+      "source_category": "plyometrics",
+      "source_primary_muscles_raw": [
+        "chest"
+      ],
+      "source_secondary_muscles_raw": [
+        "shoulders",
+        "triceps"
+      ],
+      "source_equipment_raw": [
+        "medicine ball"
+      ],
+      "source_id": "460",
+      "license_author": null,
+      "license_meta": null
+    },
+    "best_match": {
+      "id": 46,
+      "name": "Medicine Ball Slam",
+      "canonical_base_name": "Medicine Ball Slam",
+      "canonical_name_key": "medicine_ball_slam",
+      "pattern": "plyometric",
+      "primary_muscle": "core",
+      "primary_region": "full body",
+      "equipment_tags": [
+        "medicine_ball"
+      ]
+    },
+    "score": 0.5071428571428571
+  },
+  {
+    "candidate": {
+      "source_name": "Medicine Ball Scoop Throw",
+      "source_aliases": [],
+      "canonical_base_name": "Medicine Ball Scoop Throw",
+      "canonical_name_key": "medicine_ball_scoop_throw",
+      "pattern": "horizontal_pull",
+      "primary_muscle": "full_body",
+      "secondary_muscles": [
+        "core",
+        "hamstrings",
+        "quadriceps"
+      ],
+      "primary_region": "full body",
+      "discipline_tags": [
+        "plyometrics"
+      ],
+      "equipment_tags": [
+        "medicine ball"
+      ],
+      "metric_type": "time",
+      "skill_level": "intermediate",
+      "cns_load": "moderate",
+      "compound": true,
+      "is_complex_lift": false,
+      "is_unilateral": false,
+      "description": null,
+      "coaching_cues": [
+        "Assume a semisquat stance with a medicine ball in your hands. Your arms should hang so the ball is near your feet.",
+        "Begin by thrusting the hips forward as you extend through the legs, jumping up.",
+        "As you do, swing your arms up and over your head, keeping them extended, releasing the ball at the peak of your movement. The goal is to throw the ball the greatest distance behind you."
+      ],
+      "substitution_group": "medicine_ball_scoop_throw",
+      "variation_on_names": [],
+      "source_category": "plyometrics",
+      "source_primary_muscles_raw": [
+        "shoulders"
+      ],
+      "source_secondary_muscles_raw": [
+        "abs",
+        "hamstrings",
+        "quads"
+      ],
+      "source_equipment_raw": [
+        "medicine ball"
+      ],
+      "source_id": "462",
+      "license_author": null,
+      "license_meta": null
+    },
+    "best_match": {
+      "id": 295,
+      "name": "Standing Two-Arm Overhead Throw",
+      "canonical_base_name": "Two Arm Overhead Throw",
+      "canonical_name_key": "two_arm_overhead_throw",
+      "pattern": "horizontal_pull",
+      "primary_muscle": "full_body",
+      "primary_region": "full body",
+      "equipment_tags": [
+        "medicine ball"
+      ]
+    },
+    "score": 0.5439209726443769
+  },
+  {
+    "candidate": {
+      "source_name": "Natural Glute Ham Raise",
+      "source_aliases": [],
+      "canonical_base_name": "Natural Glute Ham Raise",
+      "canonical_name_key": "natural_glute_ham_raise",
+      "pattern": "isolation",
+      "primary_muscle": "hamstrings",
+      "secondary_muscles": [
+        "calves",
+        "glutes",
+        "lower_back"
+      ],
+      "primary_region": "posterior lower",
+      "discipline_tags": [
+        "strength"
+      ],
+      "equipment_tags": [
+        "none"
+      ],
+      "metric_type": "reps",
+      "skill_level": "intermediate",
+      "cns_load": "moderate",
+      "compound": false,
+      "is_complex_lift": false,
+      "is_unilateral": false,
+      "description": null,
+      "coaching_cues": [
+        "Using the leg pad of a lat pulldown machine or a preacher bench, position yourself so that your ankles are under the pads, knees on the seat, and you are facing away from the machine. You should be upright and maintaining good posture.",
+        "This will be your starting position. Lower yourself under control until your knees are almost completely straight.",
+        "Remaining in control, raise yourself back up to the starting position.",
+        "If you are unable to complete a rep, use a band, a partner, or push off of a box to aid in completing a repetition."
+      ],
+      "substitution_group": "natural_glute_ham_raise",
+      "variation_on_names": [],
+      "source_category": "strength",
+      "source_primary_muscles_raw": [
+        "hamstrings"
+      ],
+      "source_secondary_muscles_raw": [
+        "calves",
+        "glutes",
+        "lower back"
+      ],
+      "source_equipment_raw": [
+        "none"
+      ],
+      "source_id": "474",
+      "license_author": null,
+      "license_meta": null
+    },
+    "best_match": {
+      "id": 270,
+      "name": "Seated Glute",
+      "canonical_base_name": "Glute",
+      "canonical_name_key": "glute",
+      "pattern": "mobility",
+      "primary_muscle": "glutes",
+      "primary_region": "posterior lower",
+      "equipment_tags": [
+        "none"
+      ]
+    },
+    "score": 0.5035714285714286
+  },
+  {
+    "candidate": {
+      "source_name": "Overhead Lat",
+      "source_aliases": [],
+      "canonical_base_name": "Overhead Lat",
+      "canonical_name_key": "overhead_lat",
+      "pattern": "mobility",
+      "primary_muscle": "lats",
+      "secondary_muscles": [
+        "triceps"
+      ],
+      "primary_region": "posterior upper",
+      "discipline_tags": [
+        "stretching"
+      ],
+      "equipment_tags": [
+        "other"
+      ],
+      "metric_type": "reps",
+      "skill_level": "intermediate",
+      "cns_load": "moderate",
+      "compound": false,
+      "is_complex_lift": false,
+      "is_unilateral": false,
+      "description": null,
+      "coaching_cues": [
+        "Sit upright on the floor with your partner behind you. Raise one arm straight up, and flex the elbow, attempting to touch your hand to your back. Your parner should hold your tricep and wrist. This will be your starting position.",
+        "Attempt to pull your upper arm to your side as your partner prevents you from doing actually doing so.",
+        "After 10-20 seconds, relax the arm and allow your partner to further stretch the lat by applying gentle pressure to the tricep. Hold for 10-20 seconds, and then switch sides."
+      ],
+      "substitution_group": "overhead_lat",
+      "variation_on_names": [],
+      "source_category": "stretching",
+      "source_primary_muscles_raw": [
+        "lats"
+      ],
+      "source_secondary_muscles_raw": [
+        "triceps"
+      ],
+      "source_equipment_raw": [
+        "other"
+      ],
+      "source_id": "520",
+      "license_author": null,
+      "license_meta": null
+    },
+    "best_match": {
+      "id": 28,
+      "name": "Lat Pulldown",
+      "canonical_base_name": "Lat Pulldown",
+      "canonical_name_key": "lat_pulldown",
+      "pattern": "vertical_pull",
+      "primary_muscle": "lats",
+      "primary_region": "posterior upper",
+      "equipment_tags": [
+        "cable"
+      ]
+    },
+    "score": 0.5208333333333333
+  },
+  {
+    "candidate": {
+      "source_name": "Overhead Slam",
+      "source_aliases": [],
+      "canonical_base_name": "Overhead Slam",
+      "canonical_name_key": "overhead_slam",
+      "pattern": "isolation",
+      "primary_muscle": "lats",
+      "secondary_muscles": [],
+      "primary_region": "posterior upper",
+      "discipline_tags": [
+        "plyometrics"
+      ],
+      "equipment_tags": [
+        "medicine ball"
+      ],
+      "metric_type": "reps",
+      "skill_level": "intermediate",
+      "cns_load": "moderate",
+      "compound": false,
+      "is_complex_lift": false,
+      "is_unilateral": false,
+      "description": null,
+      "coaching_cues": [
+        "Hold a medine ball with both hands and stand with your feet at shoulder width. This will be your starting position.",
+        "Initiate the countermovement by raising the ball above your head and fully extending your body.",
+        "Reverse the motion, slamming the ball into the ground directly in front of you as hard as you can.",
+        "Receive the ball with both hands on the bounce and repeat the movement."
+      ],
+      "substitution_group": "overhead_slam",
+      "variation_on_names": [],
+      "source_category": "plyometrics",
+      "source_primary_muscles_raw": [
+        "lats"
+      ],
+      "source_secondary_muscles_raw": [],
+      "source_equipment_raw": [
+        "medicine ball"
+      ],
+      "source_id": "521",
+      "license_author": null,
+      "license_meta": null
+    },
+    "best_match": {
+      "id": 119,
+      "name": "Catch and Overhead Throw",
+      "canonical_base_name": "Catch And Overhead Throw",
+      "canonical_name_key": "catch_and_overhead_throw",
+      "pattern": "horizontal_pull",
+      "primary_muscle": "lats",
+      "primary_region": "posterior upper",
+      "equipment_tags": [
+        "medicine ball"
+      ]
+    },
+    "score": 0.522972972972973
+  },
+  {
+    "candidate": {
+      "source_name": "Overhead Triceps",
+      "source_aliases": [],
+      "canonical_base_name": "Overhead Triceps",
+      "canonical_name_key": "overhead_triceps",
+      "pattern": "mobility",
+      "primary_muscle": "triceps",
+      "secondary_muscles": [
+        "lats"
+      ],
+      "primary_region": "posterior upper",
+      "discipline_tags": [
+        "stretching"
+      ],
+      "equipment_tags": [
+        "none"
+      ],
+      "metric_type": "reps",
+      "skill_level": "intermediate",
+      "cns_load": "moderate",
+      "compound": false,
+      "is_complex_lift": false,
+      "is_unilateral": false,
+      "description": null,
+      "coaching_cues": [
+        "Sit upright on the floor with your partner behind you. Raise one arm straight up, and flex the elbow, attempting to touch your hand to your back. Your parner should hold your elbow and wrist. This will be your starting position.",
+        "Attempt to extend the arm straight into the air as your partner prevents you from doing actually doing so.",
+        "After 10-20 seconds, relax the arm and allow your partner to further stretch the tricep by applying gentle pressure to the wrist. Hold for 10-20 seconds, and then switch sides."
+      ],
+      "substitution_group": "overhead_triceps",
+      "variation_on_names": [],
+      "source_category": "stretching",
+      "source_primary_muscles_raw": [
+        "triceps"
+      ],
+      "source_secondary_muscles_raw": [
+        "lats"
+      ],
+      "source_equipment_raw": [
+        "none"
+      ],
+      "source_id": "524",
+      "license_author": null,
+      "license_meta": null
+    },
+    "best_match": {
+      "id": 238,
+      "name": "Push-Ups - Close Triceps Position",
+      "canonical_base_name": "Push Ups Close Triceps Position",
+      "canonical_name_key": "push_ups_close_triceps_position",
+      "pattern": "isolation",
+      "primary_muscle": "triceps",
+      "primary_region": "posterior upper",
+      "equipment_tags": [
+        "none"
+      ]
+    },
+    "score": 0.47411347517730495
+  },
+  {
+    "candidate": {
+      "source_name": "Physioball Hip Bridge",
+      "source_aliases": [],
+      "canonical_base_name": "Physioball Hip Bridge",
+      "canonical_name_key": "physioball_hip_bridge",
+      "pattern": "lunge",
+      "primary_muscle": "glutes",
+      "secondary_muscles": [
+        "hamstrings"
+      ],
+      "primary_region": "posterior lower",
+      "discipline_tags": [
+        "strength"
+      ],
+      "equipment_tags": [
+        "exercise ball"
+      ],
+      "metric_type": "reps",
+      "skill_level": "intermediate",
+      "cns_load": "moderate",
+      "compound": false,
+      "is_complex_lift": false,
+      "is_unilateral": false,
+      "description": null,
+      "coaching_cues": [
+        "Lay on a ball so that your upper back is on the ball with your hips unsupported. Both feet should be flat on the floor, hip width apart or wider. This will be your starting position.",
+        "Begin by extending the hips using your glutes and hamstrings, raising your hips upward as you bridge.",
+        "Pause at the top of the motion and return to the starting position."
+      ],
+      "substitution_group": "physioball_hip_bridge",
+      "variation_on_names": [],
+      "source_category": "strength",
+      "source_primary_muscles_raw": [
+        "glutes"
+      ],
+      "source_secondary_muscles_raw": [
+        "hamstrings"
+      ],
+      "source_equipment_raw": [
+        "exercise ball"
+      ],
+      "source_id": "534",
+      "license_author": null,
+      "license_meta": null
+    },
+    "best_match": {
+      "id": 279,
+      "name": "Single Leg Glute Bridge",
+      "canonical_base_name": "Glute Bridge",
+      "canonical_name_key": "glute_bridge",
+      "pattern": "hinge",
+      "primary_muscle": "glutes",
+      "primary_region": "posterior lower",
+      "equipment_tags": [
+        "none"
+      ]
+    },
+    "score": 0.4727272727272728
+  },
+  {
+    "candidate": {
+      "source_name": "Press Sit-Up",
+      "source_aliases": [],
+      "canonical_base_name": "Press Sit Up",
+      "canonical_name_key": "press_sit_up",
+      "pattern": "core",
+      "primary_muscle": "core",
+      "secondary_muscles": [
+        "chest",
+        "full_body",
+        "triceps"
+      ],
+      "primary_region": "full body",
+      "discipline_tags": [
+        "strength"
+      ],
+      "equipment_tags": [
+        "barbell"
+      ],
+      "metric_type": "reps",
+      "skill_level": "intermediate",
+      "cns_load": "moderate",
+      "compound": true,
+      "is_complex_lift": false,
+      "is_unilateral": false,
+      "description": null,
+      "coaching_cues": [
+        "To begin, lie down on a bench with a barbell resting on your chest. Position your legs so they are secure on the extension of the abdominal bench. This is the starting position.",
+        "While inhaling, tighten your abdominals and glutes. Simultaneously curl your torso as you do when performing a sit-up and press the barbell to an overhead position while exhaling. Tip: Use your arms to push the barbell out as you perform this exercise while still focusing on the abdominal muscles.",
+        "Lower your upper body back down to the starting position while bringing the barbell back down to your torso. Remember to breathe in while lowering the body.",
+        "Repeat for the recommended amount of repetitions."
+      ],
+      "substitution_group": "press_sit_up",
+      "variation_on_names": [],
+      "source_category": "strength",
+      "source_primary_muscles_raw": [
+        "abs"
+      ],
+      "source_secondary_muscles_raw": [
+        "chest",
+        "shoulders",
+        "triceps"
+      ],
+      "source_equipment_raw": [
+        "barbell"
+      ],
+      "source_id": "554",
+      "license_author": null,
+      "license_meta": null
+    },
+    "best_match": {
+      "id": 40,
+      "name": "Pallof Press",
+      "canonical_base_name": "Pallof Press",
+      "canonical_name_key": "pallof_press",
+      "pattern": "rotation",
+      "primary_muscle": "core",
+      "primary_region": "anterior upper",
+      "equipment_tags": [
+        "cable",
+        "band"
+      ]
+    },
+    "score": 0.4625
+  },
+  {
+    "candidate": {
+      "source_name": "Pull Through",
+      "source_aliases": [],
+      "canonical_base_name": "Pull Through",
+      "canonical_name_key": "pull_through",
+      "pattern": "lunge",
+      "primary_muscle": "glutes",
+      "secondary_muscles": [
+        "hamstrings",
+        "lower_back"
+      ],
+      "primary_region": "posterior lower",
+      "discipline_tags": [
+        "strength"
+      ],
+      "equipment_tags": [
+        "cable"
+      ],
+      "metric_type": "reps",
+      "skill_level": "intermediate",
+      "cns_load": "moderate",
+      "compound": false,
+      "is_complex_lift": false,
+      "is_unilateral": false,
+      "description": null,
+      "coaching_cues": [
+        "Begin standing a few feet in front of a low pulley with a rope or handle attached. Face away from the machine, straddling the cable, with your feet set wide apart.",
+        "Begin the movement by reaching through your legs as far as possible, bending at the hips. Keep your knees slightly bent. Keeping your arms straight, extend through the hip to stand straight up. Avoid pulling upward through the shoulders; all of the motion should originate through the hips."
+      ],
+      "substitution_group": "pull_through",
+      "variation_on_names": [],
+      "source_category": "strength",
+      "source_primary_muscles_raw": [
+        "glutes"
+      ],
+      "source_secondary_muscles_raw": [
+        "hamstrings",
+        "lower back"
+      ],
+      "source_equipment_raw": [
+        "cable"
+      ],
+      "source_id": "557",
+      "license_author": null,
+      "license_meta": null
+    },
+    "best_match": {
+      "id": 50,
+      "name": "Face Pull",
+      "canonical_base_name": "Face Pull",
+      "canonical_name_key": "face_pull",
+      "pattern": "isolation",
+      "primary_muscle": "rear_delts",
+      "primary_region": "posterior upper",
+      "equipment_tags": [
+        "cable",
+        "band"
+      ]
+    },
+    "score": 0.4904761904761904
+  },
+  {
+    "candidate": {
+      "source_name": "Quad Stretch",
+      "source_aliases": [],
+      "canonical_base_name": "Quad Stretch",
+      "canonical_name_key": "quad_stretch",
+      "pattern": "mobility",
+      "primary_muscle": "quadriceps",
+      "secondary_muscles": [],
+      "primary_region": "anterior lower",
+      "discipline_tags": [
+        "stretching"
+      ],
+      "equipment_tags": [
+        "other"
+      ],
+      "metric_type": "reps",
+      "skill_level": "intermediate",
+      "cns_load": "moderate",
+      "compound": false,
+      "is_complex_lift": false,
+      "is_unilateral": false,
+      "description": null,
+      "coaching_cues": [
+        "Lay on your side. Loop a belt, rope, or band around your top foot. Flex the knee and extend your hip, attempting to touch your glutes with your foot, and holding the belt with your hands. This will be your starting position.",
+        "With the belt being held over the shoulder or overhead, gently pull to increase the stretch in the quadriceps. Hold for 10-20 seconds, and then switch sides."
+      ],
+      "substitution_group": "quad_stretch",
+      "variation_on_names": [],
+      "source_category": "stretching",
+      "source_primary_muscles_raw": [
+        "quads"
+      ],
+      "source_secondary_muscles_raw": [],
+      "source_equipment_raw": [
+        "other"
+      ],
+      "source_id": "569",
+      "license_author": null,
+      "license_meta": null
+    },
+    "best_match": {
+      "id": 55,
+      "name": "Pigeon Stretch",
+      "canonical_base_name": "Pigeon Stretch",
+      "canonical_name_key": "pigeon_stretch",
+      "pattern": "mobility",
+      "primary_muscle": "glutes",
+      "primary_region": "posterior lower",
+      "equipment_tags": [
+        "bodyweight"
+      ]
+    },
+    "score": 0.5256410256410257
+  },
+  {
+    "candidate": {
+      "source_name": "Rickshaw Deadlift",
+      "source_aliases": [],
+      "canonical_base_name": "Rickshaw Deadlift",
+      "canonical_name_key": "rickshaw_deadlift",
+      "pattern": "hinge",
+      "primary_muscle": "quadriceps",
+      "secondary_muscles": [
+        "forearms",
+        "glutes",
+        "hamstrings",
+        "lower_back",
+        "upper_back"
+      ],
+      "primary_region": "anterior lower",
+      "discipline_tags": [
+        "strongman",
+        "powerlifting"
+      ],
+      "equipment_tags": [
+        "other"
+      ],
+      "metric_type": "reps",
+      "skill_level": "intermediate",
+      "cns_load": "high",
+      "compound": true,
+      "is_complex_lift": true,
+      "is_unilateral": false,
+      "description": null,
+      "coaching_cues": [
+        "Load the frame with the desired weight. Center yourself between the handles. You feet should be about hip width apart. Bend at the hips to grip the handles, allowing your shoulder blades to protract.",
+        "With your feet and your grip set, take a big breath and then lower your hips and flex the knees. Look forward with your head, keep your chest up and your back arched, and begin driving through the heels to move the weight upward. As the weight comes up, pull your shoulder blades together as you drive your hips forward.",
+        "Lower the weight by bending at the hips and guiding it to the ground."
+      ],
+      "substitution_group": "rickshaw_deadlift",
+      "variation_on_names": [
+        "deadlift"
+      ],
+      "source_category": "strongman",
+      "source_primary_muscles_raw": [
+        "quads"
+      ],
+      "source_secondary_muscles_raw": [
+        "forearms",
+        "glutes",
+        "hamstrings",
+        "lower back",
+        "traps"
+      ],
+      "source_equipment_raw": [
+        "other"
+      ],
+      "source_id": "597",
+      "license_author": null,
+      "license_meta": null
+    },
+    "best_match": {
+      "id": 8,
+      "name": "Romanian Deadlift",
+      "canonical_base_name": "Romanian Deadlift",
+      "canonical_name_key": "romanian_deadlift",
+      "pattern": "hinge",
+      "primary_muscle": "hamstrings",
+      "primary_region": "posterior lower",
+      "equipment_tags": [
+        "barbell",
+        "dumbbell"
+      ]
+    },
+    "score": 0.5392156862745098
+  },
+  {
+    "candidate": {
+      "source_name": "Round The World Shoulder Stretch",
+      "source_aliases": [],
+      "canonical_base_name": "Round The World Shoulder Stretch",
+      "canonical_name_key": "round_the_world_shoulder_stretch",
+      "pattern": "mobility",
+      "primary_muscle": "full_body",
+      "secondary_muscles": [
+        "biceps",
+        "chest"
+      ],
+      "primary_region": "full body",
+      "discipline_tags": [
+        "stretching"
+      ],
+      "equipment_tags": [
+        "other"
+      ],
+      "metric_type": "reps",
+      "skill_level": "intermediate",
+      "cns_load": "moderate",
+      "compound": false,
+      "is_complex_lift": false,
+      "is_unilateral": false,
+      "description": null,
+      "coaching_cues": [
+        "Stand up straight with your legs together, holding a bodybar or broomstick.",
+        "Hold the pole behind your hips with a wider than shoulder width grip. Your palms should be down and your thumbs facing out.",
+        "Slowly lift your arms up behind your head. Don't force it if it gets hard to lift further."
+      ],
+      "substitution_group": "round_the_world_shoulder_stretch",
+      "variation_on_names": [],
+      "source_category": "stretching",
+      "source_primary_muscles_raw": [
+        "shoulders"
+      ],
+      "source_secondary_muscles_raw": [
+        "biceps",
+        "chest"
+      ],
+      "source_equipment_raw": [
+        "other"
+      ],
+      "source_id": "608",
+      "license_author": null,
+      "license_meta": null
+    },
+    "best_match": {
+      "id": 120,
+      "name": "Chest And Front Of Shoulder Stretch",
+      "canonical_base_name": "Chest And Front Of Shoulder Stretch",
+      "canonical_name_key": "chest_and_front_of_shoulder_stretch",
+      "pattern": "mobility",
+      "primary_muscle": "chest",
+      "primary_region": "anterior upper",
+      "equipment_tags": [
+        "other"
+      ]
+    },
+    "score": 0.5162520729684908
+  },
+  {
+    "candidate": {
+      "source_name": "Seated Dumbbell Palms-Down Wrist Curl",
+      "source_aliases": [],
+      "canonical_base_name": "Palms Down Wrist Curl",
+      "canonical_name_key": "palms_down_wrist_curl",
+      "pattern": "isolation",
+      "primary_muscle": "forearms",
+      "secondary_muscles": [],
+      "primary_region": "anterior upper",
+      "discipline_tags": [
+        "strength"
+      ],
+      "equipment_tags": [
+        "dumbbell"
+      ],
+      "metric_type": "reps",
+      "skill_level": "intermediate",
+      "cns_load": "moderate",
+      "compound": false,
+      "is_complex_lift": false,
+      "is_unilateral": false,
+      "description": null,
+      "coaching_cues": [
+        "Start out by placing two dumbbells on the floor in front of a flat bench.",
+        "Sit down on the edge of the flat bench with your legs at about shoulder width apart. Make sure to keep your feet on the floor.",
+        "Use your arms to grab both of the dumbbells and bring them up so that your forearms are resting against your thighs with the palms of the hands facing down. Your wrists should be hanging over the edge of your thighs.",
+        "Start out by curling your wrist upwards and exhaling.",
+        "Slowly lower your wrists back down to the starting position while inhaling. Make sure to inhale during this part of the exercise. Tip: Your forearms should be stationary as your wrist is the only movement needed to perform this exercise.",
+        "Repeat for the recommended amount of repetitions.",
+        "When finished, simply lower the dumbbells to the floor."
+      ],
+      "substitution_group": "palms_down_wrist_curl",
+      "variation_on_names": [],
+      "source_category": "strength",
+      "source_primary_muscles_raw": [
+        "forearms"
+      ],
+      "source_secondary_muscles_raw": [],
+      "source_equipment_raw": [
+        "dumbbell"
+      ],
+      "source_id": "631",
+      "license_author": null,
+      "license_meta": null
+    },
+    "best_match": {
+      "id": 320,
+      "name": "Wrist Roller",
+      "canonical_base_name": "Wrist Roller",
+      "canonical_name_key": "wrist_roller",
+      "pattern": "isolation",
+      "primary_muscle": "forearms",
+      "primary_region": "anterior upper",
+      "equipment_tags": [
+        "other"
+      ]
+    },
+    "score": 0.5136363636363637
+  },
+  {
+    "candidate": {
+      "source_name": "Seated Dumbbell Palms-Up Wrist Curl",
+      "source_aliases": [],
+      "canonical_base_name": "Palms Up Wrist Curl",
+      "canonical_name_key": "palms_up_wrist_curl",
+      "pattern": "isolation",
+      "primary_muscle": "forearms",
+      "secondary_muscles": [],
+      "primary_region": "anterior upper",
+      "discipline_tags": [
+        "strength"
+      ],
+      "equipment_tags": [
+        "dumbbell"
+      ],
+      "metric_type": "reps",
+      "skill_level": "intermediate",
+      "cns_load": "moderate",
+      "compound": false,
+      "is_complex_lift": false,
+      "is_unilateral": false,
+      "description": null,
+      "coaching_cues": [
+        "Start out by placing two dumbbells on the floor in front of a flat bench.",
+        "Sit down on the edge of the flat bench with your legs at about shoulder width apart. Make sure to keep your feet on the floor.",
+        "Use your arms to grab both of the dumbbells and bring them up so that your forearms are resting against your thighs with the palms of the hands facing up. Your wrists should be hanging over the edge of your thighs.",
+        "Start out by curling your wrist upwards and exhaling.",
+        "Slowly lower your wrists back down to the starting position while inhaling. Make sure to inhale during this part of the exercise. Tip: Your forearms should be stationary as your wrist is the only movement needed to perform this exercise.",
+        "Repeat for the recommended amount of repetitions.",
+        "When finished, simply lower the dumbbells to the floor."
+      ],
+      "substitution_group": "palms_up_wrist_curl",
+      "variation_on_names": [],
+      "source_category": "strength",
+      "source_primary_muscles_raw": [
+        "forearms"
+      ],
+      "source_secondary_muscles_raw": [],
+      "source_equipment_raw": [
+        "dumbbell"
+      ],
+      "source_id": "632",
+      "license_author": null,
+      "license_meta": null
+    },
+    "best_match": {
+      "id": 320,
+      "name": "Wrist Roller",
+      "canonical_base_name": "Wrist Roller",
+      "canonical_name_key": "wrist_roller",
+      "pattern": "isolation",
+      "primary_muscle": "forearms",
+      "primary_region": "anterior upper",
+      "equipment_tags": [
+        "other"
+      ]
+    },
+    "score": 0.517741935483871
+  },
+  {
+    "candidate": {
+      "source_name": "Seated Leg Tucks",
+      "source_aliases": [],
+      "canonical_base_name": "Leg Tucks",
+      "canonical_name_key": "leg_tucks",
+      "pattern": "isolation",
+      "primary_muscle": "core",
+      "secondary_muscles": [],
+      "primary_region": "full body",
+      "discipline_tags": [
+        "strength"
+      ],
+      "equipment_tags": [
+        "none"
+      ],
+      "metric_type": "reps",
+      "skill_level": "intermediate",
+      "cns_load": "moderate",
+      "compound": false,
+      "is_complex_lift": false,
+      "is_unilateral": false,
+      "description": null,
+      "coaching_cues": [
+        "Sit on a bench with the legs stretched out in front of you slightly below parallel and your arms holding on to the sides of the bench. Your torso should be leaning backwards around a 45-degree angle from the bench. This will be your starting position.",
+        "Bring the knees in toward you as you move your torso closer to them at the same time. Breathe out as you perform this movement.",
+        "After a second pause, go back to the starting position as you inhale.",
+        "Repeat for the recommended amount of repetitions."
+      ],
+      "substitution_group": "leg_tucks",
+      "variation_on_names": [],
+      "source_category": "strength",
+      "source_primary_muscles_raw": [
+        "abs"
+      ],
+      "source_secondary_muscles_raw": [],
+      "source_equipment_raw": [
+        "none"
+      ],
+      "source_id": "643",
+      "license_author": null,
+      "license_meta": null
+    },
+    "best_match": {
+      "id": 52,
+      "name": "Leg Curl",
+      "canonical_base_name": "Leg Curl",
+      "canonical_name_key": "leg_curl",
+      "pattern": "isolation",
+      "primary_muscle": "hamstrings",
+      "primary_region": "posterior lower",
+      "equipment_tags": [
+        "machine"
+      ]
+    },
+    "score": 0.5215686274509804
+  },
+  {
+    "candidate": {
+      "source_name": "Seated One-Arm Dumbbell Palms-Down Wrist Curl",
+      "source_aliases": [],
+      "canonical_base_name": "One Arm Palms Down Wrist Curl",
+      "canonical_name_key": "one_arm_palms_down_wrist_curl",
+      "pattern": "isolation",
+      "primary_muscle": "forearms",
+      "secondary_muscles": [],
+      "primary_region": "anterior upper",
+      "discipline_tags": [
+        "strength"
+      ],
+      "equipment_tags": [
+        "dumbbell"
+      ],
+      "metric_type": "reps",
+      "skill_level": "intermediate",
+      "cns_load": "moderate",
+      "compound": false,
+      "is_complex_lift": false,
+      "is_unilateral": false,
+      "description": null,
+      "coaching_cues": [
+        "Sit on a flat bench with a dumbbell in your right hand.",
+        "Place your feet flat on the floor, at a distance that is slightly wider than shoulder width apart.",
+        "Lean forward and place your right forearm on top of your upper right thigh with your palm down. Tip: Make sure that the back of the wrist lies on top of your knees. This will be your starting position.",
+        "Lower the dumbbell as far as possible as you keep a tight grip on the dumbbell. Inhale as you perform this movement.",
+        "Now curl the dumbbell as high as possible as you contract the forearms and as you exhale. Keep the contraction for a second before you lower again. Tip: The only movement should happen at the wrist.",
+        "Perform for the recommended amount of repetitions, switch arms and repeat the movement."
+      ],
+      "substitution_group": "one_arm_palms_down_wrist_curl",
+      "variation_on_names": [],
+      "source_category": "strength",
+      "source_primary_muscles_raw": [
+        "forearms"
+      ],
+      "source_secondary_muscles_raw": [],
+      "source_equipment_raw": [
+        "dumbbell"
+      ],
+      "source_id": "644",
+      "license_author": null,
+      "license_meta": null
+    },
+    "best_match": {
+      "id": 223,
+      "name": "One-Arm Side Laterals",
+      "canonical_base_name": "One Arm Side Laterals",
+      "canonical_name_key": "one_arm_side_laterals",
+      "pattern": "isolation",
+      "primary_muscle": "full_body",
+      "primary_region": "full body",
+      "equipment_tags": [
+        "dumbbell"
+      ]
+    },
+    "score": 0.516
+  },
+  {
+    "candidate": {
+      "source_name": "Seated One-Arm Dumbbell Palms-Up Wrist Curl",
+      "source_aliases": [],
+      "canonical_base_name": "One Arm Palms Up Wrist Curl",
+      "canonical_name_key": "one_arm_palms_up_wrist_curl",
+      "pattern": "isolation",
+      "primary_muscle": "forearms",
+      "secondary_muscles": [],
+      "primary_region": "anterior upper",
+      "discipline_tags": [
+        "strength"
+      ],
+      "equipment_tags": [
+        "dumbbell"
+      ],
+      "metric_type": "reps",
+      "skill_level": "intermediate",
+      "cns_load": "moderate",
+      "compound": false,
+      "is_complex_lift": false,
+      "is_unilateral": false,
+      "description": null,
+      "coaching_cues": [
+        "Sit on a flat bench with a dumbbell in your right hand.",
+        "Place your feet flat on the floor, at a distance that is slightly wider than shoulder width apart.",
+        "Lean forward and place your right forearm on top of your upper right thigh with your palm up. Tip: Make sure that the front of the wrist lies on top of your knees. This will be your starting position.",
+        "Lower the dumbbell as far as possible as you keep a tight grip on the dumbbell. Inhale as you perform this movement.",
+        "Now curl the dumbbell as high as possible as you contract the forearms and as you exhale. Keep the contraction for a second before you lower again. Tip: The only movement should happen at the wrist.",
+        "Perform for the recommended amount of repetitions, switch arms and repeat the movement."
+      ],
+      "substitution_group": "one_arm_palms_up_wrist_curl",
+      "variation_on_names": [],
+      "source_category": "strength",
+      "source_primary_muscles_raw": [
+        "forearms"
+      ],
+      "source_secondary_muscles_raw": [],
+      "source_equipment_raw": [
+        "dumbbell"
+      ],
+      "source_id": "645",
+      "license_author": null,
+      "license_meta": null
+    },
+    "best_match": {
+      "id": 223,
+      "name": "One-Arm Side Laterals",
+      "canonical_base_name": "One Arm Side Laterals",
+      "canonical_name_key": "one_arm_side_laterals",
+      "pattern": "isolation",
+      "primary_muscle": "full_body",
+      "primary_region": "full body",
+      "equipment_tags": [
+        "dumbbell"
+      ]
+    },
+    "score": 0.5187499999999999
+  },
+  {
+    "candidate": {
+      "source_name": "Seated Palm-Up Barbell Wrist Curl",
+      "source_aliases": [],
+      "canonical_base_name": "Palm Up Wrist Curl",
+      "canonical_name_key": "palm_up_wrist_curl",
+      "pattern": "isolation",
+      "primary_muscle": "forearms",
+      "secondary_muscles": [],
+      "primary_region": "anterior upper",
+      "discipline_tags": [
+        "strength"
+      ],
+      "equipment_tags": [
+        "barbell"
+      ],
+      "metric_type": "reps",
+      "skill_level": "intermediate",
+      "cns_load": "moderate",
+      "compound": false,
+      "is_complex_lift": false,
+      "is_unilateral": false,
+      "description": null,
+      "coaching_cues": [
+        "Hold a barbell with both hands and your palms facing up; hands spaced about shoulder width.",
+        "Place your feet flat on the floor, at a distance that is slightly wider than shoulder width apart.",
+        "Lean forward and place your forearms on top of your upper thighs with your palms up. Tip: Make sure that the front of the wrists lay on top of your knees. This will be your starting position.",
+        "Lower the bar as far as possible while inhaling and keeping a tight grip.",
+        "Now curl bar up as high as possible while flexing the forearms and exhaling. Hold the contraction at the top for a second and Tip: Only the wrist should move."
+      ],
+      "substitution_group": "palm_up_wrist_curl",
+      "variation_on_names": [],
+      "source_category": "strength",
+      "source_primary_muscles_raw": [
+        "forearms"
+      ],
+      "source_secondary_muscles_raw": [],
+      "source_equipment_raw": [
+        "barbell"
+      ],
+      "source_id": "648",
+      "license_author": null,
+      "license_meta": null
+    },
+    "best_match": {
+      "id": 320,
+      "name": "Wrist Roller",
+      "canonical_base_name": "Wrist Roller",
+      "canonical_name_key": "wrist_roller",
+      "pattern": "isolation",
+      "primary_muscle": "forearms",
+      "primary_region": "anterior upper",
+      "equipment_tags": [
+        "other"
+      ]
+    },
+    "score": 0.52
+  },
+  {
+    "candidate": {
+      "source_name": "Seated Palms-Down Barbell Wrist Curl",
+      "source_aliases": [],
+      "canonical_base_name": "Palms Down Wrist Curl",
+      "canonical_name_key": "palms_down_wrist_curl",
+      "pattern": "isolation",
+      "primary_muscle": "forearms",
+      "secondary_muscles": [],
+      "primary_region": "anterior upper",
+      "discipline_tags": [
+        "strength"
+      ],
+      "equipment_tags": [
+        "barbell"
+      ],
+      "metric_type": "reps",
+      "skill_level": "intermediate",
+      "cns_load": "moderate",
+      "compound": false,
+      "is_complex_lift": false,
+      "is_unilateral": false,
+      "description": null,
+      "coaching_cues": [
+        "Hold a barbell with both hands and your palms facing down; hands spaced about shoulder width.",
+        "Place your feet flat on the floor, at a distance that is slightly wider than shoulder width apart.",
+        "Lean forward and place your forearms on top of your upper thighs with your palms down. Tip: Make sure that the back of the wrists lay on top of your knees. This will be your starting position.",
+        "Lower the bar as far as possible while inhaling and keeping a tight grip.",
+        "Now curl bar up as high as possible while flexing the forearms and exhaling. Hold the contraction at the top for a second and Tip: Only the wrist should move."
+      ],
+      "substitution_group": "palms_down_wrist_curl",
+      "variation_on_names": [],
+      "source_category": "strength",
+      "source_primary_muscles_raw": [
+        "forearms"
+      ],
+      "source_secondary_muscles_raw": [],
+      "source_equipment_raw": [
+        "barbell"
+      ],
+      "source_id": "649",
+      "license_author": null,
+      "license_meta": null
+    },
+    "best_match": {
+      "id": 321,
+      "name": "Wrist Rotations with Straight Bar",
+      "canonical_base_name": "Wrist Rotations With Straight Bar",
+      "canonical_name_key": "wrist_rotations_with_straight_bar",
+      "pattern": "isolation",
+      "primary_muscle": "forearms",
+      "primary_region": "anterior upper",
+      "equipment_tags": [
+        "barbell"
+      ]
+    },
+    "score": 0.5138888888888888
+  },
+  {
+    "candidate": {
+      "source_name": "See-Saw Press (Alternating Side Press)",
+      "source_aliases": [],
+      "canonical_base_name": "See Saw Press",
+      "canonical_name_key": "see_saw_press",
+      "pattern": "isolation",
+      "primary_muscle": "full_body",
+      "secondary_muscles": [
+        "core",
+        "triceps"
+      ],
+      "primary_region": "full body",
+      "discipline_tags": [
+        "strength"
+      ],
+      "equipment_tags": [
+        "dumbbell"
+      ],
+      "metric_type": "reps",
+      "skill_level": "intermediate",
+      "cns_load": "moderate",
+      "compound": true,
+      "is_complex_lift": false,
+      "is_unilateral": false,
+      "description": null,
+      "coaching_cues": [
+        "Grab a dumbbell with each hand and stand up erect.",
+        "Clean (lift) the dumbbells to the chest/shoulder level and then rotate your wrists so that your palms are facing towards you as if you were getting ready to perform an Arnold Press. This will be your starting position.",
+        "Now start extending your left arm overhead as you rotate the wrist so that the palm of your hand faces forward as you go up. Your elbows should come out also as you lift the weight. Simultaneously, you will also be bending from your hip to your opposite side. Tip: If you perform the exercise correctly, is should look as if you are trying to reach for something overhead on the right hand side of your body, but with your left arm. Breathe out as you perform this movement.",
+        "Once you reach the top position breathe in. Then, with the weight fully extended overhead and you bent over to your right hand side, begin the movement to the left side.",
+        "Repeat for the recommended amount of repetitions."
+      ],
+      "substitution_group": "see_saw_press",
+      "variation_on_names": [],
+      "source_category": "strength",
+      "source_primary_muscles_raw": [
+        "shoulders"
+      ],
+      "source_secondary_muscles_raw": [
+        "abs",
+        "triceps"
+      ],
+      "source_equipment_raw": [
+        "dumbbell"
+      ],
+      "source_id": "653",
+      "license_author": null,
+      "license_meta": null
+    },
+    "best_match": {
+      "id": 220,
+      "name": "One-Arm Kettlebell Para Press",
+      "canonical_base_name": "One Arm Para Press",
+      "canonical_name_key": "one_arm_para_press",
+      "pattern": "isolation",
+      "primary_muscle": "full_body",
+      "primary_region": "full body",
+      "equipment_tags": [
+        "kettlebell"
+      ]
+    },
+    "score": 0.5037634408602151
+  },
+  {
+    "candidate": {
+      "source_name": "Shoulder Raise",
+      "source_aliases": [],
+      "canonical_base_name": "Shoulder Raise",
+      "canonical_name_key": "shoulder_raise",
+      "pattern": "isolation",
+      "primary_muscle": "full_body",
+      "secondary_muscles": [
+        "lats"
+      ],
+      "primary_region": "full body",
+      "discipline_tags": [
+        "stretching"
+      ],
+      "equipment_tags": [
+        "none"
+      ],
+      "metric_type": "reps",
+      "skill_level": "intermediate",
+      "cns_load": "moderate",
+      "compound": false,
+      "is_complex_lift": false,
+      "is_unilateral": false,
+      "description": null,
+      "coaching_cues": [
+        "Relax your arms to your sides and raise your shoulders up toward your ears, then back down."
+      ],
+      "substitution_group": "shoulder_raise",
+      "variation_on_names": [],
+      "source_category": "stretching",
+      "source_primary_muscles_raw": [
+        "shoulders"
+      ],
+      "source_secondary_muscles_raw": [
+        "lats"
+      ],
+      "source_equipment_raw": [
+        "none"
+      ],
+      "source_id": "657",
+      "license_author": null,
+      "license_meta": null
+    },
+    "best_match": {
+      "id": 49,
+      "name": "Lateral Raise",
+      "canonical_base_name": "Lateral Raise",
+      "canonical_name_key": "lateral_raise",
+      "pattern": "isolation",
+      "primary_muscle": "side_delts",
+      "primary_region": "shoulder",
+      "equipment_tags": [
+        "dumbbell",
+        "cable"
+      ]
+    },
+    "score": 0.5222222222222221
+  },
+  {
+    "candidate": {
+      "source_name": "Side-Lying Floor Stretch",
+      "source_aliases": [],
+      "canonical_base_name": "Side Lying Floor Stretch",
+      "canonical_name_key": "side_lying_floor_stretch",
+      "pattern": "mobility",
+      "primary_muscle": "lats",
+      "secondary_muscles": [],
+      "primary_region": "posterior upper",
+      "discipline_tags": [
+        "stretching"
+      ],
+      "equipment_tags": [
+        "none"
+      ],
+      "metric_type": "reps",
+      "skill_level": "intermediate",
+      "cns_load": "moderate",
+      "compound": false,
+      "is_complex_lift": false,
+      "is_unilateral": false,
+      "description": null,
+      "coaching_cues": [
+        "First lie on your left side, bending your left knee in front of you to stabilize your torso (use your abdominal muscles as well to hold you upright).",
+        "Straighten your right leg and rest the right foot on the floor behind your left. Straighten your right arm over your head and gently pull on your right wrist to stretch the entire right side of the body. Switch sides."
+      ],
+      "substitution_group": "side_lying_floor_stretch",
+      "variation_on_names": [],
+      "source_category": "stretching",
+      "source_primary_muscles_raw": [
+        "lats"
+      ],
+      "source_secondary_muscles_raw": [],
+      "source_equipment_raw": [
+        "none"
+      ],
+      "source_id": "659",
+      "license_author": null,
+      "license_meta": null
+    },
+    "best_match": {
+      "id": 207,
+      "name": "Lying Glute",
+      "canonical_base_name": "Lying Glute",
+      "canonical_name_key": "lying_glute",
+      "pattern": "mobility",
+      "primary_muscle": "glutes",
+      "primary_region": "posterior lower",
+      "equipment_tags": [
+        "none"
+      ]
+    },
+    "score": 0.4771428571428571
+  },
+  {
+    "candidate": {
+      "source_name": "Side Bridge",
+      "source_aliases": [],
+      "canonical_base_name": "Side Bridge",
+      "canonical_name_key": "side_bridge",
+      "pattern": "isolation",
+      "primary_muscle": "core",
+      "secondary_muscles": [
+        "full_body"
+      ],
+      "primary_region": "full body",
+      "discipline_tags": [
+        "strength"
+      ],
+      "equipment_tags": [
+        "none"
+      ],
+      "metric_type": "reps",
+      "skill_level": "intermediate",
+      "cns_load": "moderate",
+      "compound": false,
+      "is_complex_lift": false,
+      "is_unilateral": false,
+      "description": null,
+      "coaching_cues": [],
+      "substitution_group": "side_bridge",
+      "variation_on_names": [],
+      "source_category": "strength",
+      "source_primary_muscles_raw": [
+        "abs"
+      ],
+      "source_secondary_muscles_raw": [
+        "shoulders"
+      ],
+      "source_equipment_raw": [
+        "none"
+      ],
+      "source_id": "660",
+      "license_author": null,
+      "license_meta": null
+    },
+    "best_match": {
+      "id": 279,
+      "name": "Single Leg Glute Bridge",
+      "canonical_base_name": "Glute Bridge",
+      "canonical_name_key": "glute_bridge",
+      "pattern": "hinge",
+      "primary_muscle": "glutes",
+      "primary_region": "posterior lower",
+      "equipment_tags": [
+        "none"
+      ]
+    },
+    "score": 0.5376811594202898
+  },
+  {
+    "candidate": {
+      "source_name": "Side Wrist Pull",
+      "source_aliases": [],
+      "canonical_base_name": "Side Wrist Pull",
+      "canonical_name_key": "side_wrist_pull",
+      "pattern": "mobility",
+      "primary_muscle": "full_body",
+      "secondary_muscles": [
+        "forearms",
+        "lats"
+      ],
+      "primary_region": "full body",
+      "discipline_tags": [
+        "stretching"
+      ],
+      "equipment_tags": [
+        "none"
+      ],
+      "metric_type": "reps",
+      "skill_level": "intermediate",
+      "cns_load": "moderate",
+      "compound": false,
+      "is_complex_lift": false,
+      "is_unilateral": false,
+      "description": null,
+      "coaching_cues": [
+        "This stretch works best standing. Cross your left arm over the midline of your body and hold the left wrist in your right hand down at the level of your hips. Start the stretch with a bent left arm.",
+        "Slowly straighten, pull, and lift it up to shoulder height, as pictured. Feel this stretch originate in your back, not your shoulders, and don't pull too hard on the shoulders joint. Switch sides."
+      ],
+      "substitution_group": "side_wrist_pull",
+      "variation_on_names": [],
+      "source_category": "stretching",
+      "source_primary_muscles_raw": [
+        "shoulders"
+      ],
+      "source_secondary_muscles_raw": [
+        "forearms",
+        "lats"
+      ],
+      "source_equipment_raw": [
+        "none"
+      ],
+      "source_id": "670",
+      "license_author": null,
+      "license_meta": null
+    },
+    "best_match": {
+      "id": 319,
+      "name": "Wrist Circles",
+      "canonical_base_name": "Wrist Circles",
+      "canonical_name_key": "wrist_circles",
+      "pattern": "mobility",
+      "primary_muscle": "forearms",
+      "primary_region": "anterior upper",
+      "equipment_tags": [
+        "none"
+      ]
+    },
+    "score": 0.525
+  },
+  {
+    "candidate": {
+      "source_name": "Single-Leg High Box Squat",
+      "source_aliases": [],
+      "canonical_base_name": "Single Leg High Box Squat",
+      "canonical_name_key": "single_leg_high_box_squat",
+      "pattern": "squat",
+      "primary_muscle": "quadriceps",
+      "secondary_muscles": [
+        "glutes",
+        "hamstrings"
+      ],
+      "primary_region": "anterior lower",
+      "discipline_tags": [
+        "strength"
+      ],
+      "equipment_tags": [
+        "other"
+      ],
+      "metric_type": "reps",
+      "skill_level": "intermediate",
+      "cns_load": "moderate",
+      "compound": true,
+      "is_complex_lift": false,
+      "is_unilateral": true,
+      "description": null,
+      "coaching_cues": [
+        "Position a box in a rack. Secure a band or rope in place above the box.",
+        "Standing in front of it, step onto the box to a full standing position, letting your other leg remain unsupported. Hold onto the band for balance",
+        ". Continue stepping up and down on the same leg before switching to the opposite side."
+      ],
+      "substitution_group": "single_leg_high_box_squat",
+      "variation_on_names": [],
+      "source_category": "strength",
+      "source_primary_muscles_raw": [
+        "quads"
+      ],
+      "source_secondary_muscles_raw": [
+        "glutes",
+        "hamstrings"
+      ],
+      "source_equipment_raw": [
+        "other"
+      ],
+      "source_id": "676",
+      "license_author": null,
+      "license_meta": null
+    },
+    "best_match": {
+      "id": 3,
+      "name": "Goblet Squat",
+      "canonical_base_name": "Goblet Squat",
+      "canonical_name_key": "goblet_squat",
+      "pattern": "squat",
+      "primary_muscle": "quadriceps",
+      "primary_region": "anterior lower",
+      "equipment_tags": [
+        "dumbbell",
+        "kettlebell"
+      ]
+    },
+    "score": 0.4815315315315315
+  },
+  {
+    "candidate": {
+      "source_name": "Single-Leg Hop Progression",
+      "source_aliases": [],
+      "canonical_base_name": "Single Leg Hop Progression",
+      "canonical_name_key": "single_leg_hop_progression",
+      "pattern": "lunge",
+      "primary_muscle": "quadriceps",
+      "secondary_muscles": [
+        "adductors",
+        "adductors",
+        "calves",
+        "hamstrings"
+      ],
+      "primary_region": "anterior lower",
+      "discipline_tags": [
+        "plyometrics"
+      ],
+      "equipment_tags": [
+        "other"
+      ],
+      "metric_type": "reps",
+      "skill_level": "intermediate",
+      "cns_load": "moderate",
+      "compound": false,
+      "is_complex_lift": false,
+      "is_unilateral": true,
+      "description": null,
+      "coaching_cues": [
+        "Arrange a line of cones in front of you. Assume a relaxed standing position, balanced on one leg. Raise the knee of your opposite leg. This will be your starting position.",
+        "Hop forward, jumping and landing with the same leg over the cone.",
+        "Use a countermovement jump to hop from cone to cone.",
+        "At the end, turn around and go back on the other leg."
+      ],
+      "substitution_group": "single_leg_hop_progression",
+      "variation_on_names": [],
+      "source_category": "plyometrics",
+      "source_primary_muscles_raw": [
+        "quads"
+      ],
+      "source_secondary_muscles_raw": [
+        "abductors",
+        "adductors",
+        "calves",
+        "hamstrings"
+      ],
+      "source_equipment_raw": [
+        "other"
+      ],
+      "source_id": "677",
+      "license_author": null,
+      "license_meta": null
+    },
+    "best_match": {
+      "id": 277,
+      "name": "Single-Cone Sprint Drill",
+      "canonical_base_name": "Single Cone Sprint Drill",
+      "canonical_name_key": "single_cone_sprint_drill",
+      "pattern": "lunge",
+      "primary_muscle": "quadriceps",
+      "primary_region": "anterior lower",
+      "equipment_tags": [
+        "other"
+      ]
+    },
+    "score": 0.5468571428571428
+  },
+  {
+    "candidate": {
+      "source_name": "Single-Leg Stride Jump",
+      "source_aliases": [],
+      "canonical_base_name": "Single Leg Stride Jump",
+      "canonical_name_key": "single_leg_stride_jump",
+      "pattern": "plyometric",
+      "primary_muscle": "quadriceps",
+      "secondary_muscles": [
+        "adductors",
+        "adductors",
+        "calves",
+        "hamstrings"
+      ],
+      "primary_region": "anterior lower",
+      "discipline_tags": [
+        "plyometrics"
+      ],
+      "equipment_tags": [
+        "other"
+      ],
+      "metric_type": "reps",
+      "skill_level": "intermediate",
+      "cns_load": "moderate",
+      "compound": false,
+      "is_complex_lift": false,
+      "is_unilateral": true,
+      "description": null,
+      "coaching_cues": [
+        "Stand to the side of a box with your inside foot on top of it, close to the edge.",
+        "Begin by swinging the arms upward as you push through the top leg, jumping upward as high as possible. Attempt to drive the opposite knee upward.",
+        "Land in the same position that you started, using your inside leg to decelerate the impact."
+      ],
+      "substitution_group": "single_leg_stride_jump",
+      "variation_on_names": [],
+      "source_category": "plyometrics",
+      "source_primary_muscles_raw": [
+        "quads"
+      ],
+      "source_secondary_muscles_raw": [
+        "abductors",
+        "adductors",
+        "calves",
+        "hamstrings"
+      ],
+      "source_equipment_raw": [
+        "other"
+      ],
+      "source_id": "680",
+      "license_author": null,
+      "license_meta": null
+    },
+    "best_match": {
+      "id": 45,
+      "name": "Depth Jump",
+      "canonical_base_name": "Depth Jump",
+      "canonical_name_key": "depth_jump",
+      "pattern": "plyometric",
+      "primary_muscle": "quadriceps",
+      "primary_region": "anterior lower",
+      "equipment_tags": [
+        "plyo_box"
+      ]
+    },
+    "score": 0.515625
+  },
+  {
+    "candidate": {
+      "source_name": "Smith Incline Shoulder Raise",
+      "source_aliases": [],
+      "canonical_base_name": "Shoulder Raise",
+      "canonical_name_key": "shoulder_raise",
+      "pattern": "isolation",
+      "primary_muscle": "full_body",
+      "secondary_muscles": [
+        "chest"
+      ],
+      "primary_region": "full body",
+      "discipline_tags": [
+        "strength"
+      ],
+      "equipment_tags": [
+        "barbell"
+      ],
+      "metric_type": "reps",
+      "skill_level": "intermediate",
+      "cns_load": "moderate",
+      "compound": false,
+      "is_complex_lift": false,
+      "is_unilateral": false,
+      "description": null,
+      "coaching_cues": [
+        "Place an incline bench underneath the smith machine. Place the barbell at a height that you can reach when lying down and your arms are almost fully extended. Once the weight you need is selected, lie down on the incline bench and make sure your shoulders are aligned right under the barbell.",
+        "Using a shoulder width pronated (palms forward) grip, lift the bar from the rack and hold it straight over you with a slight bend at the elbows. This will be your starting position.",
+        "As you breathe out, lift the bar up until your arms are fully extended. Note: The contraction should be felt around the shoulders.",
+        "After a second pause, bring the bar back down to the starting position as you breathe in.",
+        "Repeat the movement for the prescribed amount of repetitions.",
+        "When you are done, place the bar back in the rack."
+      ],
+      "substitution_group": "shoulder_raise",
+      "variation_on_names": [],
+      "source_category": "strength",
+      "source_primary_muscles_raw": [
+        "shoulders"
+      ],
+      "source_secondary_muscles_raw": [
+        "chest"
+      ],
+      "source_equipment_raw": [
+        "barbell"
+      ],
+      "source_id": "695",
+      "license_author": null,
+      "license_meta": null
+    },
+    "best_match": {
+      "id": 49,
+      "name": "Lateral Raise",
+      "canonical_base_name": "Lateral Raise",
+      "canonical_name_key": "lateral_raise",
+      "pattern": "isolation",
+      "primary_muscle": "side_delts",
+      "primary_region": "shoulder",
+      "equipment_tags": [
+        "dumbbell",
+        "cable"
+      ]
+    },
+    "score": 0.5222222222222221
+  },
+  {
+    "candidate": {
+      "source_name": "Spinal Stretch",
+      "source_aliases": [],
+      "canonical_base_name": "Spinal Stretch",
+      "canonical_name_key": "spinal_stretch",
+      "pattern": "mobility",
+      "primary_muscle": "full_body",
+      "secondary_muscles": [
+        "lats",
+        "lower_back",
+        "full_body",
+        "upper_back"
+      ],
+      "primary_region": "full body",
+      "discipline_tags": [
+        "stretching"
+      ],
+      "equipment_tags": [
+        "none"
+      ],
+      "metric_type": "reps",
+      "skill_level": "intermediate",
+      "cns_load": "moderate",
+      "compound": false,
+      "is_complex_lift": false,
+      "is_unilateral": false,
+      "description": null,
+      "coaching_cues": [
+        "Sit in a chair so your back is straight and your feet planted on the floor.",
+        "Interlace your fingers behind your head, elbows out and your chin down.",
+        "Twist your upper body to one side about 3 times as far as you can. Then lean forward and twist your torso to reach your elbow to the floor on the inside of your knee.",
+        "Return to upright position and then repeat for your other side."
+      ],
+      "substitution_group": "spinal_stretch",
+      "variation_on_names": [],
+      "source_category": "stretching",
+      "source_primary_muscles_raw": [
+        "middle back"
+      ],
+      "source_secondary_muscles_raw": [
+        "lats",
+        "lower back",
+        "neck",
+        "traps"
+      ],
+      "source_equipment_raw": [
+        "none"
+      ],
+      "source_id": "726",
+      "license_author": null,
+      "license_meta": null
+    },
+    "best_match": {
+      "id": 55,
+      "name": "Pigeon Stretch",
+      "canonical_base_name": "Pigeon Stretch",
+      "canonical_name_key": "pigeon_stretch",
+      "pattern": "mobility",
+      "primary_muscle": "glutes",
+      "primary_region": "posterior lower",
+      "equipment_tags": [
+        "bodyweight"
+      ]
+    },
+    "score": 0.5404761904761904
+  },
+  {
+    "candidate": {
+      "source_name": "Standing Alternating Dumbbell Press",
+      "source_aliases": [],
+      "canonical_base_name": "Alternating Press",
+      "canonical_name_key": "alternating_press",
+      "pattern": "isolation",
+      "primary_muscle": "full_body",
+      "secondary_muscles": [
+        "triceps"
+      ],
+      "primary_region": "full body",
+      "discipline_tags": [
+        "strength"
+      ],
+      "equipment_tags": [
+        "dumbbell"
+      ],
+      "metric_type": "reps",
+      "skill_level": "intermediate",
+      "cns_load": "moderate",
+      "compound": true,
+      "is_complex_lift": false,
+      "is_unilateral": false,
+      "description": null,
+      "coaching_cues": [
+        "Stand with a dumbbell in each hand. Raise the dumbbells to your shoulders with your palms facing forward and your elbows pointed out. This will be your starting position.",
+        "Extend one arm to press the dumbbell straight up, keeping your off hand in place. Do not lean or jerk the weight during the movement.",
+        "After a brief pause, return the weight to the starting position.",
+        "Repeat for the opposite side, continuing to alternate between arms."
+      ],
+      "substitution_group": "alternating_press",
+      "variation_on_names": [],
+      "source_category": "strength",
+      "source_primary_muscles_raw": [
+        "shoulders"
+      ],
+      "source_secondary_muscles_raw": [
+        "triceps"
+      ],
+      "source_equipment_raw": [
+        "dumbbell"
+      ],
+      "source_id": "739",
+      "license_author": null,
+      "license_meta": null
+    },
+    "best_match": {
+      "id": 220,
+      "name": "One-Arm Kettlebell Para Press",
+      "canonical_base_name": "One Arm Para Press",
+      "canonical_name_key": "one_arm_para_press",
+      "pattern": "isolation",
+      "primary_muscle": "full_body",
+      "primary_region": "full body",
+      "equipment_tags": [
+        "kettlebell"
+      ]
+    },
+    "score": 0.5271428571428571
+  },
+  {
+    "candidate": {
+      "source_name": "Standing Front Barbell Raise Over Head",
+      "source_aliases": [],
+      "canonical_base_name": "Front Raise Over Head",
+      "canonical_name_key": "front_raise_over_head",
+      "pattern": "isolation",
+      "primary_muscle": "full_body",
+      "secondary_muscles": [],
+      "primary_region": "full body",
+      "discipline_tags": [
+        "strength"
+      ],
+      "equipment_tags": [
+        "barbell"
+      ],
+      "metric_type": "reps",
+      "skill_level": "intermediate",
+      "cns_load": "moderate",
+      "compound": false,
+      "is_complex_lift": false,
+      "is_unilateral": false,
+      "description": null,
+      "coaching_cues": [
+        "To begin, stand straight with a barbell in your hands. You should grip the bar with palms facing down and a closer than shoulder width grip apart from each other.",
+        "Your feet should be shoulder width apart from each other. Your elbows should be slightly bent. This is the starting position.",
+        "Lift the barbell up until it is directly over your head while exhaling. Make sure to keep your elbows slightly bent when performing each repetition.",
+        "Once you feel the contraction, begin to lower the barbell back down to the starting position as you inhale.",
+        "Repeat for the recommended amount of repetitions."
+      ],
+      "substitution_group": "front_raise_over_head",
+      "variation_on_names": [],
+      "source_category": "strength",
+      "source_primary_muscles_raw": [
+        "shoulders"
+      ],
+      "source_secondary_muscles_raw": [],
+      "source_equipment_raw": [
+        "barbell"
+      ],
+      "source_id": "759",
+      "license_author": null,
+      "license_meta": null
+    },
+    "best_match": {
+      "id": 92,
+      "name": "Bent Over Dumbbell Rear Delt Raise With Head On Bench",
+      "canonical_base_name": "Bent Over Rear Delt Raise With Head On Bench",
+      "canonical_name_key": "bent_over_rear_delt_raise_with_head_on_bench",
+      "pattern": "horizontal_push",
+      "primary_muscle": "full_body",
+      "primary_region": "full body",
+      "equipment_tags": [
+        "dumbbell"
+      ]
+    },
+    "score": 0.5146153846153846
+  },
+  {
+    "candidate": {
+      "source_name": "Standing Hip Flexors",
+      "source_aliases": [],
+      "canonical_base_name": "Hip Flexors",
+      "canonical_name_key": "hip_flexors",
+      "pattern": "mobility",
+      "primary_muscle": "quadriceps",
+      "secondary_muscles": [],
+      "primary_region": "anterior lower",
+      "discipline_tags": [
+        "stretching"
+      ],
+      "equipment_tags": [
+        "none"
+      ],
+      "metric_type": "reps",
+      "skill_level": "intermediate",
+      "cns_load": "moderate",
+      "compound": false,
+      "is_complex_lift": false,
+      "is_unilateral": false,
+      "description": null,
+      "coaching_cues": [
+        "Stand up straight with the spine vertical, the left foot slightly in front of the right.",
+        "Bend both knees and lift the back heel off the floor as you press the right hip forward. You can't get a thorough, deep stretch in this position, however, because it's hard to relax the hip flexor and stand on it at the same time. Switch sides."
+      ],
+      "substitution_group": "hip_flexors",
+      "variation_on_names": [],
+      "source_category": "stretching",
+      "source_primary_muscles_raw": [
+        "quads"
+      ],
+      "source_secondary_muscles_raw": [],
+      "source_equipment_raw": [
+        "none"
+      ],
+      "source_id": "763",
+      "license_author": null,
+      "license_meta": null
+    },
+    "best_match": {
+      "id": 164,
+      "name": "Hip Flexion with Band",
+      "canonical_base_name": "Hip Flexion With",
+      "canonical_name_key": "hip_flexion_with",
+      "pattern": "lunge",
+      "primary_muscle": "quadriceps",
+      "primary_region": "anterior lower",
+      "equipment_tags": [
+        "bands"
+      ]
+    },
+    "score": 0.5
+  },
+  {
+    "candidate": {
+      "source_name": "Standing Lateral Stretch",
+      "source_aliases": [],
+      "canonical_base_name": "Lateral Stretch",
+      "canonical_name_key": "lateral_stretch",
+      "pattern": "mobility",
+      "primary_muscle": "core",
+      "secondary_muscles": [],
+      "primary_region": "full body",
+      "discipline_tags": [
+        "stretching"
+      ],
+      "equipment_tags": [
+        "none"
+      ],
+      "metric_type": "reps",
+      "skill_level": "intermediate",
+      "cns_load": "moderate",
+      "compound": false,
+      "is_complex_lift": false,
+      "is_unilateral": false,
+      "description": null,
+      "coaching_cues": [
+        "Take a slightly wider than hip distance stance with your knees slightly bent.",
+        "Place your right hand on your right hip to support the spine.",
+        "Raise your left arm in a vertical line and place your left hand behind your head. Keep it there as you incline your torso to the right.",
+        "Keep your weight evenly distributed between both legs (don't lean into your left hip). Switch sides."
+      ],
+      "substitution_group": "lateral_stretch",
+      "variation_on_names": [],
+      "source_category": "stretching",
+      "source_primary_muscles_raw": [
+        "abs"
+      ],
+      "source_secondary_muscles_raw": [],
+      "source_equipment_raw": [
+        "none"
+      ],
+      "source_id": "765",
+      "license_author": null,
+      "license_meta": null
+    },
+    "best_match": {
+      "id": 55,
+      "name": "Pigeon Stretch",
+      "canonical_base_name": "Pigeon Stretch",
+      "canonical_name_key": "pigeon_stretch",
+      "pattern": "mobility",
+      "primary_muscle": "glutes",
+      "primary_region": "posterior lower",
+      "equipment_tags": [
+        "bodyweight"
+      ]
+    },
+    "score": 0.5264367816091954
+  },
+  {
+    "candidate": {
+      "source_name": "Standing Low-Pulley Deltoid Raise",
+      "source_aliases": [],
+      "canonical_base_name": "Low Pulley Deltoid Raise",
+      "canonical_name_key": "low_pulley_deltoid_raise",
+      "pattern": "isolation",
+      "primary_muscle": "full_body",
+      "secondary_muscles": [
+        "forearms"
+      ],
+      "primary_region": "full body",
+      "discipline_tags": [
+        "strength"
+      ],
+      "equipment_tags": [
+        "cable"
+      ],
+      "metric_type": "reps",
+      "skill_level": "intermediate",
+      "cns_load": "moderate",
+      "compound": false,
+      "is_complex_lift": false,
+      "is_unilateral": false,
+      "description": null,
+      "coaching_cues": [
+        "Start by standing to the right side of a low pulley row. Use your left hand to come across the body and grab a single handle attached to the low pulley with a pronated grip (palms facing down). Rest your arm in front of you. Your right hand should grab the machine for better support and balance.",
+        "Make sure that your back is erect and your feet are shoulder width apart from each other. This is the starting position.",
+        "Begin to use the left hand and come across your body out until it is elevated to shoulder height while exhaling.",
+        "Feel the contraction at the top for a second and begin to slowly lower the handle back down to the original starting position while inhaling.",
+        "Repeat for the recommended amount of repetitions.",
+        "Switch arms and repeat the exercise."
+      ],
+      "substitution_group": "low_pulley_deltoid_raise",
+      "variation_on_names": [],
+      "source_category": "strength",
+      "source_primary_muscles_raw": [
+        "shoulders"
+      ],
+      "source_secondary_muscles_raw": [
+        "forearms"
+      ],
+      "source_equipment_raw": [
+        "cable"
+      ],
+      "source_id": "768",
+      "license_author": null,
+      "license_meta": null
+    },
+    "best_match": {
+      "id": 49,
+      "name": "Lateral Raise",
+      "canonical_base_name": "Lateral Raise",
+      "canonical_name_key": "lateral_raise",
+      "pattern": "isolation",
+      "primary_muscle": "side_delts",
+      "primary_region": "shoulder",
+      "equipment_tags": [
+        "dumbbell",
+        "cable"
+      ]
+    },
+    "score": 0.4648648648648649
+  },
+  {
+    "candidate": {
+      "source_name": "Standing One-Arm Dumbbell Curl Over Incline Bench",
+      "source_aliases": [],
+      "canonical_base_name": "One Arm Curl Over Bench",
+      "canonical_name_key": "one_arm_curl_over_bench",
+      "pattern": "horizontal_push",
+      "primary_muscle": "biceps",
+      "secondary_muscles": [],
+      "primary_region": "anterior upper",
+      "discipline_tags": [
+        "strength"
+      ],
+      "equipment_tags": [
+        "dumbbell"
+      ],
+      "metric_type": "reps",
+      "skill_level": "intermediate",
+      "cns_load": "moderate",
+      "compound": false,
+      "is_complex_lift": false,
+      "is_unilateral": false,
+      "description": null,
+      "coaching_cues": [
+        "Stand on the back side of an incline bench as if you were going to be a spotter for someone. Have a dumbbell in one hand and rest it across the incline bench with a supinated (palms up) grip.",
+        "Position your non lifting hand at the corner or side of the incline bench. The chest should be pressed against the top part of the incline and your feet should be pressed against the floor at a wide stance. This is the starting position.",
+        "While holding the upper arm stationary, curl the dumbbell upward while contracting the biceps as you breathe out. Only the forearms should move. Continue the movement until your biceps are fully contracted and the dumbbell is at shoulder level. Hold the contracted position for a second.",
+        "Slowly begin to bring the dumbbells back to starting position as your breathe in.",
+        "Repeat for the recommended amount of repetitions.",
+        "Switch arms while performing this exercise."
+      ],
+      "substitution_group": "one_arm_curl_over_bench",
+      "variation_on_names": [],
+      "source_category": "strength",
+      "source_primary_muscles_raw": [
+        "biceps"
+      ],
+      "source_secondary_muscles_raw": [],
+      "source_equipment_raw": [
+        "dumbbell"
+      ],
+      "source_id": "773",
+      "license_author": null,
+      "license_meta": null
+    },
+    "best_match": {
+      "id": 47,
+      "name": "Bicep Curl",
+      "canonical_base_name": "Bicep Curl",
+      "canonical_name_key": "bicep_curl",
+      "pattern": "isolation",
+      "primary_muscle": "biceps",
+      "primary_region": "anterior upper",
+      "equipment_tags": [
+        "dumbbell",
+        "barbell",
+        "cable"
+      ]
+    },
+    "score": 0.4712121212121212
+  },
+  {
+    "candidate": {
+      "source_name": "Standing Palms-In Dumbbell Press",
+      "source_aliases": [],
+      "canonical_base_name": "Palms In Press",
+      "canonical_name_key": "palms_in_press",
+      "pattern": "isolation",
+      "primary_muscle": "full_body",
+      "secondary_muscles": [
+        "triceps"
+      ],
+      "primary_region": "full body",
+      "discipline_tags": [
+        "strength"
+      ],
+      "equipment_tags": [
+        "dumbbell"
+      ],
+      "metric_type": "reps",
+      "skill_level": "intermediate",
+      "cns_load": "moderate",
+      "compound": true,
+      "is_complex_lift": false,
+      "is_unilateral": false,
+      "description": null,
+      "coaching_cues": [
+        "Start by having a dumbbell in each hand with your arm fully extended to the side using a neutral grip. Your feet should be shoulder width apart from each other. Now slowly lift the dumbbells up until you create a 90 degree angle with your arms. Note: Your forearms should be perpendicular to the floor. This the starting position.",
+        "Continue to maintain a neutral grip throughout the entire exercise. Slowly lift the dumbbells up until your arms are fully extended.",
+        "While inhaling lower the weights down until your arm is at a 90 degree angle again.",
+        "Repeat for the recommended amount of repetitions."
+      ],
+      "substitution_group": "palms_in_press",
+      "variation_on_names": [],
+      "source_category": "strength",
+      "source_primary_muscles_raw": [
+        "shoulders"
+      ],
+      "source_secondary_muscles_raw": [
+        "triceps"
+      ],
+      "source_equipment_raw": [
+        "dumbbell"
+      ],
+      "source_id": "777",
+      "license_author": null,
+      "license_meta": null
+    },
+    "best_match": {
+      "id": 220,
+      "name": "One-Arm Kettlebell Para Press",
+      "canonical_base_name": "One Arm Para Press",
+      "canonical_name_key": "one_arm_para_press",
+      "pattern": "isolation",
+      "primary_muscle": "full_body",
+      "primary_region": "full body",
+      "equipment_tags": [
+        "kettlebell"
+      ]
+    },
+    "score": 0.4916666666666667
+  },
+  {
+    "candidate": {
+      "source_name": "Standing Soleus And Achilles Stretch",
+      "source_aliases": [],
+      "canonical_base_name": "Soleus And Achilles Stretch",
+      "canonical_name_key": "soleus_and_achilles_stretch",
+      "pattern": "mobility",
+      "primary_muscle": "calves",
+      "secondary_muscles": [],
+      "primary_region": "posterior lower",
+      "discipline_tags": [
+        "stretching"
+      ],
+      "equipment_tags": [
+        "none"
+      ],
+      "metric_type": "reps",
+      "skill_level": "intermediate",
+      "cns_load": "moderate",
+      "compound": false,
+      "is_complex_lift": false,
+      "is_unilateral": false,
+      "description": null,
+      "coaching_cues": [
+        "Stand with your feet hip-distance apart, one foot slightly in front of the other.",
+        "Bend both knees, keeping your back heel on the floor. Switch sides."
+      ],
+      "substitution_group": "soleus_and_achilles_stretch",
+      "variation_on_names": [],
+      "source_category": "stretching",
+      "source_primary_muscles_raw": [
+        "calves"
+      ],
+      "source_secondary_muscles_raw": [],
+      "source_equipment_raw": [
+        "none"
+      ],
+      "source_id": "781",
+      "license_author": null,
+      "license_meta": null
+    },
+    "best_match": {
+      "id": 115,
+      "name": "Calf Stretch Hands Against Wall",
+      "canonical_base_name": "Calf Stretch Hands Against Wall",
+      "canonical_name_key": "calf_stretch_hands_against_wall",
+      "pattern": "mobility",
+      "primary_muscle": "calves",
+      "primary_region": "posterior lower",
+      "equipment_tags": [
+        "none"
+      ]
+    },
+    "score": 0.521551724137931
+  },
+  {
+    "candidate": {
+      "source_name": "Straight Raises on Incline Bench",
+      "source_aliases": [],
+      "canonical_base_name": "Straight Raises On Bench",
+      "canonical_name_key": "straight_raises_on_bench",
+      "pattern": "horizontal_push",
+      "primary_muscle": "full_body",
+      "secondary_muscles": [
+        "upper_back"
+      ],
+      "primary_region": "full body",
+      "discipline_tags": [
+        "strength"
+      ],
+      "equipment_tags": [
+        "barbell"
+      ],
+      "metric_type": "reps",
+      "skill_level": "intermediate",
+      "cns_load": "moderate",
+      "compound": false,
+      "is_complex_lift": false,
+      "is_unilateral": false,
+      "description": null,
+      "coaching_cues": [
+        "Place a bar on the ground behind the head of an incline bench.",
+        "Lay on the bench face down. With a pronated grip, pick the barbell up from the floor, keeping your arms straight. Allow the bar to hang straight down. This will be your starting position.",
+        "To begin, raise the barbell out in front of your head while keeping your arms extended.",
+        "Return to the starting position."
+      ],
+      "substitution_group": "straight_raises_on_bench",
+      "variation_on_names": [],
+      "source_category": "strength",
+      "source_primary_muscles_raw": [
+        "shoulders"
+      ],
+      "source_secondary_muscles_raw": [
+        "traps"
+      ],
+      "source_equipment_raw": [
+        "barbell"
+      ],
+      "source_id": "795",
+      "license_author": null,
+      "license_meta": null
+    },
+    "best_match": {
+      "id": 92,
+      "name": "Bent Over Dumbbell Rear Delt Raise With Head On Bench",
+      "canonical_base_name": "Bent Over Rear Delt Raise With Head On Bench",
+      "canonical_name_key": "bent_over_rear_delt_raise_with_head_on_bench",
+      "pattern": "horizontal_push",
+      "primary_muscle": "full_body",
+      "primary_region": "full body",
+      "equipment_tags": [
+        "dumbbell"
+      ]
+    },
+    "score": 0.5156417112299465
+  },
+  {
+    "candidate": {
+      "source_name": "T-Bar Row with Handle",
+      "source_aliases": [],
+      "canonical_base_name": "T Bar Row With Handle",
+      "canonical_name_key": "t_bar_row_with_handle",
+      "pattern": "horizontal_pull",
+      "primary_muscle": "full_body",
+      "secondary_muscles": [
+        "biceps",
+        "lats"
+      ],
+      "primary_region": "full body",
+      "discipline_tags": [
+        "strength"
+      ],
+      "equipment_tags": [
+        "barbell"
+      ],
+      "metric_type": "time",
+      "skill_level": "intermediate",
+      "cns_load": "moderate",
+      "compound": true,
+      "is_complex_lift": false,
+      "is_unilateral": false,
+      "description": null,
+      "coaching_cues": [
+        "Position a bar into a landmine or in a corner to keep it from moving. Load an appropriate weight onto your end.",
+        "Stand over the bar, and position a Double D row handle around the bar next to the collar. Using your hips and legs, rise to a standing position.",
+        "Assume a wide stance with your hips back and your chest up. Your arms should be extended. This will be your starting position.",
+        "Pull the weight to your upper abdomen by retracting the shoulder blades and flexing the elbows. Do not jerk the weight or cheat during the movement.",
+        "After a brief pause, return to the starting position."
+      ],
+      "substitution_group": "t_bar_row_with_handle",
+      "variation_on_names": [],
+      "source_category": "strength",
+      "source_primary_muscles_raw": [
+        "middle back"
+      ],
+      "source_secondary_muscles_raw": [
+        "biceps",
+        "lats"
+      ],
+      "source_equipment_raw": [
+        "barbell"
+      ],
+      "source_id": "810",
+      "license_author": null,
+      "license_meta": null
+    },
+    "best_match": {
+      "id": 22,
+      "name": "Barbell Row",
+      "canonical_base_name": "Row",
+      "canonical_name_key": "row",
+      "pattern": "horizontal_pull",
+      "primary_muscle": "lats",
+      "primary_region": "posterior upper",
+      "equipment_tags": [
+        "barbell"
+      ]
+    },
+    "score": 0.5375
+  },
+  {
+    "candidate": {
+      "source_name": "Tate Press",
+      "source_aliases": [],
+      "canonical_base_name": "Tate Press",
+      "canonical_name_key": "tate_press",
+      "pattern": "isolation",
+      "primary_muscle": "triceps",
+      "secondary_muscles": [
+        "chest",
+        "full_body"
+      ],
+      "primary_region": "posterior upper",
+      "discipline_tags": [
+        "strength"
+      ],
+      "equipment_tags": [
+        "dumbbell"
+      ],
+      "metric_type": "reps",
+      "skill_level": "intermediate",
+      "cns_load": "moderate",
+      "compound": true,
+      "is_complex_lift": false,
+      "is_unilateral": false,
+      "description": null,
+      "coaching_cues": [
+        "Lie down on a flat bench with a dumbbell in each hand on top of your thighs. The palms of your hand will be facing each other.",
+        "By using your thighs to help you get the dumbbells up, clean the dumbbells one arm at a time so that you can hold them in front of you at shoulder width. Note: when holding the dumbbells in front of you, make sure your arms are wider than shoulder width apart from each other using a pronated (palms forward) grip. Allow your elbows to point out. This is your starting position.",
+        "Keeping the upper arms stationary, slowly move the dumbbells in and down in a semi circular motion until they touch the upper chest while inhaling. Keep full control of the dumbbells at all times and do not move the upper arms nor rest the dumbbells on the chest.",
+        "As you breathe out, move the dumbbells up using your triceps and the same semi-circular motion but in reverse. Attempt to keep the dumbbells together as they move up. Lock your arms in the contracted position, hold for a second and then start coming down again slowly again. Tip: It should take at least twice as long to go down than to come up.",
+        "Repeat the movement for the prescribed amount of repetitions of your training program."
+      ],
+      "substitution_group": "tate_press",
+      "variation_on_names": [],
+      "source_category": "strength",
+      "source_primary_muscles_raw": [
+        "triceps"
+      ],
+      "source_secondary_muscles_raw": [
+        "chest",
+        "shoulders"
+      ],
+      "source_equipment_raw": [
+        "dumbbell"
+      ],
+      "source_id": "811",
+      "license_author": null,
+      "license_meta": null
+    },
+    "best_match": {
+      "id": 14,
+      "name": "Incline Bench Press",
+      "canonical_base_name": "Bench Press",
+      "canonical_name_key": "bench_press",
+      "pattern": "horizontal_push",
+      "primary_muscle": "chest",
+      "primary_region": "anterior upper",
+      "equipment_tags": [
+        "barbell",
+        "dumbbell",
+        "bench"
+      ]
+    },
+    "score": 0.5333333333333333
+  },
+  {
+    "candidate": {
+      "source_name": "Torso Rotation",
+      "source_aliases": [],
+      "canonical_base_name": "Torso Rotation",
+      "canonical_name_key": "torso_rotation",
+      "pattern": "mobility",
+      "primary_muscle": "core",
+      "secondary_muscles": [],
+      "primary_region": "full body",
+      "discipline_tags": [
+        "stretching"
+      ],
+      "equipment_tags": [
+        "exercise ball"
+      ],
+      "metric_type": "reps",
+      "skill_level": "intermediate",
+      "cns_load": "moderate",
+      "compound": false,
+      "is_complex_lift": false,
+      "is_unilateral": false,
+      "description": null,
+      "coaching_cues": [
+        "Stand upright holding an exercise ball with both hands. Extend your arms so the ball is straight out in front of you. This will be your starting position.",
+        "Rotate your torso to one side, keeping your eyes on the ball as you move. Now, rotate back to the opposite direction. Repeat for 10-20 repetitions."
+      ],
+      "substitution_group": "torso_rotation",
+      "variation_on_names": [],
+      "source_category": "stretching",
+      "source_primary_muscles_raw": [
+        "abs"
+      ],
+      "source_secondary_muscles_raw": [],
+      "source_equipment_raw": [
+        "exercise ball"
+      ],
+      "source_id": "817",
+      "license_author": null,
+      "license_meta": null
+    },
+    "best_match": {
+      "id": 57,
+      "name": "Thoracic Rotation",
+      "canonical_base_name": "Thoracic Rotation",
+      "canonical_name_key": "thoracic_rotation",
+      "pattern": "mobility",
+      "primary_muscle": "upper_back",
+      "primary_region": "posterior upper",
+      "equipment_tags": [
+        "bodyweight"
+      ]
+    },
+    "score": 0.5494623655913978
+  },
+  {
+    "candidate": {
+      "source_name": "Tricep Side Stretch",
+      "source_aliases": [],
+      "canonical_base_name": "Tricep Side Stretch",
+      "canonical_name_key": "tricep_side_stretch",
+      "pattern": "mobility",
+      "primary_muscle": "triceps",
+      "secondary_muscles": [
+        "full_body"
+      ],
+      "primary_region": "posterior upper",
+      "discipline_tags": [
+        "stretching"
+      ],
+      "equipment_tags": [
+        "none"
+      ],
+      "metric_type": "reps",
+      "skill_level": "intermediate",
+      "cns_load": "moderate",
+      "compound": false,
+      "is_complex_lift": false,
+      "is_unilateral": false,
+      "description": null,
+      "coaching_cues": [
+        "Bring right arm across your body and over your left shoulder, holding your elbow with your left hand, until you feel a stretch in your tricep. Then repeat for your other arm."
+      ],
+      "substitution_group": "tricep_side_stretch",
+      "variation_on_names": [],
+      "source_category": "stretching",
+      "source_primary_muscles_raw": [
+        "triceps"
+      ],
+      "source_secondary_muscles_raw": [
+        "shoulders"
+      ],
+      "source_equipment_raw": [
+        "none"
+      ],
+      "source_id": "821",
+      "license_author": null,
+      "license_meta": null
+    },
+    "best_match": {
+      "id": 48,
+      "name": "Tricep Extension",
+      "canonical_base_name": "Tricep Extension",
+      "canonical_name_key": "tricep_extension",
+      "pattern": "isolation",
+      "primary_muscle": "triceps",
+      "primary_region": "posterior upper",
+      "equipment_tags": [
+        "dumbbell",
+        "cable"
+      ]
+    },
+    "score": 0.4685714285714285
+  },
+  {
+    "candidate": {
+      "source_name": "Triceps Stretch",
+      "source_aliases": [],
+      "canonical_base_name": "Triceps Stretch",
+      "canonical_name_key": "triceps_stretch",
+      "pattern": "mobility",
+      "primary_muscle": "triceps",
+      "secondary_muscles": [
+        "lats"
+      ],
+      "primary_region": "posterior upper",
+      "discipline_tags": [
+        "stretching"
+      ],
+      "equipment_tags": [
+        "none"
+      ],
+      "metric_type": "reps",
+      "skill_level": "intermediate",
+      "cns_load": "moderate",
+      "compound": false,
+      "is_complex_lift": false,
+      "is_unilateral": false,
+      "description": null,
+      "coaching_cues": [
+        "Reach your hand behind your head, grasp your elbow and gently pull. Hold for 10 to 20 seconds, then switch sides."
+      ],
+      "substitution_group": "triceps_stretch",
+      "variation_on_names": [],
+      "source_category": "stretching",
+      "source_primary_muscles_raw": [
+        "triceps"
+      ],
+      "source_secondary_muscles_raw": [
+        "lats"
+      ],
+      "source_equipment_raw": [
+        "none"
+      ],
+      "source_id": "826",
+      "license_author": null,
+      "license_meta": null
+    },
+    "best_match": {
+      "id": 55,
+      "name": "Pigeon Stretch",
+      "canonical_base_name": "Pigeon Stretch",
+      "canonical_name_key": "pigeon_stretch",
+      "pattern": "mobility",
+      "primary_muscle": "glutes",
+      "primary_region": "posterior lower",
+      "equipment_tags": [
+        "bodyweight"
+      ]
+    },
+    "score": 0.5367816091954023
+  },
+  {
+    "candidate": {
+      "source_name": "Upward Stretch",
+      "source_aliases": [],
+      "canonical_base_name": "Upward Stretch",
+      "canonical_name_key": "upward_stretch",
+      "pattern": "mobility",
+      "primary_muscle": "full_body",
+      "secondary_muscles": [
+        "chest",
+        "lats"
+      ],
+      "primary_region": "full body",
+      "discipline_tags": [
+        "stretching"
+      ],
+      "equipment_tags": [
+        "none"
+      ],
+      "metric_type": "reps",
+      "skill_level": "intermediate",
+      "cns_load": "moderate",
+      "compound": false,
+      "is_complex_lift": false,
+      "is_unilateral": false,
+      "description": null,
+      "coaching_cues": [
+        "Extend both hands straight above your head, palms touching.",
+        "Slowly push your hands up and back, keeping your back straight."
+      ],
+      "substitution_group": "upward_stretch",
+      "variation_on_names": [],
+      "source_category": "stretching",
+      "source_primary_muscles_raw": [
+        "shoulders"
+      ],
+      "source_secondary_muscles_raw": [
+        "chest",
+        "lats"
+      ],
+      "source_equipment_raw": [
+        "none"
+      ],
+      "source_id": "839",
+      "license_author": null,
+      "license_meta": null
+    },
+    "best_match": {
+      "id": 55,
+      "name": "Pigeon Stretch",
+      "canonical_base_name": "Pigeon Stretch",
+      "canonical_name_key": "pigeon_stretch",
+      "pattern": "mobility",
+      "primary_muscle": "glutes",
+      "primary_region": "posterior lower",
+      "equipment_tags": [
+        "bodyweight"
+      ]
+    },
+    "score": 0.519047619047619
+  }
+]

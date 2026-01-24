@@ -1,0 +1,1 @@
+"""ShowMeGains Workout Coach application."""
