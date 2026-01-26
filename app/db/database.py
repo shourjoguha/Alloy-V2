@@ -15,7 +15,8 @@ engine = create_async_engine(
     pool_size=20,
     max_overflow=20,
     pool_timeout=30,
-    pool_recycle=1800,
+    pool_recycle=300,
+    pool_pre_ping=True,
 )
 
 async_session_maker = async_sessionmaker(
@@ -46,17 +47,8 @@ async def get_db() -> AsyncSession:
 async def init_db():
     """Initialize database tables."""
     if settings.debug and not settings.database_url.startswith("sqlite"):
-        try:
-            from alembic import command
-            from alembic.config import Config
-
-            repo_root = Path(__file__).resolve().parents[2]
-            cfg = Config(str(repo_root / "alembic.ini"))
-            cfg.set_main_option("script_location", str(repo_root / "alembic"))
-            cfg.set_main_option("sqlalchemy.url", settings.database_url)
-            command.upgrade(cfg, "head")
-        except Exception:
-            pass
+        import logging
+        logging.info("Alembic migrations skipped (manual migration required)")
 
     # Enable WAL mode for SQLite to support concurrent access
     if settings.database_url.startswith("sqlite"):

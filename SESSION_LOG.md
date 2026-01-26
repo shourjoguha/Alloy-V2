@@ -687,3 +687,112 @@ Session tracking for continuous development with date/time headers. A new sessio
 - The new config module will contain both:
   - variables controlling behavior (caps, thresholds, preference margin), and
   - plain-text bias rationale + explicit paths to any remaining hardcoded bias.
+
+---
+
+## Session 17: 2026-01-26 (Authentication Implementation)
+
+**Objective**: Implement production-ready JWT authentication system with secure password management.
+
+**Key Accomplishments**:
+
+1. **Created Authentication System** ([app/api/routes/auth.py](file:///Users/shourjosmac/Documents/alloy/app/api/routes/auth.py)):
+   - Implemented `POST /auth/register` endpoint:
+     - Validates email uniqueness in database
+     - Hashes password using bcrypt with salt generation
+     - Creates new User record with hashed_password and is_active=True
+     - Generates JWT token with user_id and expiration timestamp
+     - Returns TokenResponse with access_token, token_type, and user_id
+   - Implemented `POST /auth/login` endpoint:
+     - Fetches user by email
+     - Verifies password against bcrypt hash (constant-time comparison)
+     - Checks user.is_active status
+     - Generates JWT token for authenticated users
+     - Returns TokenResponse with access_token, token_type, and user_id
+   - Implemented `GET /auth/verify-token` endpoint:
+     - Decodes JWT token using secret key
+     - Verifies token signature and expiration
+     - Extracts user_id from "sub" claim
+     - Fetches user from database
+     - Returns UserResponse with id, email, name, and is_active
+
+2. **Created Security Utilities** ([app/security/jwt_utils.py](file:///Users/shourjosmac/Documents/alloy/app/security/jwt_utils.py)):
+   - `get_password_hash()`: Generates bcrypt hash with per-password salt using `bcrypt.gensalt()`
+   - `verify_password()`: Verifies password against bcrypt hash using `bcrypt.checkpw()` for constant-time comparison
+   - `create_access_token()`: Generates JWT token with HS256 algorithm, includes "sub" (user_id) and "exp" (expiration) claims
+   - `verify_token()`: Decodes and validates JWT token, extracts user_id from "sub" claim, handles expired tokens
+
+3. **Created Database Migration** ([alembic/versions/add_user_authentication_fields.py](file:///Users/shourjosmac/Documents/alloy/alembic/versions/add_user_authentication_fields.py)):
+   - Added `hashed_password` column (String 255, nullable) to users table
+   - Added `is_active` column (Boolean, default True) to users table
+   - Added `created_at` column (DateTime, default now) to users table
+   - Applied migration to update database schema
+
+4. **Updated User Model** ([app/models/user.py](file:///Users/shourjosmac/Documents/alloy/app/models/user.py#L26-78)):
+   - Added `hashed_password` field for bcrypt password hash storage
+   - Added `is_active` field for account activation status
+   - Added `created_at` field for account creation timestamp
+
+5. **Security Implementation**:
+   - Password hashing algorithm: bcrypt with automatic salt generation
+   - JWT signing algorithm: HS256 (HMAC SHA-256)
+   - Token expiration: Configurable via `settings.access_token_expire_minutes` (default: 30 minutes)
+   - Email uniqueness: Enforced at registration time
+   - Password verification: Constant-time comparison using bcrypt.checkpw()
+   - Token payload structure: {"sub": user_id, "exp": expiration_timestamp}
+   - Account activation: Checked on login via `user.is_active` field
+
+6. **Configuration Updates** ([app/config/settings.py](file:///Users/shourjosmac/Documents/alloy/app/config/settings.py)):
+   - Added `secret_key` configuration for JWT token signing
+   - Added `access_token_expire_minutes` configuration for token lifetime
+   - Added `algorithm` configuration set to "HS256"
+
+7. **Frontend Integration** (created frontend auth components):
+   - [frontend/src/api/auth.ts](file:///Users/shourjosmac/Documents/alloy/frontend/src/api/auth.ts): Authentication API client methods
+   - [frontend/src/stores/auth-store.ts](file:///Users/shourjosmac/Documents/alloy/frontend/src/stores/auth-store.ts): Token state management with persistence
+   - [frontend/src/routes/login.tsx](file:///Users/shourjosmac/Documents/alloy/frontend/src/routes/login.tsx): Login page implementation
+   - [frontend/src/routes/register.tsx](file:///Users/shourjosmac/Documents/alloy/frontend/src/routes/register.tsx): Registration page implementation
+   - `useAuthInitialization` hook: Automatic token restoration from localStorage
+
+**Technical Notes**:
+- All authentication endpoints use async database sessions for non-blocking I/O
+- Email uniqueness check prevents duplicate accounts
+- Password never stored in plain text; only bcrypt hash with salt
+- JWT tokens expire after configured time to prevent indefinite access
+- Bearer token pattern: `Authorization: Bearer <token>` header for API requests
+- Token validation includes signature verification and expiration checking
+- Account activation status (`is_active`) checked before token issuance
+- Frontend persists tokens in localStorage for session persistence
+- Token restoration happens on app initialization via `useAuthInitialization` hook
+
+**Authentication Flow**:
+```
+Registration: User email/password → Hash password → Create User → Generate JWT → Return token
+Login: User email/password → Fetch User → Verify password → Check is_active → Generate JWT → Return token
+Verify: Bearer token → Decode JWT → Validate signature/expiry → Extract user_id → Fetch User → Return user info
+```
+
+**Status**:
+- ✅ Production-ready authentication implemented
+- ✅ JWT token management complete with expiration
+- ✅ Password security with bcrypt hashing
+- ✅ Frontend auth flows integrated with token persistence
+- ✅ Database migration applied successfully
+- ✅ Security best practices followed (constant-time comparison, salt generation, token expiration)
+
+**Integration Points**:
+- Backend: [auth.py](file:///Users/shourjosmac/Documents/alloy/app/api/routes/auth.py) - Authentication endpoints
+- Backend: [jwt_utils.py](file:///Users/shourjosmac/Documents/alloy/app/security/jwt_utils.py) - Security utilities
+- Backend: [user.py](file:///Users/shourjosmac/Documents/alloy/app/models/user.py) - User model with auth fields
+- Database: Alembic migration adds authentication fields to users table
+- Frontend: Token storage and management in auth-store.ts
+- Frontend: Login and registration pages for user onboarding
+- Configuration: JWT settings in environment variables
+
+**Security Considerations**:
+- Secret key must be kept secure (environment variable, never committed to repo)
+- Password salt generated per-password prevents rainbow table attacks
+- Constant-time comparison prevents timing attacks on password verification
+- Token expiration limits exposure if tokens are compromised
+- Account activation status allows account disabling without password changes
+- Email uniqueness enforced at application level

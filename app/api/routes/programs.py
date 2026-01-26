@@ -34,15 +34,11 @@ from app.schemas.program import (
 from app.services.program import program_service
 from app.services.interference import interference_service
 from app.services.time_estimation import time_estimation_service
+from app.api.routes.dependencies import get_current_user_id
 
 router = APIRouter()
 settings = get_settings()
 logger = logging.getLogger(__name__)
-
-
-def get_current_user_id() -> int:
-    """Get current user ID (MVP: hardcoded default user)."""
-    return settings.default_user_id
 
 
 def _normalize_enjoyable_activity(activity_type: str, custom_name: str | None) -> tuple[EnjoyableActivity, str | None]:
@@ -80,11 +76,16 @@ async def create_program(
     """
     logger.info("Starting program creation for user_id=%s, data=%s", user_id, program_data.model_dump())
     
-    # Get user for persona defaults
-    user = await db.get(User, user_id)
-    if not user:
-        logger.error("User not found for user_id=%s", user_id)
-        raise HTTPException(status_code=404, detail="User not found")
+    try:
+        logger.info("Fetching user with id=%s", user_id)
+        user = await db.get(User, user_id)
+        logger.info("User fetched: %s", user)
+        if not user:
+            logger.error("User not found for user_id=%s", user_id)
+            raise HTTPException(status_code=404, detail="User not found")
+    except Exception as e:
+        logger.exception("Error fetching user: %s", e)
+        raise HTTPException(status_code=500, detail=f"Error fetching user: {str(e)}")
     
     # Validate goals before creation (only if multiple goals provided)
     if len(program_data.goals) >= 2:
@@ -105,33 +106,25 @@ async def create_program(
                 detail=f"Goal validation failed: {', '.join(warnings)}"
             )
     
-    try:
-        logger.info("Calling ProgramService.create_program")
-        # Use ProgramService to create program with microcycles and sessions
-        program = await program_service.create_program(db, user_id, program_data)
-        logger.info("Program created successfully with id=%s", program.id)
-        
-        # Refresh program to load program_disciplines relationship
-        await db.refresh(program)
-        
-        # Explicitly load program_disciplines relationship
-        logger.info("Loading program_disciplines for program_id=%s", program.id)
-        result = await db.execute(
-            select(Program)
-            .options(selectinload(Program.program_disciplines))
-            .where(Program.id == program.id)
-        )
-        program = result.scalar_one()
-        logger.info("Program disciplines loaded successfully")
-        
-    except ValueError as e:
-        logger.error("ValueError during program creation: %s", str(e))
-        await db.rollback()
-        raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
-        logger.exception("Unhandled error while creating program")
-        await db.rollback()
-        raise HTTPException(status_code=500, detail="Internal server error")
+    logger.info("Calling ProgramService.create_program")
+    # Use ProgramService to create program with microcycles and sessions
+    program = await program_service.create_program(db, user_id, program_data)
+    logger.info("Program created successfully with id=%s", program.id)
+    
+    # Refresh program to load program_disciplines relationship
+    logger.info("Refreshing program with id=%s", program.id)
+    await db.refresh(program)
+    logger.info("Program refreshed successfully")
+    
+    # Explicitly load program_disciplines relationship
+    logger.info("Loading program_disciplines for program_id=%s", program.id)
+    result = await db.execute(
+        select(Program)
+        .options(selectinload(Program.program_disciplines))
+        .where(Program.id == program.id)
+    )
+    program = result.scalar_one()
+    logger.info("Program disciplines loaded successfully")
     
     # Create movement rules if provided (post-program creation)
     if program_data.movement_rules:
@@ -164,7 +157,7 @@ async def create_program(
     if program_data.movement_rules or program_data.enjoyable_activities:
         try:
             await db.commit()
-        except Exception as e:
+        except Exception:
             await db.rollback()
             logger.exception("Unhandled error while saving program preferences")
             raise HTTPException(status_code=500, detail="Internal server error")
@@ -174,7 +167,11 @@ async def create_program(
         program.id,
     )
 
-    return program
+    try:
+        return program
+    except Exception as e:
+        logger.exception("Error serializing program response: %s", e)
+        raise HTTPException(status_code=500, detail=f"Error serializing program: {str(e)}")
 
 
 @router.get("/{program_id}", response_model=ProgramWithMicrocycleResponse)
@@ -354,7 +351,7 @@ async def get_program(
             )
         )
 
-    print(f"DEBUG: Constructing ProgramWithMicrocycleResponse")
+    print("DEBUG: Constructing ProgramWithMicrocycleResponse")
     print(f"DEBUG: program={program}, active_microcycle={active_microcycle}")
     print(f"DEBUG: upcoming_sessions count={len(session_responses)}, microcycles count={len(microcycle_responses)}")
     
@@ -387,7 +384,7 @@ async def list_programs(
     query = select(Program).options(selectinload(Program.program_disciplines)).where(Program.user_id == user_id)
     
     if active_only:
-        query = query.where(Program.is_active == True)
+        query = query.where(Program.is_active.is_(True))
     
     query = query.order_by(Program.is_active.desc(), Program.created_at.desc())
     
@@ -404,6 +401,7 @@ async def list_programs(
 @router.post("/{program_id}/microcycles/generate-next", response_model=MicrocycleResponse)
 async def generate_next_microcycle(
     program_id: int,
+    background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db),
     user_id: int = Depends(get_current_user_id),
 ):
@@ -469,12 +467,11 @@ async def generate_next_microcycle(
     )
     db.add(new_microcycle)
     
-    # TODO: Generate sessions using LLM
-    # For now, just create the microcycle structure
-    # Session generation will be implemented in a service
-    
     await db.commit()
     await db.refresh(new_microcycle)
+    
+    # Generate sessions in background using LLM
+    background_tasks.add_task(program_service.generate_active_microcycle_sessions, program_id)
     
     return new_microcycle
 
@@ -541,7 +538,7 @@ async def activate_program(
         select(Program).where(
             and_(
                 Program.user_id == user_id,
-                Program.is_active == True,
+                Program.is_active.is_(True),
                 Program.id != program_id
             )
         )

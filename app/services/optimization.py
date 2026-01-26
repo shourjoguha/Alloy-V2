@@ -95,9 +95,9 @@ class ConstraintSolver:
             return OptimizationResult([], [], 0, 0, 0, "INFEASIBLE")
 
         # 2. Constraints
-        
-        # Set a time limit for the solver to prevent hanging
-        solver.parameters.max_time_in_seconds = 10.0
+
+        # Set a time limit for solver to prevent hanging
+        solver.parameters.max_time_in_seconds = float(activity_distribution_config.or_tools_solver_timeout_seconds)
         
         # A. Required Movements
         for m_id in request.required_movement_ids:
@@ -105,43 +105,53 @@ class ConstraintSolver:
                 model.Add(movement_vars[m_id] == 1)
                 
         # B. Volume Targets (Sets)
-        # We assume 1 selection = 3 sets for simplicity in this V1
-        # In V2, we would make sets an integer variable [3, 4, 5]
-        SETS_PER_MOVEMENT = 3
-        
-        for muscle, target_sets in request.target_muscle_volumes.items():
-            relevant_variables = []
-            
-            # Add movement variables
+        # Use configurable min/max sets per movement (2-5 range)
+        MIN_SETS_PER_MOVEMENT = activity_distribution_config.or_tools_min_sets_per_movement
+        MAX_SETS_PER_MOVEMENT = activity_distribution_config.or_tools_max_sets_per_movement
+
+        # Reduce volume targets by configured percentage to make them easier to meet
+        volume_reduction_pct = activity_distribution_config.or_tools_volume_target_reduction_pct
+        reduced_target_volumes = {
+            muscle: int(target_sets * (1 - volume_reduction_pct))
+            for muscle, target_sets in request.target_muscle_volumes.items()
+        }
+
+        # Create sets variables for each movement (allows flexible sets 2-5)
+        sets_vars = {}
+        for m in request.available_movements:
+            if m.id in movement_vars:
+                sets_vars[m.id] = model.NewIntVar(MIN_SETS_PER_MOVEMENT, MAX_SETS_PER_MOVEMENT, f'sets_{m.id}')
+
+        for muscle, reduced_target in reduced_target_volumes.items():
+            relevant_sets_expr = []
+
+            # Add movement sets expressions
             for m in request.available_movements:
-                if m.id not in movement_vars:
+                if m.id not in movement_vars or m.id not in sets_vars:
                     continue
-                # Check if movement hits this muscle (primary)
-                # SolverMovement stores primary_muscle as string
                 if m.primary_muscle == muscle:
-                    relevant_variables.append(movement_vars[m.id])
-            
+                    relevant_sets_expr.append(sets_vars[m.id])
+
             # Add circuit variables
             if request.allow_circuits and request.available_circuits:
                 for c in request.available_circuits:
                     if c.id not in circuit_vars:
                         continue
-                    # Check if circuit hits this muscle
                     if c.primary_muscle == muscle:
-                        relevant_variables.append(circuit_vars[c.id])
-            
-            if relevant_variables:
-                # Total sets >= Target
-                # We assume each selected movement/circuit provides SETS_PER_MOVEMENT sets
-                model.Add(sum(relevant_variables) * SETS_PER_MOVEMENT >= target_sets)
+                        # Assume circuits provide 3 sets
+                        relevant_sets_expr.append(circuit_vars[c.id] * 3)
+
+            if relevant_sets_expr:
+                # Total sets >= Reduced target
+                model.Add(sum(relevant_sets_expr) >= reduced_target)
 
         # C. Max Fatigue Constraint
         movement_fatigue = sum(
-            movement_vars[m.id] * int(m.fatigue_factor * 100) 
-            for m in request.available_movements 
+            movement_vars[m.id] * int(m.fatigue_factor * 100)
+            for m in request.available_movements
             if m.id in movement_vars
         )
-        
+
         circuit_fatigue = 0
         if request.allow_circuits and request.available_circuits:
             circuit_fatigue = sum(
@@ -149,14 +159,16 @@ class ConstraintSolver:
                 for c in request.available_circuits
                 if c.id in circuit_vars
             )
-        
+
         fatigue_expr = movement_fatigue + circuit_fatigue
-        model.Add(fatigue_expr <= int(request.max_fatigue * 100))
-        
+        model.Add(fatigue_expr <= int(activity_distribution_config.or_tools_max_fatigue * 100))
+
         # D. Max Duration Constraint
         # Assume 1 set = 2 mins + 2 mins rest = 4 mins
-        # 3 sets = 12 mins
-        MINS_PER_MOVEMENT = 12
+        # Variable sets: 2-5 sets = 8-20 mins per movement
+        # Use average 3.5 sets for duration calculation
+        AVG_SETS_PER_MOVEMENT = (MIN_SETS_PER_MOVEMENT + MAX_SETS_PER_MOVEMENT) / 2
+        MINS_PER_MOVEMENT = int(AVG_SETS_PER_MOVEMENT * 4)
         
         movement_duration = sum(
             movement_vars[m.id] * MINS_PER_MOVEMENT
@@ -203,9 +215,8 @@ class ConstraintSolver:
                 objective_terms.append(circuit_vars[c.id] * (strength_score + cardio_score))
 
         model.Maximize(sum(objective_terms))
-        
+
         # 3. Solve
-        solver.parameters.max_time_in_seconds = 10.0
         status = solver.Solve(model)
         
         # 4. Result

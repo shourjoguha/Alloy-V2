@@ -8,12 +8,10 @@ from app.models.program import ActivityDefinition, ActivityInstance
 from app.models.enums import ActivitySource
 from app.schemas.logging import ActivityInstanceCreate
 from app.config.settings import get_settings
+from app.api.routes.dependencies import get_current_user_id
 
 router = APIRouter()
 settings = get_settings()
-
-def get_current_user_id() -> int:
-    return settings.default_user_id
 
 @router.get("/definitions")
 async def get_activity_definitions(db: AsyncSession = Depends(get_db)):

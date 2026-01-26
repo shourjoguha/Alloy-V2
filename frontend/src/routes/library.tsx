@@ -587,6 +587,14 @@ function MovementsTab() {
     [data],
   );
 
+  if (error) {
+    return (
+      <div className="rounded bg-error/10 p-3 text-sm text-error">
+        Failed to load movements. Please try refreshing the page or check your connection.
+      </div>
+    );
+  }
+
   const patternOptions: { value: MovementPattern | 'all'; label: string }[] =
     useMemo(() => {
       const patterns: string[] = filtersData?.patterns ?? [];
@@ -835,12 +843,20 @@ function MovementsTab() {
 
 function CircuitsTab() {
   const [filter, setFilter] = useState<CircuitFilter>('all');
-  const { data: circuits, isLoading } = useCircuits(filter);
+  const { data: circuits, isLoading, error } = useCircuits(filter);
 
   if (isLoading) {
     return (
       <div className="flex justify-center py-6">
         <div className="animate-spin rounded-full h-6 w-6 border-2 border-primary border-t-transparent" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="rounded bg-error/10 p-3 text-sm text-error">
+        Failed to load circuits. Please try refreshing the page or check your connection.
       </div>
     );
   }

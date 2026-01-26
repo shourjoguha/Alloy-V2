@@ -137,3 +137,33 @@ export function useCreateMovement() {
     },
   });
 }
+
+async function fetchUserMovementRules(): Promise<any[]> {
+  const { data } = await apiClient.get('/settings/movement-rules');
+  return data;
+}
+
+async function createUserMovementRuleAPI(data: any): Promise<any> {
+  const { data: response } = await apiClient.post('/settings/movement-rules', data);
+  return response;
+}
+
+async function deleteUserMovementRuleAPI(ruleId: number): Promise<void> {
+  await apiClient.delete(`/settings/movement-rules/${ruleId}`);
+}
+
+export function getUserMovementRules(): Promise<any[]> {
+  return fetchUserMovementRules();
+}
+
+export function getAllMovements(options: MovementsQueryOptions = {}): Promise<MovementListResponse> {
+  return fetchMovements(options);
+}
+
+export function createUserMovementRule(data: any): Promise<any> {
+  return createUserMovementRuleAPI(data);
+}
+
+export function deleteUserMovementRule(ruleId: number): Promise<void> {
+  return deleteUserMovementRuleAPI(ruleId);
+}

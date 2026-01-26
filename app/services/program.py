@@ -64,6 +64,7 @@ class ProgramService:
             ValueError: If split template not found, goals empty, week_count invalid, interference conflict detected
         """
         logger.info("ProgramService.create_program called for user_id=%s", user_id)
+        logger.info("Request data: %s", request.model_dump())
         
         # Validate week count
         if not (8 <= request.duration_weeks <= 12):
@@ -269,6 +270,8 @@ class ProgramService:
                 cycle_length_days=cycle_length_days,
                 days_per_week=request.days_per_week,
             )
+            logger.info("Built freeform split config for microcycle %d", mc_idx)
+
             split_config = self._apply_goal_based_cycle_distribution(
                 split_config=split_config,
                 goals=request.goals,
@@ -278,10 +281,13 @@ class ProgramService:
                 user_experience_level=user.experience_level if user else None,
                 scheduling_prefs=scheduling_prefs,
             )
+            logger.info("Applied goal-based cycle distribution for microcycle %d", mc_idx)
+
             split_config = self._assign_freeform_day_types_and_focus(
                 split_config=split_config,
                 days_per_week=request.days_per_week,
             )
+            logger.info("Assigned freeform day types and focus for microcycle %d", mc_idx)
             
             microcycle = await self._create_microcycle(
                 db,
@@ -304,6 +310,8 @@ class ProgramService:
         logger.info("Program creation committed successfully")
         await db.refresh(program)
         logger.info("Program refreshed successfully, returning program id=%s", program.id)
+        logger.info("Program data for serialization: id=%s, start_date=%s, persona_aggression=%s, persona_tone=%s", 
+                    program.id, program.start_date, program.persona_aggression, program.persona_tone)
         return program
 
     async def _infer_avoid_cardio_days(self, db: AsyncSession, user_id: int) -> bool:
@@ -777,6 +785,7 @@ class ProgramService:
             
             # Create session (even for rest days - they can have recovery activities)
             session = Session(
+                user_id=program.user_id,
                 microcycle_id=microcycle.id,
                 date=session_date,
                 day_number=day_num,

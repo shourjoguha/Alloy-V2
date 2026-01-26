@@ -37,6 +37,46 @@ This section lists **both**:
 - **DB values**: what is actually stored/allowed in enum-typed DB columns
 - **Semantic values**: the Python `.value` strings used in business logic and prompts
 
+### Soft Enum Convention
+
+Gainsly uses a **soft enum** pattern that differs between Python code and PostgreSQL storage:
+
+**Python Enum (Application Layer)**:
+- Stored in `.value` attribute as semantic strings
+- Example: `MovementPattern.SQUAT.value` → `"squat"` (lowercase, readable)
+- Used throughout application logic and API responses
+
+**PostgreSQL Enum (Database Layer)**:
+- Stored as uppercase string values
+- Example: `'SQUAT'` (uppercase)
+- Used in database constraints and queries
+
+**Why This Difference?**:
+1. **Database Compatibility**: PostgreSQL enums are case-sensitive and traditionally uppercase
+2. **API Readability**: JSON APIs use semantic lowercase values (`"squat"` vs `"SQUAT"`)
+3. **Type Safety**: Python enums provide compile-time checking
+4. **Flexibility**: Database can be queried with either value type
+
+**Mapping Example**:
+```python
+# Python Enum
+class MovementPattern(str, enum.Enum):
+    SQUAT = "squat"
+    BENCH_PRESS = "bench_press"
+
+# Database Query
+db.query(Exercise).filter(Exercise.movement_pattern == "squat")  # Works with .value
+db.query(Exercise).filter(Exercise.movement_pattern == "SQUAT")  # Also works
+
+# API Response
+{
+  "movement_pattern": "squat"  # Semantic lowercase value
+}
+```
+
+**Application Layer Validation**:
+The application validates enum values at the Pydantic model level to ensure data integrity while maintaining database flexibility.
+
 ### 2.1 MovementPattern
 
 Used to classify movement patterns.
@@ -86,6 +126,17 @@ Semantic values (Python `.value`, used in prompts/UI):
 
 Body region emphasis:
 
+DB values (enforced in SQL enum columns):
+- `ANTERIOR_LOWER`
+- `POSTERIOR_LOWER`
+- `SHOULDER`
+- `ANTERIOR_UPPER`
+- `POSTERIOR_UPPER`
+- `FULL_BODY`
+- `LOWER_BODY`
+- `UPPER_BODY`
+
+Semantic values (Python `.value`, used in prompts/UI):
 - `anterior lower`
 - `posterior lower`
 - `shoulder`
@@ -99,6 +150,28 @@ Body region emphasis:
 
 Primary muscular focus:
 
+DB values (enforced in SQL enum columns):
+- `QUADRICEPS`
+- `HAMSTRINGS`
+- `GLUTES`
+- `CALVES`
+- `CHEST`
+- `LATS`
+- `UPPER_BACK`
+- `REAR_DELTS`
+- `FRONT_DELTS`
+- `SIDE_DELTS`
+- `BICEPS`
+- `TRICEPS`
+- `FOREARMS`
+- `CORE`
+- `OBLIQUES`
+- `LOWER_BACK`
+- `HIP_FLEXORS`
+- `ADDUCTORS`
+- `FULL_BODY`
+
+Semantic values (Python `.value`, used in prompts/UI):
 - `quadriceps`
 - `hamstrings`
 - `glutes`
@@ -123,6 +196,13 @@ Primary muscular focus:
 
 Measurement units for movements:
 
+DB values (enforced in SQL enum columns):
+- `REPS`
+- `TIME`
+- `TIME_UNDER_TENSION`
+- `DISTANCE`
+
+Semantic values (Python `.value`, used in prompts/UI):
 - `reps`
 - `time`
 - `time_under_tension`
@@ -132,6 +212,14 @@ Measurement units for movements:
 
 Movement skill / complexity:
 
+DB values (enforced in SQL enum columns):
+- `BEGINNER`
+- `INTERMEDIATE`
+- `ADVANCED`
+- `EXPERT`
+- `ELITE`
+
+Semantic values (Python `.value`, used in prompts/UI):
 - `beginner`
 - `intermediate`
 - `advanced`
@@ -142,6 +230,14 @@ Movement skill / complexity:
 
 Central nervous system demand:
 
+DB values (enforced in SQL enum columns):
+- `VERY_LOW`
+- `LOW`
+- `MODERATE`
+- `HIGH`
+- `VERY_HIGH`
+
+Semantic values (Python `.value`, used in prompts/UI):
 - `very_low`
 - `low`
 - `moderate`
@@ -384,6 +480,14 @@ Semantic values:
 
 Movement relationship types:
 
+DB values (enforced in SQL enum columns):
+- `PROGRESSION`
+- `REGRESSION`
+- `VARIATION`
+- `ANTAGONIST`
+- `PREP`
+
+Semantic values (Python `.value`, used in prompts/UI):
 - `progression`
 - `regression`
 - `variation`
@@ -463,45 +567,133 @@ Semantic values:
 - `friends`
 - `public`
 
-### 2.25 GoalType
+### 2.25 DisciplineCategory
 
-Types of long-term goals:
+Discipline categories for activity classification:
 
-DB values:
-- `BODY_COMPOSITION`
-- `STRENGTH_1RM`
-- `ENDURANCE_EVENT`
-- `HABIT_CONSISTENCY`
-- `SKILL_ACQUISITION`
+DB values (enforced in SQL enum columns):
+- `STRENGTH`
+- `CARDIO`
+- `MOBILITY`
+- `SKILL`
+- `HYBRID`
 
-### 2.26 DisciplineCategory
+Semantic values (Python `.value`, used in prompts/UI):
+- `strength`
+- `cardio`
+- `mobility`
+- `skill`
+- `hybrid`
 
-Categories of disciplines:
+### 2.26 ActivityCategory
 
-DB values:
-- `TRAINING`
-- `SPORTS`
-- `OUTDOOR`
-- `WELLNESS`
+Activity categories for classification:
 
-### 2.27 ActivityCategory
-
-Categories of activities:
-
-DB values:
-- `WORKOUT`
+DB values (enforced in SQL enum columns):
+- `LIFTING`
+- `CARDIO`
+- `MOBILITY`
+- `SKILL`
 - `SPORT`
-- `OUTDOOR`
-- `WELLNESS`
+- `OTHER`
 
-### 2.28 ActivitySource
+Semantic values (Python `.value`, used in prompts/UI):
+- `lifting`
+- `cardio`
+- `mobility`
+- `skill`
+- `sport`
+- `other`
+
+### 2.27 GoalType
+
+Goal types for user objectives:
+
+DB values (enforced in SQL enum columns):
+- `STRENGTH`
+- `HYPERTROPHY`
+- `ENDURANCE`
+- `FAT_LOSS`
+- `MOBILITY`
+- `EXPLOSIVENESS`
+- `SPEED`
+
+Semantic values (Python `.value`, used in prompts/UI):
+- `strength`
+- `hypertrophy`
+- `endurance`
+- `fat_loss`
+- `mobility`
+- `explosiveness`
+- `speed`
+
+### 2.28 Sex
+
+User biological sex for biometric calculations:
+
+DB values (enforced in SQL enum columns):
+- `MALE`
+- `FEMALE`
+
+Semantic values (Python `.value`, used in prompts/UI):
+- `male`
+- `female`
+
+### 2.29 DataSource
+
+Source of biometric or activity data:
+
+DB values (enforced in SQL enum columns):
+- `MANUAL`
+- `GARMIN`
+- `APPLE_HEALTH`
+- `WHOOP`
+- `OURA_RING`
+- `FITBIT`
+- `STRAVA`
+- `GOOGLE_FIT`
+- `OTHER`
+
+Semantic values (Python `.value`, used in prompts/UI):
+- `manual`
+- `garmin`
+- `apple_health`
+- `whoop`
+- `oura_ring`
+- `fitbit`
+- `strava`
+- `google_fit`
+- `other`
+
+### 2.30 GoalStatus
+
+Status tracking for user goals:
+
+DB values (enforced in SQL enum columns):
+- `ACTIVE`
+- `PAUSED`
+- `COMPLETED`
+- `CANCELLED`
+
+Semantic values (Python `.value`, used in prompts/UI):
+- `active`
+- `paused`
+- `completed`
+- `cancelled`
+
+### 2.31 ActivitySource
 
 Source of activity data:
 
-DB values:
+DB values (enforced in SQL enum columns):
 - `PLANNED`
 - `MANUAL`
 - `IMPORTED`
+
+Semantic values (Python `.value`, used in prompts/UI):
+- `planned`
+- `manual`
+- `imported`
 
 ---
 
@@ -523,6 +715,10 @@ Model: [User](file:///Users/shourjosmac/Documents/Gainsly/app/models/user.py)
 - **Identity**
   - `name` (String(100), nullable)
   - `email` (String(255), nullable, unique)
+- **Authentication**
+  - `hashed_password` (String(255), nullable) — Bcrypt password hash with salt
+  - `is_active` (Boolean, default True) — Account activation status
+  - `created_at` (DateTime, default now) — Account creation timestamp
 - **Categorical**
   - `experience_level` (SQLEnum(ExperienceLevel), not null, default `INTERMEDIATE`)
     - DB values: `BEGINNER`, `INTERMEDIATE`, `ADVANCED`, `EXPERT`
@@ -964,6 +1160,28 @@ Model: `ActivityInstance`
   - `activity_definition` → ActivityDefinition
   - `session` → Session (via planned_session_id)
 
+---
+
+### 3.17 activity_muscle_map
+
+Model: `ActivityMuscleMap`
+
+- **PK**
+  - `id`
+- **FK**
+  - `activity_definition_id` (FK → activity_definitions.id, not null, index=True)
+- **Categorical**
+  - `muscle_group` (SQLEnum(PrimaryMuscle), not null, index=True)
+    - DB values: See PrimaryMuscle enum (2.3)
+    - Semantic values: See PrimaryMuscle enum (2.3)
+  - `muscle_role` (String(50), nullable=True)
+    - Open categorical field; typical values: `"primary"`, `"secondary"`, `"stabilizer"`, `"assisting"`
+- **Other**
+  - `emphasis_level` (Integer, nullable=True) — Optional emphasis score (e.g., 1-10)
+- **Relationships**
+  - `activity_definition` → ActivityDefinition
+
+---
 
 ## 4. Debug & Troubleshooting
 

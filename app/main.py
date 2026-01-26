@@ -75,12 +75,17 @@ def create_app() -> FastAPI:
         circuits_router,
         activities_router,
     )
+    from app.api.routes import auth as auth_router
+    from app.api.routes import favorites as favorites_router
+
+    app.include_router(auth_router.router, prefix="/auth", tags=["Authentication"])
     app.include_router(programs_router, prefix="/programs", tags=["Programs"])
     app.include_router(days_router, prefix="/days", tags=["Daily Planning"])
     app.include_router(logs_router, prefix="/logs", tags=["Logging"])
     app.include_router(settings_router, prefix="/settings", tags=["Settings"])
     app.include_router(circuits_router, prefix="/circuits", tags=["Circuits"])
     app.include_router(activities_router, prefix="/activities", tags=["Activities"])
+    app.include_router(favorites_router.router, prefix="/favorites", tags=["Favorites"])
     
     return app
 

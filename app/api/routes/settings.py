@@ -46,14 +46,10 @@ from app.schemas.settings import (
     BiomechanicsQueryRequest,
 )
 from app.models.enums import MuscleRole
+from app.api.routes.dependencies import get_current_user_id
 
 router = APIRouter()
 settings = get_settings()
-
-
-def get_current_user_id() -> int:
-    """Get current user ID (MVP: hardcoded default user)."""
-    return settings.default_user_id
 
 
 # User settings

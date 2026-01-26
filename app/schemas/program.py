@@ -12,6 +12,7 @@ from app.models.enums import (
     PersonaAggression,
     MicrocycleStatus,
     SessionType,
+    ExerciseRole,
 )
 
 
@@ -165,44 +166,36 @@ class ProgramResponse(BaseModel):
 
     @model_validator(mode='before')
     @classmethod
-    def debug_validation(cls, data: Any) -> Any:
-        """Debug validation to identify rollback causes."""
-        print(f"DEBUG SessionResponse: Validating session data")
-        if hasattr(data, 'id'):
-            print(f"DEBUG SessionResponse: session_id={data.id}, exercises count={len(data.exercises) if hasattr(data, 'exercises') else 0}")
-        return data
-
-    @model_validator(mode='before')
-    @classmethod
-    def debug_validation(cls, data: Any) -> Any:
-        """Debug validation to identify rollback causes."""
-        import logging
-        logger = logging.getLogger(__name__)
-        print(f"DEBUG ProgramResponse: Validating program data")
-        if hasattr(data, 'id'):
-            print(f"DEBUG ProgramResponse: program_id={data.id}")
-            if hasattr(data, 'program_disciplines'):
-                print(f"DEBUG ProgramResponse: program_disciplines count={len(data.program_disciplines)}")
-                for pd in data.program_disciplines:
-                    print(f"DEBUG ProgramResponse:   discipline={pd.discipline_type}, weight={pd.weight}")
-            else:
-                print(f"DEBUG ProgramResponse: No program_disciplines attribute")
-        return data
-
-    @model_validator(mode='before')
-    @classmethod
     def convert_program_disciplines(cls, data: Any) -> Any:
-        """Convert ProgramDiscipline ORM instances to DisciplineWeight."""
-        if hasattr(data, 'program_disciplines'):
+        """Convert ProgramDiscipline ORM instances to DisciplineWeight and map start_date to program_start_date."""
+        try:
+            if isinstance(data, dict):
+                if 'start_date' in data and 'program_start_date' not in data:
+                    data['program_start_date'] = data.pop('start_date')
+                return data
+                
+            if not hasattr(data, 'program_disciplines'):
+                return data
+            
             converted_disciplines = []
             for pd in data.program_disciplines:
-                if hasattr(pd, 'discipline_type') and hasattr(pd, 'weight'):
+                if hasattr(pd, 'discipline') and hasattr(pd, 'weight'):
                     converted_disciplines.append({
-                        'discipline': pd.discipline_type,
+                        'discipline': pd.discipline,
                         'weight': pd.weight
                     })
-            return {**data.__dict__, 'program_disciplines': converted_disciplines}
-        return data
+            
+            data_dict = {}
+            for field in cls.model_fields:
+                if hasattr(data, field):
+                    data_dict[field] = getattr(data, field)
+            
+            data_dict['program_disciplines'] = converted_disciplines
+            return data_dict
+        except Exception as e:
+            import logging
+            logging.exception("Error in convert_program_disciplines validator: %s", e)
+            raise
 
 
 # ============== Microcycle Schemas ==============
@@ -219,15 +212,6 @@ class MicrocycleResponse(BaseModel):
     
     class Config:
         from_attributes = True
-
-    @model_validator(mode='before')
-    @classmethod
-    def debug_validation(cls, data: Any) -> Any:
-        """Debug validation to identify rollback causes."""
-        print(f"DEBUG MicrocycleResponse: Validating microcycle data")
-        if hasattr(data, 'id'):
-            print(f"DEBUG MicrocycleResponse: microcycle_id={data.id}")
-        return data
 
 
 class MicrocycleWithSessionsResponse(MicrocycleResponse):

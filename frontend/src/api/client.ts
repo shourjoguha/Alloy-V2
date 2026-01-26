@@ -1,6 +1,7 @@
 import axios, { AxiosError, AxiosInstance } from 'axios';
+import { useAuthStore } from '@/stores/auth-store';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
 export const apiClient: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
@@ -10,14 +11,12 @@ export const apiClient: AxiosInstance = axios.create({
   },
 });
 
-// Request interceptor
 apiClient.interceptors.request.use(
   (config) => {
-    // Add auth token if available (future implementation)
-    // const token = localStorage.getItem('auth_token');
-    // if (token) {
-    //   config.headers.Authorization = `Bearer ${token}`;
-    // }
+    const token = useAuthStore.getState().token;
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
     return config;
   },
   (error) => {
@@ -25,16 +24,14 @@ apiClient.interceptors.request.use(
   }
 );
 
-// Response interceptor
 apiClient.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
     if (error.response) {
-      // Server responded with error status
       const status = error.response.status;
       
       if (status === 401) {
-        // Handle unauthorized - redirect to login (future)
+        useAuthStore.getState().logout();
         console.error('Unauthorized request');
       } else if (status === 403) {
         console.error('Forbidden request');
@@ -44,10 +41,8 @@ apiClient.interceptors.response.use(
         console.error('Server error');
       }
     } else if (error.request) {
-      // Request was made but no response received
       console.error('Network error - no response received');
     } else {
-      // Error in setting up request
       console.error('Request setup error:', error.message);
     }
     
@@ -55,7 +50,6 @@ apiClient.interceptors.response.use(
   }
 );
 
-// Utility function for SSE streaming
 export async function* streamSSE(url: string, body: unknown): AsyncGenerator<string> {
   const response = await fetch(`${API_BASE_URL}${url}`, {
     method: 'POST',

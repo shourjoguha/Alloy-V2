@@ -62,7 +62,7 @@ class Program(Base):
     deload_every_n_microcycles = Column(Integer, nullable=False, default=4)
     
     # Persona snapshot (copied from user at program creation)
-    persona_tone = Column(SQLEnum(PersonaTone), nullable=False)
+    persona_tone = Column(SQLEnum('drill_sergeant', 'supportive', 'analytical', 'motivational', 'minimalist', name='personatone'), nullable=False)
     persona_aggression = Column(SQLEnum(PersonaAggression), nullable=False)
     
     # Status
@@ -84,6 +84,7 @@ class Program(Base):
     microcycles = relationship("Microcycle", back_populates="program", cascade="all, delete-orphan")
     goals = relationship("UserGoal", back_populates="program", cascade="all, delete-orphan")
     program_disciplines = relationship("ProgramDiscipline", back_populates="program", cascade="all, delete-orphan")
+    favorites = relationship("Favorite", back_populates="program", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<Program(id={self.id}, user_id={self.user_id}, split={self.split_template})>"

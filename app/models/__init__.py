@@ -58,6 +58,7 @@ from app.models.user import (
     UserSkill,
     UserInjury,
 )
+from app.models.favorite import Favorite
 from app.models.program import (
     Program,
     ProgramDiscipline,
@@ -142,6 +143,7 @@ __all__ = [
     "UserBiometricHistory",
     "UserSkill",
     "UserInjury",
+    "Favorite",
     "Program",
     "ProgramDiscipline",
     "Microcycle",

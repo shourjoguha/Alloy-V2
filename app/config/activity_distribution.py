@@ -68,6 +68,13 @@ endurance_heavy_dedicated_cardio_day_default: bool = True
 endurance_heavy_dedicated_cardio_day_min_weight: int = 6
 endurance_heavy_dedicated_cardio_day_min_cycle_length_days: int = 7
 
+# OR-Tools Constraint Solver Configuration
+or_tools_max_fatigue: float = 8.0
+or_tools_solver_timeout_seconds: int = 60
+or_tools_min_sets_per_movement: int = 2
+or_tools_max_sets_per_movement: int = 5
+or_tools_volume_target_reduction_pct: float = 0.2
+
 BIAS_RATIONALE = {
     "fat_loss": "Bias toward higher weekly energy expenditure via cardio blocks and/or metabolic finishers while keeping lifting exposure for lean mass retention.",
     "endurance": "Bias toward time-under-aerobic-load via cardio blocks or interval-style finishers; lifting stays but is not the sole driver.",

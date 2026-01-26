@@ -11,8 +11,10 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TeamsRouteImport } from './routes/teams'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ProgramsRouteImport } from './routes/programs'
 import { Route as MovementsRouteImport } from './routes/movements'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as LibraryRouteImport } from './routes/library'
 import { Route as FriendsRouteImport } from './routes/friends'
 import { Route as FavoritesRouteImport } from './routes/favorites'
@@ -38,6 +40,11 @@ const SettingsRoute = SettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RegisterRoute = RegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProgramsRoute = ProgramsRouteImport.update({
   id: '/programs',
   path: '/programs',
@@ -46,6 +53,11 @@ const ProgramsRoute = ProgramsRouteImport.update({
 const MovementsRoute = MovementsRouteImport.update({
   id: '/movements',
   path: '/movements',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LibraryRoute = LibraryRouteImport.update({
@@ -125,8 +137,10 @@ export interface FileRoutesByFullPath {
   '/favorites': typeof FavoritesRoute
   '/friends': typeof FriendsRoute
   '/library': typeof LibraryRoute
+  '/login': typeof LoginRoute
   '/movements': typeof MovementsRoute
   '/programs': typeof ProgramsRoute
+  '/register': typeof RegisterRoute
   '/settings': typeof SettingsRoute
   '/teams': typeof TeamsRoute
   '/log/activity': typeof LogActivityRoute
@@ -145,8 +159,10 @@ export interface FileRoutesByTo {
   '/favorites': typeof FavoritesRoute
   '/friends': typeof FriendsRoute
   '/library': typeof LibraryRoute
+  '/login': typeof LoginRoute
   '/movements': typeof MovementsRoute
   '/programs': typeof ProgramsRoute
+  '/register': typeof RegisterRoute
   '/settings': typeof SettingsRoute
   '/teams': typeof TeamsRoute
   '/log/activity': typeof LogActivityRoute
@@ -166,8 +182,10 @@ export interface FileRoutesById {
   '/favorites': typeof FavoritesRoute
   '/friends': typeof FriendsRoute
   '/library': typeof LibraryRoute
+  '/login': typeof LoginRoute
   '/movements': typeof MovementsRoute
   '/programs': typeof ProgramsRoute
+  '/register': typeof RegisterRoute
   '/settings': typeof SettingsRoute
   '/teams': typeof TeamsRoute
   '/log/activity': typeof LogActivityRoute
@@ -188,8 +206,10 @@ export interface FileRouteTypes {
     | '/favorites'
     | '/friends'
     | '/library'
+    | '/login'
     | '/movements'
     | '/programs'
+    | '/register'
     | '/settings'
     | '/teams'
     | '/log/activity'
@@ -208,8 +228,10 @@ export interface FileRouteTypes {
     | '/favorites'
     | '/friends'
     | '/library'
+    | '/login'
     | '/movements'
     | '/programs'
+    | '/register'
     | '/settings'
     | '/teams'
     | '/log/activity'
@@ -228,8 +250,10 @@ export interface FileRouteTypes {
     | '/favorites'
     | '/friends'
     | '/library'
+    | '/login'
     | '/movements'
     | '/programs'
+    | '/register'
     | '/settings'
     | '/teams'
     | '/log/activity'
@@ -249,8 +273,10 @@ export interface RootRouteChildren {
   FavoritesRoute: typeof FavoritesRoute
   FriendsRoute: typeof FriendsRoute
   LibraryRoute: typeof LibraryRoute
+  LoginRoute: typeof LoginRoute
   MovementsRoute: typeof MovementsRoute
   ProgramsRoute: typeof ProgramsRoute
+  RegisterRoute: typeof RegisterRoute
   SettingsRoute: typeof SettingsRoute
   TeamsRoute: typeof TeamsRoute
   LogActivityRoute: typeof LogActivityRoute
@@ -280,6 +306,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/register': {
+      id: '/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/programs': {
       id: '/programs'
       path: '/programs'
@@ -292,6 +325,13 @@ declare module '@tanstack/react-router' {
       path: '/movements'
       fullPath: '/movements'
       preLoaderRoute: typeof MovementsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/library': {
@@ -401,8 +441,10 @@ const rootRouteChildren: RootRouteChildren = {
   FavoritesRoute: FavoritesRoute,
   FriendsRoute: FriendsRoute,
   LibraryRoute: LibraryRoute,
+  LoginRoute: LoginRoute,
   MovementsRoute: MovementsRoute,
   ProgramsRoute: ProgramsRoute,
+  RegisterRoute: RegisterRoute,
   SettingsRoute: SettingsRoute,
   TeamsRoute: TeamsRoute,
   LogActivityRoute: LogActivityRoute,

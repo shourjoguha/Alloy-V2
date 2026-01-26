@@ -35,14 +35,10 @@ from app.llm import get_llm_provider, LLMConfig, Message, PromptBuilder
 from app.services.adaptation import adaptation_service
 from app.services.deload import deload_service
 from app.services.time_estimation import time_estimation_service
+from app.api.routes.dependencies import get_current_user_id
 
 router = APIRouter()
 settings = get_settings()
-
-
-def get_current_user_id() -> int:
-    """Get current user ID (MVP: hardcoded default user)."""
-    return settings.default_user_id
 
 
 @router.get("/{target_date}/plan", response_model=DailyPlanResponse)

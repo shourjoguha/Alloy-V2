@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils';
 import type { Program } from '@/types';
 
 export function ProgramsTab() {
-  const { data: programs, isLoading } = usePrograms(false);
+  const { data: programs, isLoading, error } = usePrograms(false);
   const deleteMutation = useDeleteProgram();
   const updateMutation = useUpdateProgram();
   const activateMutation = useActivateProgram();
@@ -55,6 +55,14 @@ export function ProgramsTab() {
     return (
       <div className="flex justify-center py-6">
         <Spinner size="sm" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="rounded bg-error/10 p-3 text-sm text-error">
+        Failed to load programs. Please try refreshing the page or check your connection.
       </div>
     );
   }

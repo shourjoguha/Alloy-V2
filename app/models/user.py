@@ -30,23 +30,28 @@ class User(Base):
     name = Column(String(100), nullable=True)
     email = Column(String(255), nullable=True, unique=True)
     
+    # Authentication fields
+    hashed_password = Column(String(255), nullable=True)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
     # Experience and defaults
     experience_level = Column(
-        SQLEnum(ExperienceLevel),
+        SQLEnum(ExperienceLevel, values_callable=lambda obj: [e.value for e in obj]),
         nullable=False,
-        default=ExperienceLevel.INTERMEDIATE
+        default='intermediate'
     )
     
     # Global persona settings
     persona_tone = Column(
-        SQLEnum(PersonaTone),
+        SQLEnum('drill_sergeant', 'supportive', 'analytical', 'motivational', 'minimalist', name='personatone'),
         nullable=False,
-        default=PersonaTone.SUPPORTIVE
+        default='supportive'
     )
     persona_aggression = Column(
-        SQLEnum(PersonaAggression),
+        SQLEnum('CONSERVATIVE', 'MODERATE_CONSERVATIVE', 'BALANCED', 'MODERATE_AGGRESSIVE', 'AGGRESSIVE', name='personaaggression'),
         nullable=False,
-        default=PersonaAggression.BALANCED
+        default='BALANCED'
     )
     
     # Relationships
@@ -66,6 +71,7 @@ class User(Base):
     activity_instances = relationship("ActivityInstance", back_populates="user", cascade="all, delete-orphan")
     skills = relationship("UserSkill", back_populates="user", cascade="all, delete-orphan")
     injuries = relationship("UserInjury", back_populates="user", cascade="all, delete-orphan")
+    favorites = relationship("Favorite", back_populates="user", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<User(id={self.id}, name='{self.name}')>"

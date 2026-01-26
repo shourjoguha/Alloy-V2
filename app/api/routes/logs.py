@@ -39,14 +39,10 @@ from app.schemas.logging import (
     CustomExerciseCreate,
 )
 from app.services.metrics import calculate_e1rm, E1RM_FORMULAS
+from app.api.routes.dependencies import get_current_user_id
 
 router = APIRouter()
 settings = get_settings()
-
-
-def get_current_user_id() -> int:
-    """Get current user ID (MVP: hardcoded default user)."""
-    return settings.default_user_id
 
 
 

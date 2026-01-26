@@ -234,50 +234,50 @@ The Gainsly database is organized around a core biomechanical knowledge graph wi
          ├── many_to_many ────┬───┐
          │                    │   │
          ▼                    ▼   ▼
-┌──────────────────┐  ┌──────────────────┐  ┌──────────────────┐
-│ movement_muscle  │  │ movement_equipment│  │ movement_tags   │
-│       _map       │  │                  │  │                  │
+┌──────────────────┐  ┌───────────────────┐  ┌──────────────────┐
+│ movement_muscle  │  │ movement_equipment│  │ movement_tags    │
+│       _map       │  │                   │  │                  │
 │                  │  │ Junction table    │  │ Flexible tagging │
-│ - movement_id    │  │ - movement_id    │  │ - movement_id    │
-│ - muscle_id      │  │ - equipment_tag  │  │ - tag           │
-│ - role (enum)    │  │                  │  │                  │
-│ - magnitude      │  │                  │  │                  │
-└──────────────────┘  └──────────────────┘  └──────────────────┘
+│ - movement_id    │  │ - movement_id     │  │ - movement_id    │
+│ - muscle_id      │  │ - equipment_tag   │  │ - tag            │
+│ - role (enum)    │  │                   │  │                  │
+│ - magnitude      │  │                   │  │                  │
+└──────────────────┘  └───────────────────┘  └──────────────────┘
          │
          │
          ▼
-┌──────────────────┐
-│     muscles      │
-│  Reference table │
-│  for muscle groups│
-│                  │
-│ - name           │
-│ - body_region    │
-│ - description    │
-└──────────────────┘
+┌────────────────────┐
+│     muscles        │
+│  Reference table   │
+│  for muscle groups │
+│                    │
+│ - name             │
+│ - body_region      │
+│ - description      │
+└────────────────────┘
          │
          │
          ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                    movement_relationships                        │
+│                    movement_relationships                       │
 │  Encodes biomechanical knowledge: progressions, regressions,    │
-│  variations, antagonists, prep movements                         │
-│                                                                  │
-│  - movement_1_id (FK → movements)                                │
-│  - movement_2_id (FK → movements)                                │
-│  - relationship_type (enum: progression, regression, etc.)       │
-│  - severity (Float)                                              │
+│  variations, antagonists, prep movements                        │
+│                                                                 │
+│  - movement_1_id (FK → movements)                               │
+│  - movement_2_id (FK → movements)                               │
+│  - relationship_type (enum: progression, regression, etc.)      │
+│  - severity (Float)                                             │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
 ### User & Personalization Layer
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                         users                                   │
-│  Core user account with authentication and preferences          │
+┌───────────────────────────────────────────────────────────────────┐
+│                         users                                     │
+│  Core user account with authentication and preferences            │
 │  - email, name, experience_level, persona_tone, persona_aggression│
-└─────────────────────────────────────────────────────────────────┘
+└───────────────────────────────────────────────────────────────────┘
          │
          ├── 1:1 ────┬──────────────────┬──────────────────┬──────┐
          │           │                  │                  │      │
@@ -290,7 +290,7 @@ The Gainsly database is organized around a core biomechanical knowledge graph wi
 │ - use_metric     │  │ - sex            │  │ - rule_type      │
 │                  │  │ - height_cm      │  │ - cadence        │
 └──────────────────┘  │ - JSON prefs     │  └──────────────────┘
-                       └──────────────────┘
+                      └──────────────────┘
          │
          ├── 1:N ────┬──────────────────┬──────────────────┬──────┐
          │           │                  │                  │      │
@@ -338,31 +338,31 @@ The Gainsly database is organized around a core biomechanical knowledge graph wi
          │                └──────────────────┘
          │                        │
          │                        ▼
-         │                ┌──────────────────┐
-         │                │     sessions     │
-         │                │                  │
-         │                │ - microcycle_id  │
-         │                │ - date           │
-         │                │ - session_type   │
-         │                │ - main_circuit_id│
-         │                │ - finisher_circuit_id│
-         │                └──────────────────┘
+         │                ┌────────────────────────┐
+         │                │     sessions           │
+         │                │                        │
+         │                │ - microcycle_id        │
+         │                │ - date                 │
+         │                │ - session_type         │
+         │                │ - main_circuit_id      │
+         │                │ - finisher_circuit_id  │
+         │                └────────────────────────┘
          │                        │
          │                        ▼
-         │                ┌──────────────────┐
-         │                │session_exercises │
-         │                │                  │
-         │                │ - session_id     │
-         │                │ - movement_id    │
+         │                ┌───────────────────┐
+         │                │session_exercises  │
+         │                │                   │
+         │                │ - session_id      │
+         │                │ - movement_id     │
          │                │ - role (warmup,   │
-         │                │   main, etc.)    │
+         │                │   main, etc.)     │
          │                │ - order_in_session│
-         │                │ - superset_group │
-         │                │ - target_sets    │
-         │                │ - target_rep_*   │
-         │                │ - target_rpe     │
-         │                │ - target_rir     │
-         │                └──────────────────┘
+         │                │ - superset_group  │
+         │                │ - target_sets     │
+         │                │ - target_rep_*    │
+         │                │ - target_rpe      │
+         │                │ - target_rir      │
+         │                └───────────────────┘
          │                        │
          │                        ▼
          │                ┌──────────────────┐
@@ -375,16 +375,16 @@ The Gainsly database is organized around a core biomechanical knowledge graph wi
 ### Fatigue, Recovery & Analytics
 
 ```
-┌──────────────────┐      ┌──────────────────┐
-│ workout_logs     │◄─────│     sessions     │
-│                  │      │                  │
-│ - session_id     │      │ - user_id        │
-│ - workout_date   │      │ - date           │
-│ - duration_sec   │      │ - total_stimulus │
-│ - perceived_effort│     │ - total_fatigue  │
-│ - mood_before/after│    │ - cns_fatigue    │
-└──────────────────┘      │ - muscle_volume_json│
-         │                └──────────────────┘
+┌────────────────────┐      ┌──────────────────────┐
+│ workout_logs       │◄─────│     sessions         │
+│                    │      │                      │
+│ - session_id       │      │ - user_id            │
+│ - workout_date     │      │ - date               │
+│ - duration_sec     │      │ - total_stimulus     │
+│ - perceived_effort │      │ - total_fatigue      │
+│ - mood_before/after│      │ - cns_fatigue        │
+└────────────────────┘      │ - muscle_volume_json │
+         │                  └──────────────────────┘
          │                        │
          ▼                        ▼
 ┌──────────────────┐      ┌──────────────────┐
@@ -398,47 +398,47 @@ The Gainsly database is organized around a core biomechanical knowledge graph wi
 │ - rpe            │      └──────────────────┘
 │ - velocity       │               │
 └──────────────────┘               ▼
-         │                ┌──────────────────┐
-         ▼                │ user_fatigue_    │
-┌──────────────────┐       │      state       │
-│ soreness_logs    │       │                  │
-│                  │       │ - user_id        │
-│ - user_id        │       │ - date           │
-│ - log_date       │       │ - muscle_fatigue_│
-│ - body_part      │       │   json           │
-│ - severity       │       │ - systemic_fatigue│
-└──────────────────┘       │ - cns_fatigue     │
-         │                │ - recovery_score │
-         ▼                └──────────────────┘
-┌──────────────────┐               │
-│recovery_signals  │               ▼
-│                  │      ┌──────────────────┐
-│ - user_id        │      │ recovery_signals │
-│ - signal_date    │      │                  │
-│ - overall_recovery│    │ - overall_score  │
-│   _score         │      │ - muscle_recovery│
-│ - muscle_recovery│     │   _json          │
-│   _json          │      │ - sleep_quality  │
-│ - hrv_score      │      │ - soreness_score │
-│ - resting_hr     │      │ - readiness_score│
-└──────────────────┘      └──────────────────┘
+         │                ┌───────────────────┐
+         ▼                │ user_fatigue_     │
+┌──────────────────┐      │      state        │
+│ soreness_logs    │      │                   │
+│                  │      │ - user_id         │
+│ - user_id        │      │ - date            │
+│ - log_date       │      │ - muscle_fatigue_ │
+│ - body_part      │      │   json            │
+│ - severity       │      │ - systemic_fatigue│
+└──────────────────┘      │ - cns_fatigue     │
+         │                │ - recovery_score  │
+         ▼                └───────────────────┘
+┌───────────────────┐               │
+│recovery_signals   │               ▼
+│                   │      ┌──────────────────┐
+│ - user_id         │      │ recovery_signals │
+│ - signal_date     │      │                  │
+│ - overall_recovery│      │ - overall_score  │
+│   _score          │      │ - muscle_recovery│
+│ - muscle_recovery │      │   _json          │
+│   _json           │      │ - sleep_quality  │
+│ - hrv_score       │      │ - soreness_score │
+│ - resting_hr      │      │ - readiness_score│
+└───────────────────┘      └──────────────────┘
 ```
 
 ### Circuit Templates (CrossFit/Hyrox)
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
+┌──────────────────────────────────────────────────────────────────┐
 │                     circuit_templates                            │
 │  Pre-defined CrossFit/Hyrox style circuit structures             │
 │                                                                  │
 │  - name, description                                             │
-│  - circuit_type (enum: rounds_for_time, amrap, emom, ladder,    │
+│  - circuit_type (enum: rounds_for_time, amrap, emom, ladder,     │
 │    tabata, chipper, station)                                     │
-│  - exercises_json (flexible structure)                          │
+│  - exercises_json (flexible structure)                           │
 │  - default_rounds, time_cap_seconds                              │
-│  - bucket_stress (JSON: stress by movement bucket)              │
+│  - bucket_stress (JSON: stress by movement bucket)               │
 │  - fatigue_factor, stimulus_factor (fitness function metrics)    │
-└─────────────────────────────────────────────────────────────────┘
+└──────────────────────────────────────────────────────────────────┘
          │
          ├── referenced by ────┐
          │                     │
@@ -462,7 +462,7 @@ The Gainsly database is organized around a core biomechanical knowledge graph wi
 │ - provider_type  │               ▼
 │   (enum)         │      ┌──────────────────┐
 │ - access_token   │      │external_ingestion│
-│ - refresh_token  │      │     _runs       │
+│ - refresh_token  │      │     _runs        │
 └──────────────────┘      │                  │
          │                │ - user_id        │
          │                │ - provider_account_id│
@@ -471,8 +471,8 @@ The Gainsly database is organized around a core biomechanical knowledge graph wi
 │external_activity_│      └──────────────────┘
 │    records       │               │
 │                  │               ├── produces ───┐
-│ - user_id        │               │              │
-│ - provider_      │               ▼              ▼
+│ - user_id        │               │               │
+│ - provider_      │               ▼               ▼
 │   activity_id    │      ┌──────────────────┐ ┌──────────────────┐
 │ - activity_type  │      │external_activity_│ │external_metric_  │
 │ - raw_data_json  │      │    records       │ │    streams       │
@@ -490,14 +490,88 @@ The Gainsly database is organized around a core biomechanical knowledge graph wi
 
 ---
 
+## 5. Authentication System Architecture
+
+### JWT-Based Authentication
+
+Gainsly implements production-ready authentication using JSON Web Tokens (JWT) with bcrypt password hashing for secure user identity management.
+
+**Authentication Flow**:
+```
+User Registration/Login
+    ↓
+Validate credentials
+    ↓
+Generate JWT token (HS256 algorithm)
+    ↓
+Return access_token + user_id
+    ↓
+Client includes token in Authorization header
+    ↓
+Token verified on protected routes
+```
+
+**Security Architecture**:
+- **Password Storage**: Bcrypt with per-password salt generation
+- **Token Algorithm**: HS256 (HMAC SHA-256)
+- **Token Payload**: `{"sub": user_id, "exp": expiration_timestamp}`
+- **Token Expiration**: Configurable (default: 30 minutes)
+- **Token Validation**: Decode with secret key, verify signature and expiration
+
+**Authentication Models**:
+- [User](file:///Users/shourjosmac/Documents/alloy/app/models/user.py#L26-78): Core user model with auth fields
+  - `hashed_password`: Bcrypt password hash (String 255, nullable)
+  - `is_active`: Account activation status (Boolean, default True)
+  - `created_at`: Account creation timestamp (DateTime, default now)
+- [UserRegister](file:///Users/shourjosmac/Documents/alloy/app/api/routes/auth.py#L18-22): Registration request model
+- [UserLogin](file:///Users/shourjosmac/Documents/alloy/app/api/routes/auth.py#L25-28): Login request model
+- [TokenResponse](file:///Users/shourjosmac/Documents/alloy/app/api/routes/auth.py#L31-35): Token response model
+- [UserResponse](file:///Users/shourjosmac/Documents/alloy/app/api/routes/auth.py#L38-44): User info response model
+
+**Authentication Endpoints**:
+- `POST /auth/register`: User registration with email validation and JWT token issuance
+- `POST /auth/login`: User authentication with credential verification and JWT token issuance
+- `GET /auth/verify-token`: Token verification and user info retrieval
+
+**Security Utilities** ([jwt_utils.py](file:///Users/shourjosmac/Documents/alloy/app/security/jwt_utils.py)):
+- `get_password_hash()`: Generate bcrypt hash with salt
+- `verify_password()`: Verify password against bcrypt hash (constant-time comparison)
+- `create_access_token()`: Generate JWT token with user_id and expiration
+- `verify_token()`: Decode and validate JWT token, extract user_id
+
+**Integration Points**:
+- Frontend: Token storage in `auth-store.ts` with persistence
+- API: Bearer token authentication in Authorization header
+- Database: User account activation status checked on login
+- Configuration: JWT settings in environment variables (secret_key, access_token_expire_minutes)
+
+**Authentication Flow for AI Agents**:
+When implementing features that require user authentication:
+1. Check if endpoint requires authentication (protected routes)
+2. Verify JWT token from Authorization header
+3. Extract user_id from token "sub" claim
+4. Validate user.is_active status
+5. Use user_id for all user-scoped operations
+
+**Security Considerations**:
+- Email uniqueness enforced at registration
+- Password never stored in plain text
+- Token expiration prevents indefinite access
+- Account activation status checked on login
+- Bearer token pattern for API requests
+- Secret key must be kept secure (environment variable)
+
+---
+
 ## Summary
 
-This architecture guide provides the foundational understanding for autonomous AI agents to interact effectively with the Gainsly database:
+This architecture guide provides foundational understanding for autonomous AI agents to interact effectively with Gainsly database:
 
-1. **The `movements` table is the central source of truth** for all biomechanical reasoning
+1. **The `movements` table is central source of truth** for all biomechanical reasoning
 2. **Soft Enums provide flexibility** while maintaining application-level validation
 3. **Biomechanical inference** follows physics-based rules (pattern → muscle → mechanics)
 4. **Truth hierarchy**: Codebase > Database Schema > Current Data > General Knowledge
 5. **Context matters**: User preferences, fatigue state, and goals all influence exercise selection
+6. **Authentication is JWT-based** with bcrypt password hashing for secure user identity management
 
-Use this guide as a reference when implementing session generation, adaptation logic, or any feature that requires understanding the biomechanical relationships encoded in the Gainsly knowledge graph.
+Use this guide as a reference when implementing session generation, adaptation logic, or any feature that requires understanding of biomechanical relationships encoded in Gainsly knowledge graph.

@@ -6,7 +6,10 @@ based on program goals, session type, and movement library.
 """
 
 import asyncio
+import httpx
+import json
 import logging
+import time
 from typing import Any
 
 from sqlalchemy import select
@@ -185,7 +188,6 @@ class SessionGeneratorService:
             draft_result = await self._generate_draft_session(db, session, used_movements, goal_weights=goal_weights)
             if draft_result.status in ["OPTIMAL", "FEASIBLE"] and draft_result.selected_movements:
                 draft_content = self._convert_optimization_result_to_content(draft_result, session.session_type)
-                draft_context = self._format_draft_for_llm(draft_content)
                 logger.info(f"Generated optimal draft for session {session.id}")
         except Exception as e:
             logger.warning(f"Failed to generate draft session: {e}")
@@ -342,7 +344,7 @@ class SessionGeneratorService:
 
         # 3. Save Results (Short DB transaction)
         current_session_volume = {}
-        logger.info(f"[populate_session_by_id] SAVING to database...")
+        logger.info("[populate_session_by_id] SAVING to database...")
         async with async_session_maker() as db:
             session = await db.get(Session, session_id)
             if session:
@@ -431,7 +433,6 @@ class SessionGeneratorService:
             )
             if draft_result.status in ["OPTIMAL", "FEASIBLE"] and draft_result.selected_movements:
                 draft_content = self._convert_optimization_result_to_content(draft_result, session_type)
-                draft_context = self._format_draft_for_llm(draft_content)
                 logger.info(f"Generated optimal draft for session {context['session']['id']}")
         except Exception as e:
             logger.warning(f"Failed to generate draft session: {e}")
@@ -479,25 +480,25 @@ class SessionGeneratorService:
         user_id: int,
     ) -> None:
         """
-        Convert content dict to SessionExercise objects and save to DB.
+        Convert content dict to SessionExercise objects and save to DB using bulk operations.
         """
-        from sqlalchemy import delete, text
+        from sqlalchemy import delete
         
         logger.info(f"[_save_session_exercises] START - session_id={session.id}, content_keys={list(content.keys())}")
         
         # Clear existing exercises for this session
         await db.execute(delete(SessionExercise).where(SessionExercise.session_id == session.id))
         
-        # Reset the sequence to avoid duplicate key violations
-        await db.execute(text("SELECT setval('session_exercises_id_seq', (SELECT COALESCE(MAX(id), 1) FROM session_exercises))"))
-        
         logger.info(f"[_save_session_exercises] Cleared existing exercises for session {session.id}")
         
         order_counter = 1
+        missing_movements = []
+        total_exercises = 0
+        exercises_to_save = []
         
         # Helper to process a section
         async def process_section(section_name: str, exercise_role: ExerciseRole):
-            nonlocal order_counter
+            nonlocal order_counter, missing_movements, total_exercises, exercises_to_save
             exercises = content.get(section_name)
             if not exercises:
                 return
@@ -505,13 +506,14 @@ class SessionGeneratorService:
             logger.info(f"[_save_session_exercises] Processing section '{section_name}' with {len(exercises)} exercises")
             
             for ex in exercises:
+                total_exercises += 1
                 movement_name = ex.get("movement")
                 if not movement_name:
                     continue
                     
                 movement_id = movement_map.get(movement_name)
                 if not movement_id:
-                    logger.warning(f"Movement '{movement_name}' not found in map. Skipping.")
+                    missing_movements.append(movement_name)
                     continue
                 
                 # Create SessionExercise
@@ -531,7 +533,7 @@ class SessionGeneratorService:
                     superset_group=None
                 )
                 
-                db.add(session_ex)
+                exercises_to_save.append(session_ex)
                 order_counter += 1
 
         await process_section("warmup", ExerciseRole.WARMUP)
@@ -544,11 +546,13 @@ class SessionGeneratorService:
         if finisher:
             if isinstance(finisher, dict) and finisher.get("exercises"):
                 for ex in finisher.get("exercises"):
+                    total_exercises += 1
                     movement_name = ex.get("movement")
                     if not movement_name:
                         continue
                     movement_id = movement_map.get(movement_name)
                     if not movement_id:
+                        missing_movements.append(movement_name)
                         continue
                         
                     session_ex = SessionExercise(
@@ -563,8 +567,25 @@ class SessionGeneratorService:
                         target_duration_seconds=ex.get("duration_seconds"),
                         notes=ex.get("notes"),
                     )
-                    db.add(session_ex)
+                    exercises_to_save.append(session_ex)
                     order_counter += 1
+        
+        # Bulk save all exercises at once
+        if exercises_to_save:
+            db.add_all(exercises_to_save)
+            logger.info(f"[_save_session_exercises] Bulk saved {len(exercises_to_save)} exercises")
+        else:
+            logger.warning(f"[_save_session_exercises] No exercises to save. Missing movements: {missing_movements[:10]}")
+        
+        # Validate missing movements threshold
+        if missing_movements and total_exercises > 0:
+            missing_percentage = len(missing_movements) / total_exercises
+            if missing_percentage > 0.25:
+                error_msg = f"Critical: {len(missing_movements)}/{total_exercises} movements not found in database: {missing_movements[:5]}"
+                logger.error(f"[_save_session_exercises] {error_msg}")
+                raise ValueError(error_msg)
+            else:
+                logger.warning(f"[_save_session_exercises] {len(missing_movements)} movements not found: {missing_movements}")
 
     async def _calculate_session_volume(self, db: AsyncSession, session: Session) -> dict[str, int]:
         """Helper to calculate volume after session is saved."""
@@ -611,8 +632,10 @@ class SessionGeneratorService:
         else:
             # Fallback to JSON (Legacy support)
             all_movements = []
-            if session.main_json: all_movements.extend([(m["movement"], 3) for m in session.main_json if "movement" in m])
-            if session.accessory_json: all_movements.extend([(m["movement"], 2) for m in session.accessory_json if "movement" in m])
+            if session.main_json:
+                all_movements.extend([(m["movement"], 3) for m in session.main_json if "movement" in m])
+            if session.accessory_json:
+                all_movements.extend([(m["movement"], 2) for m in session.accessory_json if "movement" in m])
             if session.finisher_json and session.finisher_json.get("exercises"):
                 all_movements.extend([(m["movement"], 1) for m in session.finisher_json["exercises"] if "movement" in m])
                 
@@ -686,12 +709,12 @@ class SessionGeneratorService:
             for name in used_movements:
                 if name in name_to_id:
                     excluded_ids.append(name_to_id[name])
-        
+
         req = OptimizationRequest(
             available_movements=solver_movements,
             available_circuits=[],
             target_muscle_volumes=targets,
-            max_fatigue=5.0,
+            max_fatigue=activity_distribution_config.or_tools_max_fatigue,
             min_stimulus=2.0,
             user_skill_level=SkillLevel.INTERMEDIATE,
             excluded_movement_ids=excluded_ids,
@@ -1030,9 +1053,14 @@ class SessionGeneratorService:
             provider = get_llm_provider()
             config = LLMConfig(model=settings.ollama_model, temperature=0.2, max_tokens=1200)
             messages = [Message(role="user", content=prompt)]
-            response = await asyncio.wait_for(provider.chat(messages, config), timeout=6.0)
-            if response.content:
-                return response.content.strip()[:1100].rstrip()
+            response = await self._call_llm_with_retry(
+                provider,
+                messages,
+                config,
+                session_type=session_type.value,
+            )
+            if response:
+                return str(response)[:1100].rstrip()
         except Exception:
             pass
 
@@ -1280,9 +1308,6 @@ class SessionGeneratorService:
             if section_name == "finisher":
                 if not content.get("finisher"):
                     continue
-                current_exercises = content["finisher"].get("exercises", [])
-            else:
-                current_exercises = content.get(section_name, [])
             
             # Find replacement movement
             replacement_movement = self._find_replacement_movement(
@@ -1585,16 +1610,13 @@ class SessionGeneratorService:
     def _get_recovery_session_content(self) -> dict[str, Any]:
         """Return content for a rest/recovery day."""
         return {
-            "warmup": None,
-            "main": None,
-            "accessory": None,
+            "warmup": [],
+            "main": [],
+            "accessory": [],
             "finisher": None,
-            "cooldown": [
-                {"movement": "Foam Rolling", "duration_seconds": 300, "notes": "Full body"},
-                {"movement": "Light Stretching", "duration_seconds": 300, "notes": "Focus on tight areas"},
-            ],
-            "estimated_duration_minutes": 15,
-            "reasoning": "Recovery day - focus on mobility and rest.",
+            "cooldown": [],
+            "estimated_duration_minutes": 0,
+            "reasoning": "Rest day - no exercises.",
         }
     
     def _get_smart_fallback_session_content(
@@ -1957,13 +1979,13 @@ class SessionGeneratorService:
             for name in used_movements:
                 if name in name_to_id:
                     excluded_ids.append(name_to_id[name])
-        
+
         # Build request
         req = OptimizationRequest(
             available_movements=solver_movements,
             available_circuits=solver_circuits,
             target_muscle_volumes=targets,
-            max_fatigue=5.0,  # Default budget
+            max_fatigue=activity_distribution_config.or_tools_max_fatigue,
             min_stimulus=2.0,
             user_skill_level=SkillLevel.INTERMEDIATE,
             excluded_movement_ids=excluded_ids,

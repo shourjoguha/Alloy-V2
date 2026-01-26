@@ -1,10 +1,13 @@
-import { Link } from '@tanstack/react-router';
-import { X, Users, Settings, BookOpen, Activity } from 'lucide-react';
+import { Link, useNavigate } from '@tanstack/react-router';
+import { X, Users, Settings, BookOpen, Activity, LogOut } from 'lucide-react';
 import { useUIStore } from '@/stores/ui-store';
+import { useAuthStore } from '@/stores/auth-store';
 import { cn } from '@/lib/utils';
 
 export function BurgerMenu() {
   const { isMenuOpen, setMenuOpen } = useUIStore();
+  const { logout } = useAuthStore();
+  const navigate = useNavigate();
 
   const menuItems = [
     { to: '/log/soreness', label: 'Log Soreness', icon: Activity },
@@ -12,6 +15,12 @@ export function BurgerMenu() {
     { to: '/friends', label: 'Friends', icon: Users },
     { to: '/settings', label: 'Settings', icon: Settings },
   ];
+
+  const handleLogout = () => {
+    logout();
+    setMenuOpen(false);
+    navigate({ to: '/login' } as any);
+  };
 
   return (
     <>
@@ -66,6 +75,17 @@ export function BurgerMenu() {
               })}
             </ul>
           </nav>
+
+          {/* Logout Button */}
+          <div className="border-t border-border p-2">
+            <button
+              onClick={handleLogout}
+              className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-error transition-colors hover:bg-background hover:text-error"
+            >
+              <LogOut className="h-5 w-5" />
+              <span className="font-medium">Logout</span>
+            </button>
+          </div>
 
           {/* Footer */}
           <div className="border-t border-border p-4">

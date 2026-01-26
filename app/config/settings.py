@@ -38,6 +38,12 @@ class Settings(BaseSettings):
     
     admin_api_token: str | None = "gainsly-admin-123"
     # also in .env file in the fronend folder
+
+    # JWT Authentication settings
+    secret_key: str = "your-secret-key-change-in-production-use-environment-variable"
+    algorithm: str = "HS256"
+    access_token_expire_minutes: int = 30
+
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"

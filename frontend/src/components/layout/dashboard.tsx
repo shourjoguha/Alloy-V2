@@ -8,9 +8,11 @@ import { usePrograms, useProgram } from '@/api/programs';
 import { useDashboardStats } from '@/api/stats';
 import { SessionCard } from '@/components/program/SessionCard';
 import { cn } from '@/lib/utils';
+import { useAuthStore } from '@/stores/auth-store';
 
 export function Dashboard() {
-  const userName = "Gain Smith";
+  const { user } = useAuthStore();
+  const userName = user?.name || "Gain Smith";
   
   // Fetch all programs (first one will be active or most recent)
   const { data: programs, isLoading: programsLoading } = usePrograms(false);
@@ -268,7 +270,7 @@ export function Dashboard() {
             <div>
               <div className="text-sm text-foreground-muted">Active Program</div>
               <div className="font-medium capitalize">
-                {activeProgram.split_template.replace('_', ' ')}
+                {activeProgram.split_template?.replace('_', ' ') || 'Custom Program'}
               </div>
               <div className="text-xs text-foreground-muted">
                 {activeProgram.duration_weeks} weeks

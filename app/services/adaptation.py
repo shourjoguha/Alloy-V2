@@ -9,7 +9,6 @@ Responsible for:
 - Enforcing user preferences (enjoyable activities weighting)
 """
 
-from datetime import datetime
 from typing import Optional, List, Dict, Any
 from sqlalchemy import select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -18,9 +17,7 @@ from sqlalchemy.orm import joinedload
 from app.models.user import (
     UserMovementRule, UserEnjoyableActivity
 )
-from app.models.logging import (
-    SorenessLog, RecoverySignal
-)
+from app.models.movement import Movement
 from app.models.program import Session, Microcycle, Program, SessionExercise
 from app.schemas.daily import AdaptationRequest
 
@@ -90,7 +87,6 @@ class AdaptationService:
         
         # Load constraints
         rules = await self._get_movement_rules(db, user_id)
-        preferences = await self._get_user_preferences(db, user_id)
         recovery = await self._assess_recovery(db, user_id, request)
         
         # Adapt patterns
@@ -137,7 +133,11 @@ class AdaptationService:
         context: Optional[Dict[str, str]] = None,
     ) -> Dict[str, Any]:
         """
-        Suggest alternative exercises (MVP: returns empty list).
+        Suggest alternative exercises using substitution_group matching.
+        
+        Uses the substitution_group field to find biomechanically similar movements
+        that can serve as substitutes. This is safer and faster than LLM-based
+        suggestions while still providing intelligent alternatives.
         
         Args:
             db: Database session
@@ -146,14 +146,135 @@ class AdaptationService:
             context: Optional context (goal, intensity, equipment)
         
         Returns:
-            Dict with suggested_movements (list), reasoning (str)
+            Dict with suggested_movements (list of movement names), reasoning (str)
         """
-        # MVP: no LLM-based suggestions yet
+        from app.models.movement import Movement
+        from sqlalchemy import select
+        
+        context = context or {}
+        
+        # Find the original movement
+        result = await db.execute(
+            select(Movement).where(Movement.name == movement)
+        )
+        original_movement = result.scalar_one_or_none()
+        
+        if not original_movement:
+            return {
+                "original_movement": movement,
+                "suggested_movements": [],
+                "reasoning": f"Original movement '{movement}' not found in database.",
+            }
+        
+        # Get substitution_group from original movement
+        substitution_group = original_movement.substitution_group
+        
+        if not substitution_group:
+            return {
+                "original_movement": movement,
+                "suggested_movements": [],
+                "reasoning": f"Movement '{movement}' has no substitution_group defined. Manual review needed.",
+            }
+        
+        # Find all movements in the same substitution_group (excluding original)
+        result = await db.execute(
+            select(Movement).where(
+                Movement.substitution_group == substitution_group,
+                Movement.name != movement
+            )
+        )
+        alternatives = list(result.scalars().all())
+        
+        # Filter by user preferences and constraints
+        # 1. Avoid movements marked as HARD_NO
+        forbidden_result = await db.execute(
+            select(Movement)
+            .join(Movement.user_rules)
+            .where(Movement.user_rules.user_id == user_id)
+        )
+        forbidden_movements = {m.name for m in forbidden_result.scalars().all()}
+        
+        # 2. Filter by equipment availability if provided in context
+        required_equipment = context.get("equipment", "").lower() if context.get("equipment") else ""
+        filtered_alternatives = []
+        
+        for alt in alternatives:
+            # Skip forbidden movements
+            if alt.name in forbidden_movements:
+                continue
+            
+            # Skip if equipment constraints specified and not met
+            if required_equipment:
+                # Simple check: if equipment field exists, skip if doesn't match
+                # MVP: basic filtering, can be enhanced with proper equipment joins
+                if not self._meets_equipment_constraint(alt, required_equipment):
+                    continue
+            
+            filtered_alternatives.append(alt.name)
+        
+        # Sort by CNS load (prefer lower CNS load for substitutions)
+        # This makes substitutions less taxing than original
+        cns_order = {"very_low": 0, "low": 1, "moderate": 2, "high": 3, "very_high": 4}
+        filtered_alternatives.sort(
+            key=lambda m_name: cns_order.get(
+                next((alt.cns_load.value for alt in alternatives if alt.name == m_name), 
+                     "moderate"),
+                2
+            )
+        )
+        
+        reasoning_parts = [
+            f"Found {len(filtered_alternatives)} alternatives in substitution group '{substitution_group}'.",
+            "Alternatives sorted by CNS load preference (lower preferred)."
+        ]
+        
+        if required_equipment:
+            reasoning_parts.append(f"Filtered by available equipment: {required_equipment}")
+        
+        if forbidden_movements:
+            reasoning_parts.append(f"Excluded {len(forbidden_movements)} user-forbidden movements")
+        
         return {
             "original_movement": movement,
-            "suggested_movements": [],
-            "reasoning": "LLM-based suggestions not yet implemented. Manual review needed.",
+            "suggested_movements": filtered_alternatives[:5],  # Limit to top 5
+            "reasoning": " ".join(reasoning_parts),
+            "substitution_group": substitution_group,
         }
+    
+    def _meets_equipment_constraint(
+        self,
+        movement: "Movement",
+        required_equipment: str,
+    ) -> bool:
+        """
+        Check if movement meets equipment constraints.
+        
+        MVP: Basic check based on movement name patterns.
+        Can be enhanced with proper equipment joins.
+        
+        Args:
+            movement: Movement to check
+            required_equipment: Required equipment string (e.g., "barbell", "dumbbell")
+        
+        Returns:
+            True if movement meets constraints, False otherwise
+        """
+        movement_lower = movement.name.lower()
+        required_lower = required_equipment.lower()
+        
+        # Common equipment patterns in movement names
+        equipment_patterns = {
+            "barbell": ["barbell", "bb ", " bb"],
+            "dumbbell": ["dumbbell", "db ", " db"],
+            "kettlebell": ["kettlebell", "kb ", " kb", "kettle"],
+            "machine": ["machine", "cable", "lat pulldown", "leg press"],
+            "bodyweight": ["bodyweight", "pushup", "pullup", "plank", "dip", "lunge"],
+            "cable": ["cable", "lat pulldown", "crossover"],
+        }
+        
+        # Check if movement matches required equipment
+        patterns = equipment_patterns.get(required_lower, [required_lower])
+        return any(pattern in movement_lower for pattern in patterns)
     
     async def apply_movement_rule(
         self,
@@ -210,24 +331,24 @@ class AdaptationService:
         Check if movement violates any rules.
         
         Args:
-            movement: Movement name
+            movement: Movement object with ID
             rules: List of rule dicts
         
         Returns:
             Reason if forbidden, None otherwise
         """
         movement_id = getattr(movement, "id", None)
-        movement_name = getattr(movement, "name", None) or str(movement)
+        
+        if movement_id is None:
+            return None
 
         for rule in rules:
             if rule.get("rule_type") != "hard_no":
                 continue
 
-            if movement_id is not None and rule.get("movement_id") == movement_id:
+            if rule.get("movement_id") == movement_id:
                 return rule.get("reason", "Rule violation")
-
-            if "movement" in rule and isinstance(rule["movement"], str) and rule["movement"].lower() in movement_name.lower():
-                return rule.get("reason", "Rule violation")
+        
         return None
     
     def _check_soreness_conflict(

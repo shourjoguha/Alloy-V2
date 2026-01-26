@@ -153,6 +153,7 @@ class Movement(Base):
     user_rules = relationship("UserMovementRule", back_populates="movement")
     session_exercises = relationship("SessionExercise", back_populates="movement")
     top_set_logs = relationship("TopSetLog", back_populates="movement")
+    favorites = relationship("Favorite", back_populates="movement", cascade="all, delete-orphan")
 
     # Movement Relationships
     outgoing_relationships = relationship(
