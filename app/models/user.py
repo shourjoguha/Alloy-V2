@@ -3,6 +3,7 @@ from datetime import datetime
 from sqlalchemy import Boolean, Column, Integer, String, ForeignKey, Enum as SQLEnum, Text, CheckConstraint
 from sqlalchemy import Date, DateTime, Float, JSON
 from sqlalchemy.orm import relationship
+from sqlalchemy.dialects.postgresql import JSONB
 
 from app.db.database import Base
 from app.models.enums import (
@@ -19,6 +20,7 @@ from app.models.enums import (
     BiometricMetricType,
     RuleOperator,
     DisciplineType,
+    UserRole,
 )
 
 
@@ -33,6 +35,7 @@ class User(Base):
     # Authentication fields
     hashed_password = Column(String(255), nullable=True)
     is_active = Column(Boolean, default=True)
+    role = Column(SQLEnum(UserRole, values_callable=lambda obj: [e.value for e in obj]), default=UserRole.USER)
     created_at = Column(DateTime, default=datetime.utcnow)
     
     # Experience and defaults
@@ -43,16 +46,8 @@ class User(Base):
     )
     
     # Global persona settings
-    persona_tone = Column(
-        SQLEnum('drill_sergeant', 'supportive', 'analytical', 'motivational', 'minimalist', name='personatone'),
-        nullable=False,
-        default='supportive'
-    )
-    persona_aggression = Column(
-        SQLEnum('CONSERVATIVE', 'MODERATE_CONSERVATIVE', 'BALANCED', 'MODERATE_AGGRESSIVE', 'AGGRESSIVE', name='personaaggression'),
-        nullable=False,
-        default='BALANCED'
-    )
+    persona_tone = Column(SQLEnum(PersonaTone), nullable=False, default=PersonaTone.SUPPORTIVE)
+    persona_aggression = Column(SQLEnum(PersonaAggression), nullable=False, default=PersonaAggression.BALANCED)
     
     # Relationships
     movement_rules = relationship("UserMovementRule", back_populates="user", cascade="all, delete-orphan")
@@ -62,6 +57,7 @@ class User(Base):
     soreness_logs = relationship("SorenessLog", back_populates="user", cascade="all, delete-orphan")
     recovery_signals = relationship("RecoverySignal", back_populates="user", cascade="all, delete-orphan")
     muscle_recovery_states = relationship("MuscleRecoveryState", back_populates="user", cascade="all, delete-orphan")
+    pattern_recovery_states = relationship("PatternRecoveryState", back_populates="user", cascade="all, delete-orphan")
     settings = relationship("UserSettings", back_populates="user", uselist=False, cascade="all, delete-orphan")
     conversation_threads = relationship("ConversationThread", back_populates="user", cascade="all, delete-orphan")
     profile = relationship("UserProfile", back_populates="user", uselist=False, cascade="all, delete-orphan")
@@ -72,6 +68,7 @@ class User(Base):
     skills = relationship("UserSkill", back_populates="user", cascade="all, delete-orphan")
     injuries = relationship("UserInjury", back_populates="user", cascade="all, delete-orphan")
     favorites = relationship("Favorite", back_populates="user", cascade="all, delete-orphan")
+    refresh_tokens = relationship("RefreshToken", back_populates="user", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<User(id={self.id}, name='{self.name}')>"
@@ -88,7 +85,7 @@ class UserMovementRule(Base):
     rule_type = Column(SQLEnum(MovementRuleType), nullable=False)
     rule_operator = Column(SQLEnum(RuleOperator, values_callable=lambda obj: [e.value for e in obj]), nullable=False, default=RuleOperator.EQ)
     cadence = Column(SQLEnum(RuleCadence), nullable=False, default=RuleCadence.PER_MICROCYCLE)
-    # notes = Column(Text, nullable=True)
+    notes = Column(Text, nullable=True)
     
     # Relationships
     user = relationship("User", back_populates="movement_rules")
@@ -154,6 +151,7 @@ class UserProfile(Base):
     discipline_preferences = Column(JSON, nullable=True)  # {"mobility": 5, "calisthenics": 3, ...}
     discipline_experience = Column(JSON, nullable=True)  # {"mobility": "intermediate", "crossfit": "beginner"}
     scheduling_preferences = Column(JSON, nullable=True)  # {"mix_disciplines": true, "cardio_preference": "finisher"}
+    equipment_available = Column(JSONB, nullable=True)  # ["barbell", "dumbbell", "pullup_bar", ...]
 
     # Long Term Goals
     long_term_goal_category = Column(String(50), nullable=True)

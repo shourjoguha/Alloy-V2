@@ -7,10 +7,11 @@ const cardVariants = cva(
   {
     variants: {
       variant: {
-        default: 'shadow-[0_1px_3px_rgba(0,0,0,0.04),0_1px_2px_rgba(0,0,0,0.06)]',
-        interactive: 'cursor-pointer hover:bg-background-secondary active:scale-[0.99] shadow-[0_1px_3px_rgba(0,0,0,0.04),0_1px_2px_rgba(0,0,0,0.06)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)]',
-        selected: 'bg-primary-muted shadow-[0_1px_3px_rgba(0,0,0,0.04),0_1px_2px_rgba(0,0,0,0.06)]',
-        grouped: 'bg-white shadow-[0_1px_3px_rgba(0,0,0,0.04),0_1px_2px_rgba(0,0,0,0.06)]',
+        default: 'shadow-md',
+        interactive: 'cursor-pointer hover:bg-background-secondary active:scale-[0.99] shadow-md hover:shadow-lg',
+        selected: 'bg-primary-muted shadow-md',
+        grouped: 'bg-background-card shadow-md',
+        auth: 'rounded-[30px] bg-[var(--color-background-secondary)]/80 border border-[var(--color-primary)]/30 shadow-[0_0_60px_rgba(45,212,191,0.2),0_0_100px_rgba(45,212,191,0.1)] backdrop-blur-xl',
       },
     },
     defaultVariants: {

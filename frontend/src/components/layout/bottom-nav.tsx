@@ -8,9 +8,8 @@ interface NavItem {
   icon: React.ComponentType<{ className?: string }>;
 }
 
-// Flexible nav items - can add up to 5
 const navItems: NavItem[] = [
-  { to: '/', label: 'Personal', icon: User },
+  { to: '/dashboard', label: 'Personal', icon: User },
   { to: '/teams', label: 'Teams', icon: Users },
 ];
 
@@ -18,7 +17,7 @@ export function BottomNav() {
   const location = useLocation();
   
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 safe-bottom border-t border-border bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80">
+    <nav className="fixed bottom-0 left-0 right-0 z-40 safe-bottom border-t border-border bg-background-card/95 backdrop-blur supports-[backdrop-filter]:bg-background-card/80">
       <div className="container-app">
         <div className="flex h-16 items-center justify-around">
           {navItems.map((item) => {

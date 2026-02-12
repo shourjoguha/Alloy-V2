@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from './client';
 import type { Program, ProgramCreate, ProgramWithMicrocycle, ProgramUpdate } from '@/types';
+import { useAuthStore } from '@/stores/auth-store';
 
 // Query keys
 export const programKeys = {
@@ -23,7 +24,7 @@ async function fetchProgram(id: number): Promise<ProgramWithMicrocycle> {
   return data;
 }
 
-async function createProgram(program: ProgramCreate): Promise<Program> {
+async function createProgram(program: ProgramCreate): Promise<ProgramWithMicrocycle> {
   const { data } = await apiClient.post('/programs', program);
   return data;
 }
@@ -43,19 +44,49 @@ async function activateProgram(id: number): Promise<Program> {
   return data;
 }
 
+interface ProgramGenerationStatus {
+  program_id: number;
+  total_microcycles: number;
+  completed_microcycles: number;
+  in_progress_microcycles: number;
+  pending_microcycles: number;
+  current_session_id: number | null;
+  current_microcycle_id: number | null;
+}
+
+async function fetchProgramGenerationStatus(programId: number): Promise<ProgramGenerationStatus> {
+  const { data } = await apiClient.get(`/programs/${programId}/generation-status`);
+  return data;
+}
+
 // React Query hooks
 export function usePrograms(activeOnly = false) {
+  const { isAuthenticated, token, _hasHydrated } = useAuthStore();
   return useQuery({
     queryKey: programKeys.list({ active_only: activeOnly }),
     queryFn: () => fetchPrograms(activeOnly),
+    enabled: _hasHydrated && isAuthenticated && !!token, // Only fetch when authenticated with a token and hydration is complete
+    staleTime: 5 * 60 * 1000, // 5 minutes - data remains fresh for this duration
+    gcTime: 10 * 60 * 1000, // 10 minutes - cache data after it's no longer in use
+    refetchOnWindowFocus: false, // Prevent refetching when window regains focus
+    refetchOnMount: false, // Prevent refetching when component remounts
+    refetchOnReconnect: true, // Still refetch on network reconnect
+    retry: 1, // Only retry failed requests once
   });
 }
 
 export function useProgram(id: number) {
+  const { isAuthenticated, token, _hasHydrated } = useAuthStore();
   return useQuery({
     queryKey: programKeys.detail(id),
     queryFn: () => fetchProgram(id),
-    enabled: Number.isFinite(id),
+    enabled: _hasHydrated && isAuthenticated && !!token && Number.isFinite(id),
+    staleTime: 5 * 60 * 1000, // 5 minutes - data remains fresh for this duration
+    gcTime: 10 * 60 * 1000, // 10 minutes - cache data after it's no longer in use
+    refetchOnWindowFocus: false, // Prevent refetching when window regains focus
+    refetchOnMount: false, // Prevent refetching when component remounts
+    refetchOnReconnect: true, // Still refetch on network reconnect
+    retry: 1, // Only retry failed requests once
   });
 }
 
@@ -64,8 +95,10 @@ export function useCreateProgram() {
   
   return useMutation({
     mutationFn: createProgram,
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: programKeys.all });
+      // Also set the new program in cache with its full structure
+      queryClient.setQueryData(programKeys.detail(data.program.id), data);
     },
   });
 }
@@ -128,5 +161,24 @@ export function useUpdateProgram() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: programKeys.all });
     },
+  });
+}
+
+export function useProgramGenerationStatus(programId: number, enabled = true) {
+  const { isAuthenticated, token, _hasHydrated } = useAuthStore();
+  return useQuery({
+    queryKey: ['programs', programId, 'generation-status'],
+    queryFn: () => fetchProgramGenerationStatus(programId),
+    enabled: _hasHydrated && isAuthenticated && !!token && enabled && Number.isFinite(programId),
+    refetchInterval: (query) => {
+      const data = query.state.data as ProgramGenerationStatus | undefined;
+      // Poll more frequently when generation is in progress
+      if (data?.in_progress_microcycles && data.in_progress_microcycles > 0) {
+        return 2000; // Poll every 2 seconds when generating
+      }
+      return false; // Stop polling when no active generation
+    },
+    staleTime: 0, // Always fetch fresh data
+    retry:1,
   });
 }

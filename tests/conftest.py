@@ -48,9 +48,34 @@ async def async_db_session():
         echo=False,
     )
     
+    # Handle JSONB columns for SQLite compatibility
+    # Replace JSONB with JSON for SQLite by patching type
+    from sqlalchemy.dialects.postgresql import JSONB as PostgresJSONB
+    from sqlalchemy import JSON as GenericJSON
+    
+    # Create a wrapper that replaces JSONB with JSON
+    def _create_all_with_jsonb_replacement(bind, metadata, **kwargs):
+        # Temporarily replace JSONB with JSON for table creation
+        jsonb_columns = []
+        for table in metadata.tables.values():
+            for column in table.columns:
+                if isinstance(column.type, PostgresJSONB):
+                    jsonb_columns.append((table.name, column.name, column.type))
+                    column.type = GenericJSON()
+        
+        try:
+            metadata.create_all(bind, **kwargs)
+        finally:
+            # Restore original types
+            for table_name, column_name, original_type in jsonb_columns:
+                if table_name in metadata.tables:
+                    table = metadata.tables[table_name]
+                    if column_name in table.columns:
+                        table.columns[column_name].type = original_type
+    
     # Create tables
     async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+        await conn.run_sync(_create_all_with_jsonb_replacement, Base.metadata)
     
     # Create session
     SessionLocal = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)

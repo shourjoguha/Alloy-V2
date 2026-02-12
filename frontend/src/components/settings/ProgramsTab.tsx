@@ -3,10 +3,11 @@ import { Link } from '@tanstack/react-router';
 import { ChevronDown, ChevronRight, Trash2, Play } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Spinner } from '@/components/common/Spinner';
+import { Spinner } from '@/components/ui';
 import { usePrograms, useDeleteProgram, useUpdateProgram, useActivateProgram } from '@/api/programs';
 import { cn } from '@/lib/utils';
 import type { Program } from '@/types';
+import { SessionThumbnail } from '@/components/program/SessionThumbnail';
 
 export function ProgramsTab() {
   const { data: programs, isLoading, error } = usePrograms(false);
@@ -183,26 +184,44 @@ export function ProgramsTab() {
 
                 {expanded && (
                   <div className="mt-4 border-t border-border/60 pt-4 space-y-3">
-                    <div className="text-xs text-foreground-muted">Weeks × Days overview</div>
-                    <div className="space-y-3 max-h-64 overflow-y-auto pr-1">
-                      {Array.from({ length: weeks }).map((_, weekIndex) => (
-                        <div key={weekIndex} className="flex items-center gap-3">
-                          <div className="w-14 text-xs text-foreground-muted">Week {weekIndex + 1}</div>
-                          <div className="flex-1 overflow-x-auto">
-                            <div className="flex gap-2 min-w-max">
-                              {Array.from({ length: daysPerWeek }).map((__, dayIndex) => (
-                                <div
-                                  key={dayIndex}
-                                  className="w-10 h-10 rounded-md border border-border bg-background-input flex items-center justify-center text-xs text-foreground-muted"
-                                >
-                                  D{dayIndex + 1}
-                                </div>
-                              ))}
-                            </div>
-                          </div>
+                    {isActive && program.upcoming_sessions && program.upcoming_sessions.length > 0 ? (
+                      <>
+                        <div className="text-xs text-foreground-muted">Upcoming Sessions</div>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                          {program.upcoming_sessions.map((session) => (
+                            <SessionThumbnail
+                              key={session.id}
+                              session={session}
+                              onClick={() => {/* TODO: Navigate to session detail */}}
+                              size="sm"
+                            />
+                          ))}
                         </div>
-                      ))}
-                    </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="text-xs text-foreground-muted">Weeks × Days overview</div>
+                        <div className="space-y-3 max-h-64 overflow-y-auto pr-1">
+                          {Array.from({ length: weeks }).map((_, weekIndex) => (
+                            <div key={weekIndex} className="flex items-center gap-3">
+                              <div className="w-14 text-xs text-foreground-muted">Week {weekIndex + 1}</div>
+                              <div className="flex-1 overflow-x-auto">
+                                <div className="flex gap-2 min-w-max">
+                                  {Array.from({ length: daysPerWeek }).map((__, dayIndex) => (
+                                    <div
+                                      key={dayIndex}
+                                      className="w-10 h-10 rounded-md border border-border bg-background-input flex items-center justify-center text-xs text-foreground-muted"
+                                    >
+                                      D{dayIndex + 1}
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </>
+                    )}
                   </div>
                 )}
               </Card>

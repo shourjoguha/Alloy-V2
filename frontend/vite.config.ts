@@ -72,7 +72,35 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ''),
       },
-      '/auth': {
+      '/circuits': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+      },
+      '/programs': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+      },
+      '/settings': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+      },
+      '/favorites': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+      },
+      '/logs': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+      },
+      '/days': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+      },
+      '/activities': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+      },
+      '/scoring': {
         target: 'http://localhost:8000',
         changeOrigin: true,
       },

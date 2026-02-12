@@ -1,7 +1,7 @@
 """API routes for user settings and configuration."""
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Path
+from fastapi import APIRouter, Depends, Query, Path
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -47,6 +47,7 @@ from app.schemas.settings import (
 )
 from app.models.enums import MuscleRole
 from app.api.routes.dependencies import get_current_user_id
+from app.core.exceptions import NotFoundError, ValidationError, ConflictError
 
 router = APIRouter()
 settings = get_settings()
@@ -89,7 +90,7 @@ async def get_user_profile(
     # Fetch User and UserProfile
     user = await db.get(User, user_id)
     if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise NotFoundError("User", details={"user_id": user_id})
         
     # UserProfile is a relationship, so it might be lazy loaded or we join it
     # But since we use async, we should probably eager load it or query it separately if lazy loading issues arise.
@@ -124,7 +125,7 @@ async def update_user_profile(
     """Update user profile."""
     user = await db.get(User, user_id)
     if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise NotFoundError("User", details={"user_id": user_id})
         
     profile = await db.scalar(select(UserProfile).where(UserProfile.user_id == user_id))
     if not profile:
@@ -240,13 +241,13 @@ async def create_movement_rule(
     # Verify movement exists
     movement = await db.get(Movement, rule.movement_id)
     if not movement:
-        raise HTTPException(status_code=404, detail="Movement not found")
+        raise NotFoundError("Movement", details={"movement_id": rule.movement_id})
     
     # Parse rule_type enum
     try:
         rule_type_enum = MovementRuleType[rule.rule_type.upper()]
     except KeyError:
-        raise HTTPException(status_code=400, detail=f"Invalid rule_type: {rule.rule_type}")
+        raise ValidationError("rule_type", f"Invalid value: {rule.rule_type}", details={"value": rule.rule_type})
     
     # Parse cadence enum if provided
     cadence_enum = RuleCadence.PER_MICROCYCLE
@@ -284,14 +285,139 @@ async def delete_movement_rule(
 ):
     """Delete a movement rule."""
     rule = await db.get(UserMovementRule, rule_id)
-    
+
     if not rule or rule.user_id != user_id:
-        raise HTTPException(status_code=404, detail="Rule not found")
-    
+        raise NotFoundError("Rule", details={"rule_id": rule_id, "user_id": user_id})
+
     await db.delete(rule)
     await db.commit()
-    
+
     return {"detail": "Rule deleted"}
+
+
+# ============== Movement Preferences (Backward Compatibility) ==============
+# These routes provide backward compatibility for /movement-preferences endpoints
+# by delegating to the existing /movement-rules endpoints
+
+
+@router.get("/movement-preferences", response_model=List[MovementRuleResponse])
+async def list_movement_preferences(
+    db: AsyncSession = Depends(get_db),
+    user_id: int = Depends(get_current_user_id),
+):
+    """List all user movement preferences (alias for movement-rules)."""
+    return await list_movement_rules(db, user_id)
+
+
+@router.get("/movement-preferences/{id}", response_model=MovementRuleResponse)
+async def get_movement_rule_by_id(
+    id: int,
+    db: AsyncSession = Depends(get_db),
+    user_id: int = Depends(get_current_user_id),
+):
+    """Get a specific movement rule by ID."""
+    rule = await db.get(UserMovementRule, id)
+
+    if not rule or rule.user_id != user_id:
+        raise NotFoundError("Rule", details={"rule_id": id, "user_id": user_id})
+
+    movement = await db.get(Movement, rule.movement_id)
+
+    return MovementRuleResponse(
+        id=rule.id,
+        movement_id=rule.movement_id,
+        movement_name=movement.name if movement else "Unknown",
+        rule_type=rule.rule_type.value if rule.rule_type else None,
+        cadence=rule.cadence.value if rule.cadence else None,
+        notes=rule.notes,
+    )
+
+
+@router.post("/movement-preferences", response_model=MovementRuleResponse)
+async def create_movement_preference(
+    rule: MovementRuleCreate,
+    db: AsyncSession = Depends(get_db),
+    user_id: int = Depends(get_current_user_id),
+):
+    """Create a new movement preference (alias for movement-rules)."""
+    return await create_movement_rule(rule, db, user_id)
+
+
+@router.delete("/movement-preferences/{rule_id}")
+async def delete_movement_preference(
+    rule_id: int,
+    db: AsyncSession = Depends(get_db),
+    user_id: int = Depends(get_current_user_id),
+):
+    """Delete a movement preference (alias for movement-rules)."""
+    return await delete_movement_rule(rule_id, db, user_id)
+
+
+@router.post("/movement-preferences/batch", response_model=List[MovementRuleResponse])
+async def batch_create_movement_rules(
+    rules: List[MovementRuleCreate],
+    db: AsyncSession = Depends(get_db),
+    user_id: int = Depends(get_current_user_id),
+):
+    """Create multiple movement rules in a single request."""
+    from app.models.enums import MovementRuleType, RuleCadence
+
+    created_rules = []
+
+    for rule_data in rules:
+        # Verify movement exists
+        movement = await db.get(Movement, rule_data.movement_id)
+        if not movement:
+            raise NotFoundError("Movement", details={"movement_id": rule_data.movement_id})
+
+        # Parse rule_type enum
+        try:
+            rule_type_enum = MovementRuleType[rule_data.rule_type.upper()]
+        except KeyError:
+            raise ValidationError("rule_type", f"Invalid value: {rule_data.rule_type}", details={"value": rule_data.rule_type})
+
+        # Parse cadence enum if provided
+        cadence_enum = RuleCadence.PER_MICROCYCLE
+        if rule_data.cadence:
+            try:
+                cadence_enum = RuleCadence[rule_data.cadence.upper()]
+            except KeyError:
+                pass  # Use default
+
+        movement_rule = UserMovementRule(
+            user_id=user_id,
+            movement_id=rule_data.movement_id,
+            rule_type=rule_type_enum,
+            cadence=cadence_enum,
+            notes=rule_data.notes,
+        )
+        db.add(movement_rule)
+
+    await db.commit()
+
+    # Fetch all created rules and build responses
+    for rule_data in rules:
+        result = await db.execute(
+            select(UserMovementRule)
+            .where(UserMovementRule.user_id == user_id)
+            .where(UserMovementRule.movement_id == rule_data.movement_id)
+            .where(UserMovementRule.rule_type == MovementRuleType[rule_data.rule_type.upper()])
+            .order_by(UserMovementRule.id.desc())
+            .limit(1)
+        )
+        rule = result.scalar_one_or_none()
+        if rule:
+            movement = await db.get(Movement, rule.movement_id)
+            created_rules.append(MovementRuleResponse(
+                id=rule.id,
+                movement_id=rule.movement_id,
+                movement_name=movement.name if movement else "Unknown",
+                rule_type=rule.rule_type.value,
+                cadence=rule.cadence.value if rule.cadence else None,
+                notes=rule.notes,
+            ))
+
+    return created_rules
 
 
 # Enjoyable activities
@@ -335,7 +461,7 @@ async def create_enjoyable_activity(
         try:
             activity_type = EnjoyableActivityEnum[activity.activity_type.upper()]
         except KeyError:
-            raise HTTPException(status_code=400, detail=f"Invalid activity_type: {activity.activity_type}")
+            raise ValidationError("activity_type", f"Invalid value: {activity.activity_type}", details={"value": activity.activity_type})
 
     new_activity = UserEnjoyableActivity(
         user_id=user_id,
@@ -367,9 +493,9 @@ async def delete_enjoyable_activity(
 ):
     """Delete an enjoyable activity."""
     activity = await db.get(UserEnjoyableActivity, activity_id)
-    
+
     if not activity or activity.user_id != user_id:
-        raise HTTPException(status_code=404, detail="Activity not found")
+        raise NotFoundError("Activity", details={"activity_id": activity_id, "user_id": user_id})
     
     await db.delete(activity)
     await db.commit()
@@ -414,9 +540,9 @@ async def get_heuristic_config(
         select(HeuristicConfig).where(HeuristicConfig.key == key)
     )
     config = result.scalar_one_or_none()
-    
+
     if not config:
-        raise HTTPException(status_code=404, detail="Config not found")
+        raise NotFoundError("Config", details={"key": key})
     
     return HeuristicConfigResponse(
         id=config.id,
@@ -573,7 +699,7 @@ async def create_movement(
     # Check if movement with same name exists
     existing = await db.execute(select(Movement).where(Movement.name.ilike(movement.name)))
     if existing.scalar_one_or_none():
-        raise HTTPException(status_code=400, detail="Movement with this name already exists")
+        raise ConflictError("Movement with this name already exists", details={"name": movement.name})
     
     new_movement = Movement(
         name=movement.name,
@@ -675,9 +801,9 @@ async def get_movement(
     )
     result = await db.execute(query)
     movement = result.scalar_one_or_none()
-    
+
     if not movement:
-        raise HTTPException(status_code=404, detail="Movement not found")
+        raise NotFoundError("Movement", details={"movement_id": movement_id})
     
     return MovementResponse(
         id=movement.id,
@@ -719,7 +845,7 @@ async def find_safest_substitution(
     
     movement = await db.get(Movement, request.movement_id)
     if not movement:
-        raise HTTPException(status_code=404, detail="Movement not found")
+        raise NotFoundError("Movement", details={"movement_id": request.movement_id})
     
     substitution_service = MovementSubstitutionService()
     safest = await substitution_service.find_safest_substitution(
@@ -749,7 +875,7 @@ async def find_similar_movement(
     
     movement = await db.get(Movement, request.movement_id)
     if not movement:
-        raise HTTPException(status_code=404, detail="Movement not found")
+        raise NotFoundError("Movement", details={"movement_id": request.movement_id})
     
     preferred_tier = None
     if request.preferred_tier:
@@ -764,7 +890,7 @@ async def find_similar_movement(
     )
     
     if not similar:
-        raise HTTPException(status_code=404, detail="No similar movements found")
+        raise NotFoundError("Movement", details={"message": "No similar movements found", "movement_id": request.movement_id})
     
     return MovementResponse(
         id=similar.id,
@@ -805,7 +931,7 @@ async def get_progression_path(
     
     movement = await db.get(Movement, movement_id)
     if not movement:
-        raise HTTPException(status_code=404, detail="Movement not found")
+        raise NotFoundError("Movement", details={"movement_id": movement_id})
     
     substitution_service = MovementSubstitutionService()
     progression = await substitution_service.find_progression_path(
@@ -829,7 +955,7 @@ async def get_regression_options(
     
     movement = await db.get(Movement, movement_id)
     if not movement:
-        raise HTTPException(status_code=404, detail="Movement not found")
+        raise NotFoundError("Movement", details={"movement_id": movement_id})
     
     substitution_service = MovementSubstitutionService()
     regressions = await substitution_service.find_regression_options(
@@ -980,7 +1106,7 @@ async def get_movements_by_discipline(
     try:
         discipline_enum = DisciplineType(discipline)
     except ValueError:
-        raise HTTPException(status_code=400, detail=f"Invalid discipline: {discipline}")
+        raise ValidationError("discipline", f"Invalid value: {discipline}", details={"value": discipline})
     
     movements = await MovementQueryService.get_movements_by_disciplines(
         db, [discipline_enum], match_all=match_all
@@ -1273,7 +1399,7 @@ async def get_movement_disciplines(
     
     movement = await db.get(Movement, movement_id)
     if not movement:
-        raise HTTPException(status_code=404, detail="Movement not found")
+        raise NotFoundError("Movement", details={"movement_id": movement_id})
     
     disciplines = await MovementQueryService.get_movement_disciplines(db, movement_id)
     
@@ -1295,7 +1421,7 @@ async def get_movement_equipment(
     
     movement = await db.get(Movement, movement_id)
     if not movement:
-        raise HTTPException(status_code=404, detail="Movement not found")
+        raise NotFoundError("Movement", details={"movement_id": movement_id})
     
     equipment = await MovementQueryService.get_movement_equipment(db, movement_id)
     
@@ -1317,7 +1443,7 @@ async def get_movement_tags(
     
     movement = await db.get(Movement, movement_id)
     if not movement:
-        raise HTTPException(status_code=404, detail="Movement not found")
+        raise NotFoundError("Movement", details={"movement_id": movement_id})
     
     tags = await MovementQueryService.get_movement_tags(db, movement_id)
     
@@ -1420,10 +1546,10 @@ async def get_similar_movements(
     
     reference_movement = await db.get(Movement, movement_id)
     if not reference_movement:
-        raise HTTPException(status_code=404, detail="Reference movement not found")
+        raise NotFoundError("Movement", details={"movement_id": movement_id, "role": "reference"})
     
     if not reference_movement.embedding_vector:
-        raise HTTPException(status_code=400, detail="Reference movement has no embedding vector")
+        raise ValidationError("embedding_vector", "Reference movement has no embedding vector", details={"movement_id": movement_id})
     
     similar_movements = await MovementQueryService.get_semantic_similar_movements(
         db, movement_id, limit=limit, min_similarity=min_similarity
@@ -1505,7 +1631,7 @@ async def get_movements_by_metabolic_demand(
     try:
         demand_enum = MetabolicDemand(demand)
     except ValueError:
-        raise HTTPException(status_code=400, detail=f"Invalid metabolic demand: {demand}")
+        raise ValidationError("metabolic_demand", f"Invalid value: {demand}", details={"value": demand})
     
     movements = await MovementQueryService.get_metabolic_demand_movements(db, demand_enum)
     

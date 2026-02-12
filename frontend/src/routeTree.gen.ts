@@ -13,11 +13,13 @@ import { Route as TeamsRouteImport } from './routes/teams'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ProgramsRouteImport } from './routes/programs'
+import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as MovementsRouteImport } from './routes/movements'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as LibraryRouteImport } from './routes/library'
 import { Route as FriendsRouteImport } from './routes/friends'
 import { Route as FavoritesRouteImport } from './routes/favorites'
+import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CircuitsRouteImport } from './routes/circuits'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProgramWizardRouteImport } from './routes/program.wizard'
@@ -28,6 +30,7 @@ import { Route as LogWorkoutRouteImport } from './routes/log.workout'
 import { Route as LogSorenessRouteImport } from './routes/log.soreness'
 import { Route as LogCustomRouteImport } from './routes/log.custom'
 import { Route as LogActivityRouteImport } from './routes/log.activity'
+import { Route as CircuitsDemoRouteImport } from './routes/circuits.demo'
 import { Route as AdminCircuitsCircuitIdRouteImport } from './routes/admin.circuits.$circuitId'
 
 const TeamsRoute = TeamsRouteImport.update({
@@ -48,6 +51,11 @@ const RegisterRoute = RegisterRouteImport.update({
 const ProgramsRoute = ProgramsRouteImport.update({
   id: '/programs',
   path: '/programs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OnboardingRoute = OnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MovementsRoute = MovementsRouteImport.update({
@@ -73,6 +81,11 @@ const FriendsRoute = FriendsRouteImport.update({
 const FavoritesRoute = FavoritesRouteImport.update({
   id: '/favorites',
   path: '/favorites',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CircuitsRoute = CircuitsRouteImport.update({
@@ -125,6 +138,11 @@ const LogActivityRoute = LogActivityRouteImport.update({
   path: '/log/activity',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CircuitsDemoRoute = CircuitsDemoRouteImport.update({
+  id: '/demo',
+  path: '/demo',
+  getParentRoute: () => CircuitsRoute,
+} as any)
 const AdminCircuitsCircuitIdRoute = AdminCircuitsCircuitIdRouteImport.update({
   id: '/admin/circuits/$circuitId',
   path: '/admin/circuits/$circuitId',
@@ -133,16 +151,19 @@ const AdminCircuitsCircuitIdRoute = AdminCircuitsCircuitIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/circuits': typeof CircuitsRoute
+  '/circuits': typeof CircuitsRouteWithChildren
+  '/dashboard': typeof DashboardRoute
   '/favorites': typeof FavoritesRoute
   '/friends': typeof FriendsRoute
   '/library': typeof LibraryRoute
   '/login': typeof LoginRoute
   '/movements': typeof MovementsRoute
+  '/onboarding': typeof OnboardingRoute
   '/programs': typeof ProgramsRoute
   '/register': typeof RegisterRoute
   '/settings': typeof SettingsRoute
   '/teams': typeof TeamsRoute
+  '/circuits/demo': typeof CircuitsDemoRoute
   '/log/activity': typeof LogActivityRoute
   '/log/custom': typeof LogCustomRoute
   '/log/soreness': typeof LogSorenessRoute
@@ -155,16 +176,19 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/circuits': typeof CircuitsRoute
+  '/circuits': typeof CircuitsRouteWithChildren
+  '/dashboard': typeof DashboardRoute
   '/favorites': typeof FavoritesRoute
   '/friends': typeof FriendsRoute
   '/library': typeof LibraryRoute
   '/login': typeof LoginRoute
   '/movements': typeof MovementsRoute
+  '/onboarding': typeof OnboardingRoute
   '/programs': typeof ProgramsRoute
   '/register': typeof RegisterRoute
   '/settings': typeof SettingsRoute
   '/teams': typeof TeamsRoute
+  '/circuits/demo': typeof CircuitsDemoRoute
   '/log/activity': typeof LogActivityRoute
   '/log/custom': typeof LogCustomRoute
   '/log/soreness': typeof LogSorenessRoute
@@ -178,16 +202,19 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/circuits': typeof CircuitsRoute
+  '/circuits': typeof CircuitsRouteWithChildren
+  '/dashboard': typeof DashboardRoute
   '/favorites': typeof FavoritesRoute
   '/friends': typeof FriendsRoute
   '/library': typeof LibraryRoute
   '/login': typeof LoginRoute
   '/movements': typeof MovementsRoute
+  '/onboarding': typeof OnboardingRoute
   '/programs': typeof ProgramsRoute
   '/register': typeof RegisterRoute
   '/settings': typeof SettingsRoute
   '/teams': typeof TeamsRoute
+  '/circuits/demo': typeof CircuitsDemoRoute
   '/log/activity': typeof LogActivityRoute
   '/log/custom': typeof LogCustomRoute
   '/log/soreness': typeof LogSorenessRoute
@@ -203,15 +230,18 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/circuits'
+    | '/dashboard'
     | '/favorites'
     | '/friends'
     | '/library'
     | '/login'
     | '/movements'
+    | '/onboarding'
     | '/programs'
     | '/register'
     | '/settings'
     | '/teams'
+    | '/circuits/demo'
     | '/log/activity'
     | '/log/custom'
     | '/log/soreness'
@@ -225,15 +255,18 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/circuits'
+    | '/dashboard'
     | '/favorites'
     | '/friends'
     | '/library'
     | '/login'
     | '/movements'
+    | '/onboarding'
     | '/programs'
     | '/register'
     | '/settings'
     | '/teams'
+    | '/circuits/demo'
     | '/log/activity'
     | '/log/custom'
     | '/log/soreness'
@@ -247,15 +280,18 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/circuits'
+    | '/dashboard'
     | '/favorites'
     | '/friends'
     | '/library'
     | '/login'
     | '/movements'
+    | '/onboarding'
     | '/programs'
     | '/register'
     | '/settings'
     | '/teams'
+    | '/circuits/demo'
     | '/log/activity'
     | '/log/custom'
     | '/log/soreness'
@@ -269,12 +305,14 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  CircuitsRoute: typeof CircuitsRoute
+  CircuitsRoute: typeof CircuitsRouteWithChildren
+  DashboardRoute: typeof DashboardRoute
   FavoritesRoute: typeof FavoritesRoute
   FriendsRoute: typeof FriendsRoute
   LibraryRoute: typeof LibraryRoute
   LoginRoute: typeof LoginRoute
   MovementsRoute: typeof MovementsRoute
+  OnboardingRoute: typeof OnboardingRoute
   ProgramsRoute: typeof ProgramsRoute
   RegisterRoute: typeof RegisterRoute
   SettingsRoute: typeof SettingsRoute
@@ -320,6 +358,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProgramsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/onboarding': {
+      id: '/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof OnboardingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/movements': {
       id: '/movements'
       path: '/movements'
@@ -353,6 +398,13 @@ declare module '@tanstack/react-router' {
       path: '/favorites'
       fullPath: '/favorites'
       preLoaderRoute: typeof FavoritesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/circuits': {
@@ -425,6 +477,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LogActivityRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/circuits/demo': {
+      id: '/circuits/demo'
+      path: '/demo'
+      fullPath: '/circuits/demo'
+      preLoaderRoute: typeof CircuitsDemoRouteImport
+      parentRoute: typeof CircuitsRoute
+    }
     '/admin/circuits/$circuitId': {
       id: '/admin/circuits/$circuitId'
       path: '/admin/circuits/$circuitId'
@@ -435,14 +494,28 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface CircuitsRouteChildren {
+  CircuitsDemoRoute: typeof CircuitsDemoRoute
+}
+
+const CircuitsRouteChildren: CircuitsRouteChildren = {
+  CircuitsDemoRoute: CircuitsDemoRoute,
+}
+
+const CircuitsRouteWithChildren = CircuitsRoute._addFileChildren(
+  CircuitsRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  CircuitsRoute: CircuitsRoute,
+  CircuitsRoute: CircuitsRouteWithChildren,
+  DashboardRoute: DashboardRoute,
   FavoritesRoute: FavoritesRoute,
   FriendsRoute: FriendsRoute,
   LibraryRoute: LibraryRoute,
   LoginRoute: LoginRoute,
   MovementsRoute: MovementsRoute,
+  OnboardingRoute: OnboardingRoute,
   ProgramsRoute: ProgramsRoute,
   RegisterRoute: RegisterRoute,
   SettingsRoute: SettingsRoute,

@@ -1,0 +1,259 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Alloy API",
+    "description": "RESTful API for the Alloy training program platform",
+    "version": "1.0.0",
+    "contact": {
+      "name": "Alloy Support",
+      "email": "support@alloy.com"
+    },
+    "license": {
+      "name": "MIT",
+      "url": "https://opensource.org/licenses/MIT"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8000",
+      "description": "Development server"
+    },
+    {
+      "url": "https://api.alloy.com",
+      "description": "Production server"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Authentication",
+      "description": "User authentication and token management"
+    },
+    {
+      "name": "Programs",
+      "description": "Training program management"
+    },
+    {
+      "name": "Settings",
+      "description": "User settings and preferences"
+    },
+    {
+      "name": "Circuits",
+      "description": "Circuit template management"
+    },
+    {
+      "name": "Health",
+      "description": "System health monitoring"
+    },
+    {
+      "name": "Metrics",
+      "description": "Performance and usage metrics"
+    },
+    {
+      "name": "Two-Factor Auth",
+      "description": "2FA setup and management"
+    },
+    {
+      "name": "Performance",
+      "description": "Performance monitoring"
+    },
+    {
+      "name": "Audit Logs",
+      "description": "Security and activity auditing"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "JWT authentication token"
+      },
+      "AdminToken": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Admin-Token",
+        "description": "DEPRECATED: Use BearerAuth instead",
+        "x-deprecated": true
+      }
+    },
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "Error code"
+          },
+          "message": {
+            "type": "string",
+            "description": "Error message"
+          },
+          "details": {
+            "type": "object",
+            "description": "Additional error details"
+          }
+        }
+      },
+      "APIResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "description": "Response data"
+          },
+          "meta": {
+            "type": "object",
+            "properties": {
+              "request_id": {
+                "type": "string"
+              },
+              "timestamp": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "LoginRequest": {
+        "type": "object",
+        "required": [
+          "email",
+          "password"
+        ],
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 8
+          }
+        }
+      },
+      "LoginResponse": {
+        "type": "object",
+        "properties": {
+          "access_token": {
+            "type": "string"
+          },
+          "refresh_token": {
+            "type": "string"
+          },
+          "token_type": {
+            "type": "string",
+            "enum": [
+              "bearer"
+            ]
+          },
+          "expires_in": {
+            "type": "integer",
+            "description": "Seconds until expiration"
+          }
+        }
+      },
+      "ProgramCreate": {
+        "type": "object",
+        "required": [
+          "name",
+          "duration_weeks",
+          "goals",
+          "split_template",
+          "progression_style",
+          "max_session_duration"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "duration_weeks": {
+            "type": "integer",
+            "minimum": 8,
+            "maximum": 12
+          },
+          "goals": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "goal_type": {
+                  "type": "string"
+                },
+                "weight": {
+                  "type": "number"
+                }
+              }
+            }
+          },
+          "split_template": {
+            "type": "string"
+          },
+          "progression_style": {
+            "type": "string"
+          },
+          "max_session_duration": {
+            "type": "integer",
+            "description": "Target session duration in minutes"
+          },
+          "persona": {
+            "type": "object",
+            "properties": {
+              "age_range": {
+                "type": "string"
+              },
+              "experience_level": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "HealthResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "healthy",
+              "degraded",
+              "unhealthy"
+            ]
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "uptime_seconds": {
+            "type": "number"
+          },
+          "database": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string"
+              },
+              "primary": {
+                "type": "object",
+                "properties": {
+                  "status": {
+                    "type": "string"
+                  },
+                  "response_time_ms": {
+                    "type": "number"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

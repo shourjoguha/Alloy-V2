@@ -3,6 +3,10 @@ import { useAuthStore } from '@/stores/auth-store';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
+const debugLog = (...args: unknown[]) => {
+  if (import.meta.env.DEV) console.log('[apiClient]', ...args);
+};
+
 export const apiClient: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
   timeout: 120000,
@@ -14,36 +18,73 @@ export const apiClient: AxiosInstance = axios.create({
 apiClient.interceptors.request.use(
   (config) => {
     const token = useAuthStore.getState().token;
+    const isAuthenticated = useAuthStore.getState().isAuthenticated;
+    
+    debugLog('Request:', {
+      method: config.method?.toUpperCase(),
+      url: config.url,
+      hasToken: !!token,
+      isAuthenticated,
+      baseURL: config.baseURL,
+      fullUrl: `${config.baseURL}${config.url}`
+    });
+    
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+    } else {
+      debugLog('⚠️ Request made without token');
     }
     return config;
   },
   (error) => {
+    debugLog('Request interceptor error:', error);
     return Promise.reject(error);
   }
 );
 
 apiClient.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    debugLog('Response:', {
+      status: response.status,
+      url: response.config.url,
+      dataKeys: Object.keys(response.data || {})
+    });
+    return response;
+  },
   (error: AxiosError) => {
     if (error.response) {
       const status = error.response.status;
+      const url = error.config?.url;
+      
+      debugLog('Response error:', {
+        status,
+        url,
+        data: error.response.data,
+        message: error.message
+      });
       
       if (status === 401) {
-        useAuthStore.getState().logout();
-        console.error('Unauthorized request');
+        const isVerifyTokenEndpoint = url?.includes('/auth/verify-token');
+        
+        if (isVerifyTokenEndpoint) {
+          console.warn('[apiClient] Token verification failed (401) - caller will handle cleanup');
+        } else {
+          console.error('[apiClient] Unauthorized request - logging out');
+          useAuthStore.getState().logout();
+        }
       } else if (status === 403) {
-        console.error('Forbidden request');
+        console.error('[apiClient] Forbidden request');
       } else if (status === 404) {
-        console.error('Resource not found');
+        console.error('[apiClient] Resource not found');
       } else if (status >= 500) {
-        console.error('Server error');
+        console.error('[apiClient] Server error');
       }
     } else if (error.request) {
-      console.error('Network error - no response received');
+      debugLog('Network error - no response received:', error.message);
+      console.error('[apiClient] Network error - no response received');
     } else {
-      console.error('Request setup error:', error.message);
+      debugLog('Request setup error:', error.message);
+      console.error('[apiClient] Request setup error:', error.message);
     }
     
     return Promise.reject(error);

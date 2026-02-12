@@ -6,7 +6,24 @@ import {
   ProgressionStyle,
   MovementRuleCreate,
   EnjoyableActivityCreate,
+  MovementRuleType,
 } from '@/types';
+
+export interface MovementPreference {
+  id: number;
+  movement_id: number;
+  rule_type: string;
+  cadence: string | null;
+  notes: string | null;
+}
+
+export interface OnboardingData {
+  gym_comfort_level?: string;
+  equipment_familiarity?: Record<string, number>;
+  goal_category?: string;
+  goal_description?: string;
+  enjoyable_activities?: string[];
+}
 
 // Discipline types for step 3
 export interface DisciplineWeight {
@@ -85,6 +102,13 @@ interface ProgramWizardState {
   getTotalDisciplineWeight: () => number;
   isGoalsValid: () => boolean;
   isDisciplinesValid: () => boolean;
+
+  // User Preferences Sync
+  initializeFromUserPreferences: (userPreferences: MovementPreference[]) => void;
+  exportToUserPreferences: () => MovementPreference[];
+  
+  // Onboarding Data Integration
+  initializeFromOnboardingData: (onboardingData: OnboardingData) => void;
 }
 
 const initialState = {
@@ -200,5 +224,74 @@ export const useProgramWizardStore = create<ProgramWizardState>()((set, get) => 
   isDisciplinesValid: () => {
     const total = get().getTotalDisciplineWeight();
     return total === 10;
+  },
+
+  // User Preferences Sync
+  initializeFromUserPreferences: (userPreferences) => {
+    const movementRules: MovementRuleCreate[] = userPreferences.map((pref) => ({
+      movement_id: pref.movement_id,
+      rule_type: pref.rule_type as MovementRuleType,
+      cadence: pref.cadence || undefined,
+      notes: pref.notes || undefined,
+    }));
+    set({ movementRules });
+  },
+  exportToUserPreferences: () => {
+    const { movementRules } = get();
+    return movementRules.map((rule, index) => ({
+      id: index,
+      movement_id: rule.movement_id,
+      rule_type: rule.rule_type,
+      cadence: rule.cadence || null,
+      notes: rule.notes || null,
+    }));
+  },
+  
+  // Onboarding Data Integration
+  initializeFromOnboardingData: (onboardingData) => {
+    const { gym_comfort_level, goal_category, enjoyable_activities } = onboardingData;
+    
+    // 1. Map gym_comfort_level to split template
+    let splitTemplate: SplitTemplate | null = null;
+    if (gym_comfort_level === 'beginner') {
+      splitTemplate = SplitTemplate.UPPER_LOWER;
+    } else if (gym_comfort_level === 'active') {
+      splitTemplate = SplitTemplate.UPPER_LOWER;
+    } else if (gym_comfort_level === 'experienced') {
+      splitTemplate = SplitTemplate.PPL;
+    }
+    
+    // 2. Map goal_category to default goals
+    let defaultGoals: GoalWeight[] = [];
+    if (goal_category) {
+      const goalMap: Record<string, Goal> = {
+        'muscle_gain': Goal.HYPERTROPHY,
+        'strength': Goal.STRENGTH,
+        'fat_loss': Goal.FAT_LOSS,
+        'endurance': Goal.ENDURANCE,
+        'mobility': Goal.MOBILITY,
+      };
+      const mappedGoal = goalMap[goal_category];
+      if (mappedGoal) {
+        defaultGoals = [{ goal: mappedGoal, weight: 10 }];
+      }
+    }
+    
+    // 3. Map enjoyable_activities to EnjoyableActivityCreate
+    let activities: EnjoyableActivityCreate[] = [];
+    if (enjoyable_activities && enjoyable_activities.length > 0) {
+      activities = enjoyable_activities.map((activity) => ({
+        activity_type: activity,
+        recommend_every_days: 28,
+        enabled: true,
+      }));
+    }
+    
+    // Set the state with mapped values
+    set({
+      splitPreference: splitTemplate,
+      goals: defaultGoals,
+      enjoyableActivities: activities,
+    });
   },
 }));

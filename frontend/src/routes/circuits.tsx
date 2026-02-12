@@ -3,9 +3,9 @@ import { createFileRoute, Link } from '@tanstack/react-router';
 import { Flame, Clock, ListChecks, ChevronDown, ChevronRight, Edit } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Spinner } from '@/components/common/Spinner';
+import { Spinner } from '@/components/ui';
 import { useCircuits } from '@/api/circuits';
-import { CircuitType, type CircuitTemplate } from '@/types';
+import { CircuitType, type CircuitTemplate, type CircuitTemplateExercise } from '@/types';
 
 export const Route = createFileRoute('/circuits')({
   component: CircuitsPage,
@@ -71,20 +71,6 @@ function CircuitsPage() {
   );
 }
 
-interface CircuitExercise {
-  original?: string;
-  movement_id?: number | null;
-  movement_name?: string | null;
-  reps?: number | null;
-  distance_meters?: number | null;
-  duration_seconds?: number | null;
-  rest_seconds?: number | null;
-  notes?: string | null;
-  metric_type?: string | null;
-  rx_weight_male?: number | null;
-  rx_weight_female?: number | null;
-}
-
 interface CircuitCardProps {
   circuit: CircuitTemplate;
 }
@@ -94,7 +80,7 @@ function CircuitCard({ circuit }: CircuitCardProps) {
 
   const formatType = (type: CircuitType) => type.replace(/_/g, ' ');
 
-  const exercises = (circuit.exercises_json ?? []) as CircuitExercise[];
+  const exercises = (circuit.exercises_json ?? []) as CircuitTemplateExercise[];
   const workoutExercises = exercises.filter(
     (ex) =>
       ex.movement_id != null ||
@@ -132,7 +118,7 @@ function CircuitCard({ circuit }: CircuitCardProps) {
   const roundsToken = roundsIdx >= 0 ? metaTokens[roundsIdx] : undefined;
   const intervalToken = intervalIdx >= 0 ? metaTokens[intervalIdx] : undefined;
 
-  const formatExerciseScheme = (ex: CircuitExercise): string => {
+  const formatExerciseScheme = (ex: CircuitTemplateExercise): string => {
     const metric = ex.metric_type?.toLowerCase() ?? '';
 
     if (ex.reps === 999 && ex.notes && ex.notes.toLowerCase().includes('max')) {

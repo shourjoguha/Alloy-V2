@@ -7,10 +7,39 @@ echo ""
 # Colors for output
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
+YELLOW='\033[0;33m'
 NC='\033[0m' # No Color
 
-echo -e "${BLUE}Starting Ollama...${NC}"
 cd "$(dirname "$0")"
+
+# Kill any existing processes before starting new ones
+echo -e "${YELLOW}Cleaning up existing processes...${NC}"
+
+# Kill existing uvicorn processes for this app
+if pgrep -f "uvicorn app.main:app" > /dev/null; then
+    echo -e "${YELLOW}Stopping existing backend (uvicorn)...${NC}"
+    pkill -f "uvicorn app.main:app" 2>/dev/null || true
+    sleep 1
+fi
+
+# Kill existing vite dev server on port 5173
+if lsof -ti:5173 > /dev/null 2>&1; then
+    echo -e "${YELLOW}Stopping existing frontend (port 5173)...${NC}"
+    lsof -ti:5173 | xargs kill -9 2>/dev/null || true
+    sleep 1
+fi
+
+# Kill existing ollama serve processes (but not ollama app)
+if pgrep -f "ollama serve" > /dev/null; then
+    echo -e "${YELLOW}Stopping existing Ollama serve...${NC}"
+    pkill -f "ollama serve" 2>/dev/null || true
+    sleep 1
+fi
+
+echo -e "${GREEN}✓ Cleanup complete${NC}"
+echo ""
+
+echo -e "${BLUE}Starting Ollama...${NC}"
 ollama serve > ollama.log 2>&1 &
 OLLAMA_PID=$!
 echo -e "${GREEN}✓ Ollama started (PID: $OLLAMA_PID)${NC}"

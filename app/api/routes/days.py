@@ -36,6 +36,7 @@ from app.services.adaptation import adaptation_service
 from app.services.deload import deload_service
 from app.services.time_estimation import time_estimation_service
 from app.api.routes.dependencies import get_current_user_id
+from app.core.exceptions import NotFoundError, ValidationError, AuthorizationError, ConflictError
 
 router = APIRouter()
 settings = get_settings()
@@ -56,7 +57,7 @@ async def get_daily_plan(
     # Verify program belongs to user
     program = await db.get(Program, program_id)
     if not program or program.user_id != user_id:
-        raise HTTPException(status_code=404, detail="Program not found")
+        raise NotFoundError("Program", details={"program_id": program_id, "user_id": user_id})
     
     # Get active microcycle
     microcycle_result = await db.execute(
@@ -68,9 +69,9 @@ async def get_daily_plan(
         )
     )
     microcycle = microcycle_result.scalar_one_or_none()
-    
+
     if not microcycle:
-        raise HTTPException(status_code=404, detail="No active microcycle found")
+        raise NotFoundError("Microcycle", details={"program_id": program_id, "status": "active"})
     
     # Get session for the date
     session_result = await db.execute(
@@ -146,13 +147,13 @@ async def adapt_session(
     # Verify program belongs to user
     program = await db.get(Program, program_id=request.program_id)
     if not program or program.user_id != user_id:
-        raise HTTPException(status_code=404, detail="Program not found")
+        raise NotFoundError("Program", details={"program_id": request.program_id, "user_id": user_id})
     
     # Get or create conversation thread
     if request.thread_id:
         thread = await db.get(ConversationThread, request.thread_id)
         if not thread or thread.user_id != user_id:
-            raise HTTPException(status_code=404, detail="Conversation not found")
+            raise NotFoundError("ConversationThread", details={"thread_id": request.thread_id, "user_id": user_id})
     else:
         thread = ConversationThread(
             user_id=user_id,
@@ -296,11 +297,11 @@ async def adapt_session(
     db.add(user_turn)
     
     # Call LLM
-    from app.llm.ollama_provider import ADAPTATION_RESPONSE_SCHEMA
+    from app.llm.schemas import ADAPTATION_RESPONSE_SCHEMA
     
     provider = get_llm_provider()
     config = LLMConfig(
-        model=settings.ollama_model,
+        model=settings.openai_model,
         temperature=0.7,
         json_schema=ADAPTATION_RESPONSE_SCHEMA,
     )
@@ -449,7 +450,7 @@ async def adapt_session_stream(
         # Stream from LLM
         provider = get_llm_provider()
         config = LLMConfig(
-            model=settings.ollama_model,
+            model=settings.openai_model,
             temperature=0.7,
             stream=True,
         )
@@ -507,15 +508,15 @@ async def accept_plan(
     This finalizes the conversation and optionally updates the session.
     """
     thread = await db.get(ConversationThread, request.thread_id)
-    
+
     if not thread:
-        raise HTTPException(status_code=404, detail="Conversation not found")
-    
+        raise NotFoundError("ConversationThread", details={"thread_id": request.thread_id})
+
     if thread.user_id != user_id:
-        raise HTTPException(status_code=403, detail="Not authorized")
-    
+        raise AuthorizationError("Not authorized to access this conversation", details={"thread_id": request.thread_id, "user_id": user_id})
+
     if thread.final_plan_accepted:
-        raise HTTPException(status_code=400, detail="Plan already accepted")
+        raise ConflictError("Plan already accepted", details={"thread_id": request.thread_id})
     
     # Get the last assistant turn with structured response
     turns_result = await db.execute(
@@ -530,9 +531,9 @@ async def accept_plan(
         .limit(1)
     )
     last_turn = turns_result.scalar_one_or_none()
-    
+
     if not last_turn or not last_turn.structured_response_json:
-        raise HTTPException(status_code=400, detail="No plan to accept")
+        raise ValidationError("structured_response_json", "No plan available to accept", details={"thread_id": request.thread_id})
     
     # Mark thread as accepted
     thread.final_plan_accepted = True

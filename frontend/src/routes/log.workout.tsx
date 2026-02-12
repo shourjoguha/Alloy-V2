@@ -2,12 +2,11 @@ import { useState } from 'react';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { ArrowLeft, Save, Plus, X, Search, Dumbbell, Timer, Flame } from 'lucide-react';
+import { ArrowLeft, Save, Plus, X, Search, Flame } from 'lucide-react';
 import { useMovements } from '@/api/settings';
 import { useCircuits } from '@/api/circuits';
 import { useLogCustomWorkout } from '@/api/logs';
-import { cn } from '@/lib/utils';
-import { Spinner } from '@/components/common/Spinner';
+import { Spinner } from '@/components/ui';
 import { SorenessTracker } from '@/components/visuals';
 import { 
   MetricType, 
@@ -135,8 +134,6 @@ function LogWorkoutPage() {
       finisher: workoutData.finisher.filter(i => i.type === 'movement').map(toApiExercise),
       cooldown: workoutData.cooldown.map(toApiExercise),
       
-      // Circuits
-      main_circuit_id: workoutData.circuit[0]?.circuit?.id, // Take first circuit in "Circuit" section
       finisher_circuit_id: workoutData.finisher.find(i => i.type === 'circuit')?.circuit?.id,
     };
 

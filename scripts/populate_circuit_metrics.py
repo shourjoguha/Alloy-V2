@@ -14,7 +14,8 @@ from sqlalchemy.orm import sessionmaker
 
 from app.config.settings import get_settings
 from app.models.circuit import CircuitTemplate
-from app.services.circuit_metrics import circuit_metrics_calculator
+from app.repositories.movement_repository import MovementRepository
+from app.services.circuit_metrics import CircuitMetricsCalculator
 
 
 async def populate_all_circuit_metrics():
@@ -36,6 +37,10 @@ async def populate_all_circuit_metrics():
     missing_rounds_count = 0
     
     async with async_session() as session:
+        # Initialize repository
+        movement_repository = MovementRepository(session)
+        calculator = CircuitMetricsCalculator(movement_repository)
+        
         # Load all circuits
         stmt = select(CircuitTemplate)
         result = await session.execute(stmt)
@@ -67,8 +72,7 @@ async def populate_all_circuit_metrics():
                         rounds = circuit.default_rounds
                     
                     # Calculate metrics
-                    metrics = await circuit_metrics_calculator.calculate_circuit_metrics(
-                        db=session,
+                    metrics = await calculator.calculate_circuit_metrics(
                         circuit=circuit,
                         rounds=rounds,
                         duration_seconds=circuit.default_duration_seconds

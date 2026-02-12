@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from './client';
-import type { CircuitTemplate, CircuitTemplateAdminDetail, CircuitType } from '@/types';
+import type { CircuitTemplate, CircuitTemplateAdminDetail, CircuitType, CircuitTemplateExercise } from '@/types';
 
 export const circuitKeys = {
   all: ['circuits'] as const,
@@ -37,11 +37,17 @@ export function useCircuitAdmin(circuitId: number) {
   return useQuery({
     queryKey: circuitKeys.adminDetail(circuitId),
     queryFn: () => fetchCircuitAdmin(circuitId),
+    staleTime: 5 * 60 * 1000, // 5 minutes - data remains fresh for this duration
+    gcTime: 10 * 60 * 1000, // 10 minutes - cache data after it's no longer in use
+    refetchOnWindowFocus: false, // Prevent refetching when window regains focus
+    refetchOnMount: false, // Prevent refetching when component remounts
+    refetchOnReconnect: true, // Still refetch on network reconnect
+    retry: 1, // Only retry failed requests once
   });
 }
 
 interface UpdateCircuitPayload {
-  exercises_json: Record<string, unknown>[];
+  exercises_json: CircuitTemplateExercise[];
 }
 
 async function updateCircuitAdmin(circuitId: number, payload: UpdateCircuitPayload): Promise<CircuitTemplate> {

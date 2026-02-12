@@ -20,6 +20,7 @@ class CircuitTemplate(Base):
     difficulty_tier = Column(Integer, default=1)
     
     # Fitness Function Metrics (parallel to Movement model)
+    # DEPRECATED: No longer used in optimization decisions. Preserved for backward compatibility.
     fatigue_factor = Column(Float, nullable=False, default=1.0)
     stimulus_factor = Column(Float, nullable=False, default=1.0)
     min_recovery_hours = Column(Integer, nullable=False, default=24)

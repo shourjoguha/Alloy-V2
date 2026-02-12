@@ -183,22 +183,6 @@ class UserProfileResponse(BaseModel):
     long_term_goal_category: str | None = None
     long_term_goal_description: str | None = None
     
-    @field_validator('persona_aggression', mode='before')
-    @classmethod
-    def convert_persona_aggression(cls, v):
-        if isinstance(v, int):
-            return v
-        if isinstance(v, str):
-            aggression_map = {
-                'CONSERVATIVE': 1,
-                'MODERATE_CONSERVATIVE': 2,
-                'BALANCED': 3,
-                'MODERATE_AGGRESSIVE': 4,
-                'AGGRESSIVE': 5,
-            }
-            return aggression_map.get(v.upper(), 3)
-        return 3
-    
     class Config:
         from_attributes = True
 
@@ -306,19 +290,43 @@ class MovementResponse(BaseModel):
 class MovementCreate(BaseModel):
     """Schema for creating a custom movement."""
     name: str
-    pattern: MovementPattern
+    pattern: MovementPattern = Field(default=None, alias="primary_pattern")
     primary_muscle: PrimaryMuscle | None = None
+    primary_muscles: list[PrimaryMuscle] | None = None
     primary_region: PrimaryRegion | None = None
     secondary_muscles: list[PrimaryMuscle] | None = None
     default_equipment: str | None = None
     skill_level: SkillLevel | None = SkillLevel.INTERMEDIATE
     cns_load: CNSLoad | None = CNSLoad.MODERATE
     metric_type: MetricType | None = MetricType.REPS
-    compound: bool = True
+    compound: bool = Field(default=True, alias="is_compound")
     description: str | None = None
     tier: MovementTier = MovementTier.BRONZE
     metabolic_demand: MetabolicDemand = MetabolicDemand.ANABOLIC
     biomechanics_profile: dict[str, Any] | None = None
+    complexity: int | None = None
+    equipment_tags: list[str] | None = None
+
+    @model_validator(mode='before')
+    @classmethod
+    def normalize_fields(cls, data: Any) -> Any:
+        """Normalize frontend field names to backend field names."""
+        if not isinstance(data, dict):
+            return data
+        
+        normalized = {}
+        for key, value in data.items():
+            if key == "primary_pattern":
+                normalized["pattern"] = value
+            elif key == "primary_muscles" and isinstance(value, list) and len(value) > 0:
+                normalized["primary_muscle"] = value[0]
+                normalized["primary_muscles"] = value
+            elif key == "is_compound":
+                normalized["compound"] = value
+            else:
+                normalized[key] = value
+        
+        return normalized
     
     @field_validator('biomechanics_profile')
     @classmethod

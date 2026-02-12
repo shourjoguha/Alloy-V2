@@ -18,6 +18,7 @@ class MovementPattern(str, Enum):
     OLYMPIC = "olympic"
     ISOLATION = "isolation"
     MOBILITY = "mobility"
+    STRETCH = "stretch"
     ISOMETRIC = "isometric"
     CONDITIONING = "conditioning"
     CARDIO = "cardio"
@@ -35,7 +36,7 @@ class PrimaryRegion(str, Enum):
 
 class PrimaryMuscle(str, Enum):
     """Primary muscle groups."""
-    QUADRICEPS = "quadriceps"    
+    QUADRICEPS = "quadriceps"
     HAMSTRINGS = "hamstrings"
     GLUTES = "glutes"
     CALVES = "calves"
@@ -53,6 +54,7 @@ class PrimaryMuscle(str, Enum):
     LOWER_BACK = "lower_back"
     HIP_FLEXORS = "hip_flexors"
     ADDUCTORS = "adductors"
+    ABDUCTORS = "abductors"
     FULL_BODY = "full_body"
 
 
@@ -70,7 +72,6 @@ class SkillLevel(str, Enum):
     INTERMEDIATE = "intermediate"
     ADVANCED = "advanced"
     EXPERT = "expert"
-    ELITE = "elite"
 
 
 class CNSLoad(str, Enum):
@@ -115,9 +116,6 @@ class MovementRuleType(str, Enum):
     HARD_NO = "hard_no"  # Never include
     HARD_YES = "hard_yes"  # Must appear at least once per microcycle
     PREFERRED = "preferred"  # Must appear at least once every 2 weeks
-    INCLUDE = "include"
-    EXCLUDE = "exclude"
-    BIAS = "bias"
 
 
 class RuleOperator(str, Enum):
@@ -148,18 +146,6 @@ class DisciplineType(str, Enum):
     YOGA = "yoga"
     RUNNING = "running"
     OTHER = "other"
-
-
-class SessionSection(str, Enum):
-    """Section of a training session. Deprecated: Use ExerciseRole instead."""
-    WARMUP = "warmup"
-    MAIN = "main"
-    ACCESSORY = "accessory"
-    SKILL = "skill"
-    FINISHER = "finisher"
-    COOLDOWN = "cooldown"
-    CARDIO = "cardio"
-    CONDITIONING = "conditioning"
 
 
 class RuleCadence(str, Enum):
@@ -273,13 +259,13 @@ class StressBucket(str, Enum):
     CNS = "cns"                   # Central nervous system fatigue
 
 
-class PersonaAggression(int, Enum):
-    """Programming aggressiveness level (1-5)."""
-    CONSERVATIVE = 1
-    MODERATE_CONSERVATIVE = 2
-    BALANCED = 3
-    MODERATE_AGGRESSIVE = 4
-    AGGRESSIVE = 5
+class PersonaAggression(str, Enum):
+    """Programming aggressiveness level."""
+    CONSERVATIVE = "CONSERVATIVE"
+    MODERATE_CONSERVATIVE = "MODERATE_CONSERVATIVE"
+    BALANCED = "BALANCED"
+    MODERATE_AGGRESSIVE = "MODERATE_AGGRESSIVE"
+    AGGRESSIVE = "AGGRESSIVE"
 
 
 class ExperienceLevel(str, Enum):
@@ -402,3 +388,41 @@ class MetabolicDemand(str, Enum):
     ANABOLIC = "anabolic"
     METABOLIC = "metabolic"
     NEURAL = "neural"
+
+
+class GenerationStatus(str, Enum):
+    """Status of exercise generation for a session."""
+    PENDING = "PENDING"
+    IN_PROGRESS = "IN_PROGRESS"
+    COMPLETED = "COMPLETED"
+    FAILED = "FAILED"
+    ESTIMATED = "ESTIMATED"
+
+
+class UserRole(str, Enum):
+    """User role for access control."""
+    USER = "user"
+    ADMIN = "admin"
+    SUPER_ADMIN = "super_admin"
+
+
+class AuditActionType(str, Enum):
+    """Types of audit log actions."""
+    LOGIN = "login"
+    LOGOUT = "logout"
+    PASSWORD_CHANGE = "password_change"
+    PASSWORD_RESET_REQUEST = "password_reset_request"
+    PASSWORD_RESET_COMPLETE = "password_reset_complete"
+    ACCOUNT_CREATION = "account_creation"
+    ACCOUNT_DELETION = "account_deletion"
+    ROLE_CHANGE = "role_change"
+    SETTINGS_UPDATE = "settings_update"
+    ADMIN_ACTION = "admin_action"
+    DATA_EXPORT = "data_export"
+    FAILED_AUTH = "failed_auth"
+    TOKEN_REFRESH = "token_refresh"
+    SESSION_TERMINATION = "session_termination"
+    PERMISSION_DENIED = "permission_denied"
+    SUSPICIOUS_ACTIVITY = "suspicious_activity"
+    API_KEY_GENERATED = "api_key_generated"
+    API_KEY_REVOKED = "api_key_revoked"

@@ -3,7 +3,7 @@ import { Link } from '@tanstack/react-router';
 import { Play, MessageSquare, RefreshCw, Plus, ChevronLeft, ChevronRight, Eye, History, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Spinner } from '@/components/common/Spinner';
+import { Spinner } from '@/components/ui';
 import { usePrograms, useProgram } from '@/api/programs';
 import { useDashboardStats } from '@/api/stats';
 import { SessionCard } from '@/components/program/SessionCard';
@@ -139,7 +139,7 @@ export function Dashboard() {
                           "text-xs font-medium uppercase tracking-wider",
                           isSelected ? "opacity-90" : "opacity-70"
                         )}>Day</span>
-                        <span className="text-xl font-bold">{session.day_number}</span>
+                        <span className="text-lg font-semibold">{session.day_number}</span>
                         {session.session_type && (
                            <span className={cn(
                              "text-[10px] mt-0.5 capitalize truncate w-full text-center",

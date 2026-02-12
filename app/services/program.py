@@ -12,21 +12,27 @@ Responsible for:
 from datetime import datetime, timedelta, date
 from typing import Optional, Dict, Any
 import logging
+import traceback
+import asyncio
 from sqlalchemy import select, and_, or_, cast, String
 from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import (
-    Program, Microcycle, Session, HeuristicConfig, User, Movement, UserProfile, UserMovementRule, SessionExercise, ProgramDiscipline
+    Program, Microcycle, Session, HeuristicConfig, User, Movement, UserProfile, UserMovementRule, SessionExercise, ProgramDiscipline, MovementDiscipline
 )
 from app.schemas.program import ProgramCreate
+from app.schemas.pagination import PaginationParams
 from app.models.enums import (
     Goal, SplitTemplate, SessionType, MicrocycleStatus, PersonaTone, PersonaAggression,
-    ProgressionStyle, MovementRuleType, ExerciseRole
+    ProgressionStyle, MovementRuleType, ExerciseRole, GenerationStatus, DisciplineType
 )
 from app.services.interference import interference_service
 from app.services.session_generator import session_generator
 from app.config import activity_distribution as activity_distribution_config
+from app.repositories.program_repository import ProgramRepository
+from app.core.transactions import transactional
+from app.core.exceptions import ValidationError, BusinessRuleError
 
 
 logger = logging.getLogger(__name__)
@@ -35,83 +41,99 @@ logger = logging.getLogger(__name__)
 class ProgramService:
     """
     Generates and manages workout programs.
-    
+
     A Program spans 8-12 weeks and contains Microcycles (1-2 weeks each).
     Each Microcycle contains Sessions (workout days).
-    
+
     Goals are distributed across microcycles with weighting to balance
-    focus across the user's objectives.
+    focus across user's objectives.
     """
+
+    def __init__(self, db: AsyncSession | None = None):
+        self._session = db
+        self._program_repo = None
+        if db:
+            self._program_repo = ProgramRepository(db)
     
-    async def create_program(
+    @property
+    def _program_repo(self) -> ProgramRepository:
+        if self.__program_repo is None:
+            self.__program_repo = ProgramRepository(self._session)
+        return self.__program_repo
+    
+    @_program_repo.setter
+    def _program_repo(self, value):
+        self.__program_repo = value
+    
+    async def create_program_skeleton(
         self,
-        db: AsyncSession,
         user_id: int,
         request: ProgramCreate,
     ) -> Program:
         """
-        Create a new 8-12 week program.
+        Create program skeleton with only program entity and disciplines.
+        Fast operation that returns immediately.
+        
+        Microcycles and sessions are generated asynchronously in separate methods.
         
         Args:
             db: Database session
             user_id: User ID
-            request: Program creation request (goals, duration_weeks, split_template, progression_style)
+            request: Program creation request
         
         Returns:
-            Created Program with microcycles and sessions
+            Created Program skeleton (without microcycles/sessions)
         
         Raises:
-            ValueError: If split template not found, goals empty, week_count invalid, interference conflict detected
+            ValidationError: If goals invalid, week_count invalid, interference conflict detected
         """
-        logger.info("ProgramService.create_program called for user_id=%s", user_id)
-        logger.info("Request data: %s", request.model_dump())
+        logger.info("[SKELETON] ProgramService.create_program_skeleton called for user_id=%s", user_id)
+        logger.info("[SKELETON] Request data: %s", request.model_dump())
         
         # Validate week count
         if not (8 <= request.duration_weeks <= 12):
-            logger.error("Invalid duration_weeks=%s (must be 8-12)", request.duration_weeks)
-            raise ValueError("Program must be 8-12 weeks")
+            logger.error("[SKELETON] Invalid duration_weeks=%s (must be 8-12)", request.duration_weeks)
+            raise ValidationError("duration_weeks", "Program must be 8-12 weeks")
         if request.duration_weeks % 2 != 0:
-            logger.error("Invalid duration_weeks=%s (must be even)", request.duration_weeks)
-            raise ValueError("Program must be an even number of weeks")
-        
+            logger.error("[SKELETON] Invalid duration_weeks=%s (must be even)", request.duration_weeks)
+            raise ValidationError("duration_weeks", "Program must be an even number of weeks")
+
         # Extract goals from request (1-3 goals allowed)
-        goals = request.goals  # List of GoalWeight objects
-        logger.info("Processing %d goals from request", len(goals))
+        goals = request.goals
+        logger.info("[SKELETON] Processing %d goals from request", len(goals))
         if not (1 <= len(goals) <= 3):
-            logger.error("Invalid number of goals=%s (must be 1-3)", len(goals))
-            raise ValueError("1-3 goals required")
+            logger.error("[SKELETON] Invalid number of goals=%s (must be 1-3)", len(goals))
+            raise ValidationError("goals", "1-3 goals required")
         
         # Pad goals list to 3 items if needed (with dummy goal of 0 weight)
         while len(goals) < 3:
-            # Find a goal not in use
             used_goals = {g.goal for g in goals}
             unused_goal = next(g for g in Goal if g not in used_goals)
             goals.append(type(goals[0])(goal=unused_goal, weight=0))
-        logger.info("Goals processed successfully: %s", [(g.goal, g.weight) for g in goals])
+        logger.info("[SKELETON] Goals processed successfully: %s", [(g.goal, g.weight) for g in goals])
         
         # Check for goal interference (only for goals with weight > 0)
         active_goals = [g.goal for g in goals if g.weight > 0]
         if len(active_goals) >= 2:
-            logger.info("Validating %d active goals for interference", len(active_goals))
-            # Pad active_goals to 3 for validation if needed
+            logger.info("[SKELETON] Validating %d active goals for interference", len(active_goals))
             validation_goals = active_goals[:]
             while len(validation_goals) < 3:
-                validation_goals.append(active_goals[0])  # Duplicate first goal for validation
+                validation_goals.append(active_goals[0])
             
             is_valid, warnings = await interference_service.validate_goals(
-                db, validation_goals[0], validation_goals[1], validation_goals[2]
+                self._session, validation_goals[0], validation_goals[1], validation_goals[2]
             )
             if not is_valid:
-                logger.error("Goal validation failed: %s", warnings)
-                raise ValueError(f"Goal validation failed: {warnings}")
+                logger.error("[SKELETON] Goal validation failed: %s", warnings)
+                raise BusinessRuleError("BR_GOAL_INTERFERENCE", f"Goal validation failed: {warnings}")
         
         # Fetch user profile for advanced preferences
-        logger.info("Fetching user profile for user_id=%s", user_id)
-        user_profile = await db.get(UserProfile, user_id)
+        logger.info("[SKELETON] Fetching user profile for user_id=%s", user_id)
+        user_profile = await self._session.get(UserProfile, user_id)
         discipline_prefs = user_profile.discipline_preferences if user_profile else None
         scheduling_prefs = dict(user_profile.scheduling_preferences) if user_profile and user_profile.scheduling_preferences else {}
-        scheduling_prefs["avoid_cardio_days"] = await self._infer_avoid_cardio_days(db, user_id)
-        logger.info("User profile fetched successfully")
+        scheduling_prefs["avoid_cardio_days"] = await self._infer_avoid_cardio_days(self._session, user_id)
+        logger.info("[SKELETON] User profile fetched successfully")
 
         split_template = request.split_template
         if not split_template:
@@ -123,32 +145,30 @@ class ProgramService:
                     split_template = None
         if not split_template:
             split_template = SplitTemplate.HYBRID
-        logger.info("Using split_template=%s", split_template)
+        logger.info("[SKELETON] Using split_template=%s", split_template)
 
         preferred_cycle_length_days = self._resolve_preferred_microcycle_length_days(scheduling_prefs)
-        logger.info("Preferred microcycle length=%s days", preferred_cycle_length_days)
+        logger.info("[SKELETON] Preferred microcycle length=%s days", preferred_cycle_length_days)
         
         # Get user for defaults
-        user = await db.get(User, user_id)
-        logger.info("User fetched for user_id=%s, experience_level=%s", user_id, user.experience_level if user else "unknown")
+        user = await self._session.get(User, user_id)
+        logger.info("[SKELETON] User fetched for user_id=%s, experience_level=%s", user_id, user.experience_level if user else "unknown")
         
         # Determine progression style if not provided
         progression_style = request.progression_style
         if not progression_style:
-            # Default based on experience level
             if user and user.experience_level == "beginner":
                 progression_style = ProgressionStyle.SINGLE_PROGRESSION
             elif user and user.experience_level in ["advanced", "expert"]:
                 progression_style = ProgressionStyle.WAVE_LOADING
             else:
-                # Intermediate defaults to Double Progression
                 progression_style = ProgressionStyle.DOUBLE_PROGRESSION
-        logger.info("Using progression_style=%s", progression_style)
+        logger.info("[SKELETON] Using progression_style=%s", progression_style)
         
         # Determine persona settings (from request or user defaults)
         persona_tone = request.persona_tone or (user.persona_tone if user else PersonaTone.SUPPORTIVE)
         persona_aggression = request.persona_aggression or (user.persona_aggression if user else PersonaAggression.BALANCED)
-        logger.info("Persona settings: tone=%s, aggression=%s", persona_tone, persona_aggression)
+        logger.info("[SKELETON] Persona settings: tone=%s, aggression=%s", persona_tone, persona_aggression)
         
         # Create program
         start_date = request.program_start_date or date.today()
@@ -175,159 +195,262 @@ class ProgramService:
         )
         
         # Deactivate other active programs for this user
-        logger.info("Deactivating other active programs for user_id=%s", user_id)
-        other_active = await db.execute(
-            select(Program).where(
-                and_(
-                    Program.user_id == user_id,
-                    Program.is_active == True
-                )
-            )
-        )
-        for prog in other_active.scalars():
-            prog.is_active = False
-            
-        db.add(program)
-        await db.flush()  # Get program.id
-        logger.info("Program created with id=%s, flushing to get program.id", program.id)
+        logger.info("[SKELETON] Deactivating other active programs for user_id=%s", user_id)
+        await self._program_repo.deactivate_other_programs(user_id, program.id)
+        await self._program_repo.create(program)
+        logger.info("[SKELETON] Program created with id=%s", program.id)
         
         # Create program disciplines from request or defaults
-        logger.info("Creating program disciplines for program_id=%s", program.id)
+        logger.info("[SKELETON] Creating program disciplines for program_id=%s", program.id)
         if request.disciplines:
-            logger.info("Using %d disciplines from request", len(request.disciplines))
+            logger.info("[SKELETON] Using %d disciplines from request", len(request.disciplines))
             for discipline_data in request.disciplines:
-                program_discipline = ProgramDiscipline(
-                    program_id=program.id,
-                    discipline_type=discipline_data.discipline,
-                    weight=discipline_data.weight,
+                await self._program_repo.add_program_discipline(
+                    program.id,
+                    discipline_data.discipline,
+                    discipline_data.weight
                 )
-                db.add(program_discipline)
         elif discipline_prefs:
-            logger.info("Using %d discipline preferences", len(discipline_prefs))
+            logger.info("[SKELETON] Using %d discipline preferences", len(discipline_prefs))
             for discipline_type, weight in discipline_prefs.items():
-                program_discipline = ProgramDiscipline(
-                    program_id=program.id,
-                    discipline_type=discipline_type,
-                    weight=weight,
-                )
-                db.add(program_discipline)
+                await self._program_repo.add_program_discipline(program.id, discipline_type, weight)
         else:
-            # Fallback based on experience level
-            logger.info("Using fallback disciplines based on experience level=%s", user.experience_level if user else "unknown")
+            logger.info("[SKELETON] Using fallback disciplines based on experience level=%s", user.experience_level if user else "unknown")
             default_discipline = "bodybuilding"
             default_weight = 10
             if user and user.experience_level == "beginner":
-                program_discipline = ProgramDiscipline(
-                    program_id=program.id,
-                    discipline_type=default_discipline,
-                    weight=default_weight,
-                )
-                db.add(program_discipline)
+                await self._program_repo.add_program_discipline(program.id, default_discipline, default_weight)
             elif user and user.experience_level == "intermediate":
-                program_discipline1 = ProgramDiscipline(
-                    program_id=program.id,
-                    discipline_type="bodybuilding",
-                    weight=6,
-                )
-                program_discipline2 = ProgramDiscipline(
-                    program_id=program.id,
-                    discipline_type="powerlifting",
-                    weight=4,
-                )
-                db.add(program_discipline1)
-                db.add(program_discipline2)
+                await self._program_repo.add_program_discipline(program.id, "bodybuilding", 6)
+                await self._program_repo.add_program_discipline(program.id, "powerlifting", 4)
             else:
-                program_discipline1 = ProgramDiscipline(
-                    program_id=program.id,
-                    discipline_type="bodybuilding",
-                    weight=5,
-                )
-                program_discipline2 = ProgramDiscipline(
-                    program_id=program.id,
-                    discipline_type="powerlifting",
-                    weight=5,
-                )
-                db.add(program_discipline1)
-                db.add(program_discipline2)
+                await self._program_repo.add_program_discipline(program.id, "bodybuilding", 5)
+                await self._program_repo.add_program_discipline(program.id, "powerlifting", 5)
         
-        total_days = request.duration_weeks * 7
-        microcycle_lengths = self._partition_microcycle_lengths(total_days, preferred_cycle_length_days)
-        logger.info("Microcycle lengths: %s", microcycle_lengths)
+        logger.info("[SKELETON] Program skeleton creation completed successfully for program_id=%s", program.id)
+        return program
+    
+    async def create_program(
+        self,
+        user_id: int,
+        request: ProgramCreate,
+    ) -> Program:
+        """
+        DEPRECATED: Use create_program_skeleton + generate_program_structure_async for fast response.
+        Kept for backward compatibility.
+        """
+        return await self.create_program_skeleton(user_id, request)
+    
+    async def generate_program_structure_async(
+        self,
+        program_id: int,
+    ) -> dict[str, Any]:
+        """
+        Generate microcycles and session shells asynchronously.
+        Runs after program skeleton is created and response returned.
         
-        # Generate microcycles with sessions
-        current_date = start_date
-        deload_frequency = request.deload_every_n_microcycles or 4
-        
-        # Track active microcycle for session generation
-        active_microcycle = None
-        
-        for mc_idx, cycle_length_days in enumerate(microcycle_lengths):
-            logger.info("Creating microcycle %d with length=%s days", mc_idx, cycle_length_days)
-            is_deload = ((mc_idx + 1) % deload_frequency == 0)
-            logger.info("Microcycle %d is_deload=%s", mc_idx, is_deload)
-
-            split_config = self._build_freeform_split_config(
-                cycle_length_days=cycle_length_days,
-                days_per_week=request.days_per_week,
-            )
-            logger.info("Built freeform split config for microcycle %d", mc_idx)
-
-            split_config = self._apply_goal_based_cycle_distribution(
-                split_config=split_config,
-                goals=request.goals,
-                days_per_week=request.days_per_week,
-                cycle_length_days=cycle_length_days,
-                max_session_duration=request.max_session_duration,
-                user_experience_level=user.experience_level if user else None,
-                scheduling_prefs=scheduling_prefs,
-            )
-            logger.info("Applied goal-based cycle distribution for microcycle %d", mc_idx)
-
-            split_config = self._assign_freeform_day_types_and_focus(
-                split_config=split_config,
-                days_per_week=request.days_per_week,
-            )
-            logger.info("Assigned freeform day types and focus for microcycle %d", mc_idx)
+        Args:
+            program_id: ID of the program to generate structure for
             
-            microcycle = await self._create_microcycle(
-                db,
-                program_id=program.id,
-                mc_index=mc_idx,
-                start_date=current_date,
-                split_config=split_config,
+        Returns:
+            Progress tracking dict
+        """
+        from app.db.database import async_session_maker
+        
+        logger.info("[STRUCTURE] Starting program structure generation for program_id=%s", program_id)
+        
+        async with async_session_maker() as db:
+            program = await db.get(Program, program_id)
+            if not program:
+                logger.error("[STRUCTURE] Program not found: %s", program_id)
+                return {"status": "failed", "error": "Program not found"}
+            
+            user = await db.get(User, program.user_id)
+            if not user:
+                logger.error("[STRUCTURE] User not found for program_id=%s", program_id)
+                return {"status": "failed", "error": "User not found"}
+            
+            user_profile = await db.get(UserProfile, program.user_id)
+            discipline_prefs = user_profile.discipline_preferences if user_profile else None
+            scheduling_prefs = dict(user_profile.scheduling_preferences) if user_profile and user_profile.scheduling_preferences else {}
+            scheduling_prefs["avoid_cardio_days"] = await self._infer_avoid_cardio_days(db, program.user_id)
+            
+            total_days = program.duration_weeks * 7
+            preferred_cycle_length_days = self._resolve_preferred_microcycle_length_days(scheduling_prefs)
+            microcycle_lengths = self._partition_microcycle_lengths(total_days, preferred_cycle_length_days)
+            logger.info("[STRUCTURE] Microcycle lengths: %s", microcycle_lengths)
+            
+            current_date = program.start_date
+            deload_frequency = program.deload_every_n_microcycles or 4
+
+            for mc_idx, cycle_length_days in enumerate(microcycle_lengths):
+                logger.info("[STRUCTURE] Creating microcycle %d in separate DB session", mc_idx)
+                is_deload = ((mc_idx + 1) % deload_frequency == 0)
+
+                split_config = self._build_freeform_split_config(
+                    cycle_length_days=cycle_length_days,
+                    days_per_week=program.days_per_week,
+                )
+
+                split_config = self._apply_goal_based_cycle_distribution(
+                    split_config=split_config,
+                    goals=[],
+                    days_per_week=program.days_per_week,
+                    cycle_length_days=cycle_length_days,
+                    max_session_duration=program.max_session_duration,
+                    user_experience_level=user.experience_level if user else None,
+                    scheduling_prefs=scheduling_prefs,
+                )
+
+                split_config = self._assign_freeform_day_types_and_focus(
+                    split_config=split_config,
+                    days_per_week=program.days_per_week,
+                )
+
+                try:
+                    microcycle = await asyncio.wait_for(
+                        self._create_microcycle_in_separate_session(
+                            program_id=program.id,
+                            user_id=program.user_id,
+                            mc_index=mc_idx,
+                            start_date=current_date,
+                            split_config=split_config,
+                            is_deload=is_deload,
+                        ),
+                        timeout=140,
+                    )
+                    logger.info("[STRUCTURE] Microcycle %d created with id=%s", mc_idx, microcycle.id)
+                    current_date += timedelta(days=cycle_length_days)
+                except asyncio.TimeoutError:
+                    logger.error("[STRUCTURE] Microcycle %d creation timeout (>140s), skipping", mc_idx)
+                    current_date += timedelta(days=cycle_length_days)
+                    continue
+
+        logger.info("[STRUCTURE] Program structure generation completed for program_id=%s", program_id)
+        return {"status": "completed", "program_id": program_id}
+
+    async def _create_microcycle_in_separate_session(
+        self,
+        program_id: int,
+        user_id: int,
+        mc_index: int,
+        start_date: date,
+        split_config: Dict[str, Any],
+        is_deload: bool = False,
+    ) -> Microcycle:
+        """
+        Create a microcycle with sessions in separate DB session.
+        Each session created individually to avoid long transactions.
+
+        Args:
+            program_id: Parent program ID
+            user_id: User ID for session creation
+            mc_index: Microcycle index (0-based)
+            start_date: Microcycle start date
+            split_config: Split template configuration from heuristics
+            is_deload: Whether this is a deload microcycle
+
+        Returns:
+            Created Microcycle
+        """
+        from app.db.database import async_session_maker
+        from app.repositories.program_repository import ProgramRepository
+
+        async with async_session_maker() as db:
+            days_per_cycle = split_config.get("days_per_cycle", 7)
+            structure = split_config.get("structure", [])
+
+            status = MicrocycleStatus.ACTIVE if mc_index == 0 else MicrocycleStatus.PLANNED
+
+            microcycle = Microcycle(
+                program_id=program_id,
+                sequence_number=mc_index + 1,
+                start_date=start_date,
+                length_days=days_per_cycle,
+                status=status,
                 is_deload=is_deload,
             )
-            logger.info("Microcycle %d created with id=%s", mc_idx, microcycle.id)
-            
-            # Keep reference to active (first) microcycle
-            if mc_idx == 0:
-                active_microcycle = microcycle
-            
-            current_date += timedelta(days=cycle_length_days)
-        
-        logger.info("Committing program creation transaction")
-        await db.commit()
-        logger.info("Program creation committed successfully")
-        await db.refresh(program)
-        logger.info("Program refreshed successfully, returning program id=%s", program.id)
-        logger.info("Program data for serialization: id=%s, start_date=%s, persona_aggression=%s, persona_tone=%s", 
-                    program.id, program.start_date, program.persona_aggression, program.persona_tone)
-        return program
+
+            repo = ProgramRepository(db)
+            await repo.add_microcycle(microcycle)
+            await db.commit()
+            await db.refresh(microcycle)
+
+            logger.info("[MICROCYCLE] Created microcycle %d with id=%s", mc_index, microcycle.id)
+
+            for day_def in structure:
+                session_id = await self._create_session_in_separate_session(
+                    microcycle_id=microcycle.id,
+                    user_id=user_id,
+                    day_num=day_def.get("day", 1),
+                    day_type=day_def.get("type", "rest"),
+                    focus_patterns=day_def.get("focus", []),
+                    start_date=start_date,
+                )
+                logger.info("[MICROCYCLE] Session created with id=%s for microcycle %d", session_id, microcycle.id)
+
+        return microcycle
+
+    async def _create_session_in_separate_session(
+        self,
+        microcycle_id: int,
+        user_id: int,
+        day_num: int,
+        day_type: str,
+        focus_patterns: list[str],
+        start_date: date,
+    ) -> Session:
+        """
+        Create a single session in separate DB session.
+
+        Args:
+            microcycle_id: Parent microcycle ID
+            user_id: User ID for session creation
+            day_num: Day number within microcycle
+            day_type: Type of day (rest, upper, lower, etc.)
+            focus_patterns: List of focus patterns
+            start_date: Microcycle start date
+
+        Returns:
+            Created Session
+        """
+        from app.db.database import async_session_maker
+        from app.repositories.program_repository import ProgramRepository
+
+        session_date = start_date + timedelta(days=day_num - 1)
+        session_type = self._map_day_type_to_session_type(day_type)
+
+        async with async_session_maker() as db:
+            session = Session(
+                user_id=user_id,
+                microcycle_id=microcycle_id,
+                date=session_date,
+                day_number=day_num,
+                session_type=session_type,
+                intent_tags=focus_patterns,
+            )
+
+            db.add(session)
+            await db.commit()
+            await db.refresh(session)
+
+        return session.id
 
     async def _infer_avoid_cardio_days(self, db: AsyncSession, user_id: int) -> bool:
         try:
+            cardio_disciplines = ["cardio", "endurance", "conditioning", "aerobic"]
+            cardio_tags = ["cardio", "conditioning", "aerobic"]
+            
             result = await db.execute(
                 select(UserMovementRule.id)
-                .join(Movement, Movement.id == UserMovementRule.movement_id)
+                .join(MovementDiscipline, MovementDiscipline.movement_id == UserMovementRule.movement_id)
+                .join(Movement, Movement.id == MovementDiscipline.movement_id)
                 .where(
                     and_(
                         UserMovementRule.user_id == user_id,
                         UserMovementRule.rule_type == MovementRuleType.HARD_NO,
                         or_(
-                            Movement.primary_discipline.ilike("%cardio%"),
-                            Movement.primary_discipline.ilike("%endurance%"),
-                            cast(Movement.tags, String).ilike("%cardio%"),
-                            cast(Movement.discipline_tags, String).ilike("%cardio%"),
+                            MovementDiscipline.discipline.in_([d.value for d in DisciplineType if d.value in cardio_disciplines]),
                         ),
                     )
                 )
@@ -336,7 +459,7 @@ class ProgramService:
             return result.scalar_one_or_none() is not None
         except Exception:
             try:
-                await db.rollback()
+                await self._session.rollback()
             except Exception:
                 pass
             return False
@@ -344,16 +467,16 @@ class ProgramService:
     async def generate_active_microcycle_sessions(
         self,
         program_id: int,
-    ) -> None:
+    ) -> dict[str, Any]:
         from app.db.database import async_session_maker
-        
+
         logger.info(f"[generate_active_microcycle_sessions] START - program_id={program_id}")
 
         async with async_session_maker() as db:
             program = await db.get(Program, program_id)
             if not program:
                 logger.error(f"[generate_active_microcycle_sessions] Program not found: {program_id}")
-                return
+                return {"status": "failed", "error": "Program not found"}
 
             result = await db.execute(
                 select(Microcycle).where(
@@ -364,69 +487,124 @@ class ProgramService:
             microcycle = result.scalar_one_or_none()
             if not microcycle:
                 logger.error(f"[generate_active_microcycle_sessions] Active microcycle not found for program {program_id}")
-                return
+                return {"status": "failed", "error": "Active microcycle not found"}
+
+            # Set microcycle generation status to IN_PROGRESS
+            microcycle.generation_status = GenerationStatus.IN_PROGRESS
+            db.add(microcycle)
+            await db.commit()
+            await db.refresh(microcycle)
 
         logger.info(f"[generate_active_microcycle_sessions] Found active microcycle {microcycle.id}, starting generation...")
-        await self._generate_session_content_async(program_id, microcycle.id)
+
+        # Generate sessions sequentially and track progress
+        progress = await self._generate_session_content_async(program_id, microcycle.id)
+
         logger.info(f"[generate_active_microcycle_sessions] COMPLETED for program {program_id}")
+
+        return progress
     
     async def _generate_session_content_async(
         self,
         program_id: int,
         microcycle_id: int,
-    ) -> None:
+    ) -> dict[str, Any]:
         """
         Generate exercise content for all non-rest sessions in a microcycle.
-        
+
         This method creates its own database sessions to avoid holding locks
         during long-running LLM calls.
-        
+
         Args:
             program_id: ID of the program
             microcycle_id: ID of the microcycle to generate content for
+
+        Returns:
+            Progress tracking dict with status and session details
         """
         from app.db.database import async_session_maker
-        
+
         logger.info(f"[_generate_session_content_async] START - program_id={program_id}, microcycle_id={microcycle_id}")
-        
+
+        # Progress tracking
+        progress = {
+            "status": "in_progress",
+            "program_id": program_id,
+            "microcycle_id": microcycle_id,
+            "total_sessions": 0,
+            "completed_sessions": 0,
+            "failed_sessions": 0,
+            "current_session_id": None,
+            "session_progress": [],
+        }
+
         # Create a new DB session for reading program and sessions
         async with async_session_maker() as db:
             # Fetch program and microcycle
             program = await db.get(Program, program_id)
             microcycle = await db.get(Microcycle, microcycle_id)
-            
+
             if not program or not microcycle:
                 logger.error(f"[_generate_session_content_async] FAILED - program={program}, microcycle={microcycle}")
-                return
-            
+                progress["status"] = "failed"
+                progress["error"] = "Program or microcycle not found"
+                return progress
+
             # Get all sessions for this microcycle
             sessions_result = await db.execute(
                 select(Session).where(Session.microcycle_id == microcycle.id)
                 .order_by(Session.day_number)
             )
             sessions = list(sessions_result.scalars().all())
-            
+
             logger.info(f"[_generate_session_content_async] Found {len(sessions)} sessions to generate")
-        
+            progress["total_sessions"] = len(sessions)
+
         # Track used movements to ensure variety
         used_movements = set()
         used_movement_groups = {}  # Track usage count by substitution_group
         used_main_patterns = {}    # Track main lift patterns by day
         used_accessory_movements = {}  # Track accessory movements by day
-        
+
         # Track previous day's muscle volume for interference logic
         previous_day_volume = {}
-        
-        # Generate content for each session independently
+
+        # Generate content for each session SEQUENTIALLY
         for session in sessions:
             logger.info(f"[_generate_session_content_async] Processing session {session.id} - type={session.session_type}, day={session.day_number}")
-            
+            progress["current_session_id"] = session.id
+
             # Skip recovery/rest sessions - they get default content
             if session.session_type == SessionType.RECOVERY:
                 logger.info(f"[_generate_session_content_async] Skipping RECOVERY session {session.id}")
+                # Mark recovery session as completed
+                async with async_session_maker() as db:
+                    recovery_session = await db.get(Session, session.id)
+                    if recovery_session:
+                        recovery_session.generation_status = GenerationStatus.COMPLETED
+                        db.add(recovery_session)
+                        await db.commit()
+
                 previous_day_volume = {}  # Recovery clears fatigue
+                progress["completed_sessions"] += 1
+                progress["session_progress"].append({
+                    "session_id": session.id,
+                    "day_number": session.day_number,
+                    "session_type": str(session.session_type),
+                    "status": "completed",
+                    "skipped": True,
+                })
                 continue
-            
+
+            # Update session generation_status to IN_PROGRESS before generation
+            async with async_session_maker() as db:
+                session_to_update = await db.get(Session, session.id)
+                if session_to_update:
+                    session_to_update.generation_status = GenerationStatus.IN_PROGRESS
+                    db.add(session_to_update)
+                    await db.commit()
+                    await db.refresh(session_to_update)
+
             try:
                 # Apply inter-session interference rules for main lift patterns
                 async with async_session_maker() as db:
@@ -435,11 +613,22 @@ class ProgramService:
                     )
             except Exception as e:
                 logger.error(
-                    "Failed to apply pattern interference rules for session %s: %s",
-                    session.id,
-                    e,
+                    f"Failed to apply pattern interference rules for session {session.id}",
+                    extra={
+                        "event": "pattern_interference_failure",
+                        "session_id": session.id,
+                        "session_type": str(session.session_type),
+                        "day_number": session.day_number,
+                        "intent_tags": session.intent_tags,
+                        "used_main_patterns": used_main_patterns,
+                        "microcycle_id": microcycle.id,
+                        "exception_type": type(e).__name__,
+                        "exception_message": str(e),
+                        "traceback": traceback.format_exc(),
+                    },
+                    exc_info=True
                 )
-            
+
             try:
                 # Generate and populate session with exercises
                 # Each call creates its own DB session
@@ -453,40 +642,83 @@ class ProgramService:
                     used_accessory_movements=dict(used_accessory_movements),
                     previous_day_volume=previous_day_volume,
                 )
+
+                # Mark session as COMPLETED after successful generation
+                async with async_session_maker() as db:
+                    completed_session = await db.get(Session, session.id)
+                    if completed_session:
+                        completed_session.generation_status = GenerationStatus.COMPLETED
+                        db.add(completed_session)
+                        await db.commit()
+
+                progress["completed_sessions"] += 1
+                progress["session_progress"].append({
+                    "session_id": session.id,
+                    "day_number": session.day_number,
+                    "session_type": str(session.session_type),
+                    "status": "completed",
+                })
+
             except Exception as e:
                 logger.error(
-                    "Failed to generate content for session %s: %s",
-                    session.id,
-                    e,
+                    f"Failed to generate content for session {session.id}",
+                    extra={
+                        "event": "session_generation_failed",
+                        "session_id": session.id,
+                        "session_type": str(session.session_type),
+                        "day_number": session.day_number,
+                        "intent_tags": session.intent_tags,
+                        "program_id": program_id,
+                        "microcycle_id": microcycle_id,
+                        "used_movements_count": len(used_movements),
+                        "previous_day_volume": previous_day_volume,
+                        "exception_type": type(e).__name__,
+                        "exception_message": str(e),
+                        "traceback": traceback.format_exc(),
+                    },
+                    exc_info=True
                 )
-                
+
                 # Robust Fallback: Mark session as failed but "content present" so spinner stops
                 try:
                     async with async_session_maker() as db:
                         failed_session = await db.get(Session, session.id)
                         if failed_session:
                             failed_session.coach_notes = f"Generation failed: {str(e)}. Please regenerate."
-                            # Add placeholder content to satisfy frontend hasContent check
-                            failed_session.main_json = [{
-                                "movement": "Generation Error",
-                                "sets": 0,
-                                "reps": "0",
-                                "rpe": "0",
-                                "rest": "0", 
-                                "notes": "An error occurred during generation."
-                            }]
+                            # Mark as FAILED
+                            failed_session.generation_status = GenerationStatus.FAILED
                             db.add(failed_session)
                             await db.commit()
                 except Exception as fallback_error:
-                    logger.error(f"Failed to apply fallback for session {session.id}: {fallback_error}")
+                    logger.error(
+                        f"Failed to apply fallback for session {session.id}",
+                        extra={
+                            "event": "session_generation_fallback_failed",
+                            "session_id": session.id,
+                            "original_exception": str(e),
+                            "fallback_exception_type": type(fallback_error).__name__,
+                            "fallback_exception_message": str(fallback_error),
+                            "traceback": traceback.format_exc(),
+                        },
+                        exc_info=True
+                    )
+
+                progress["failed_sessions"] += 1
+                progress["session_progress"].append({
+                    "session_id": session.id,
+                    "day_number": session.day_number,
+                    "session_type": str(session.session_type),
+                    "status": "failed",
+                    "error": str(e),
+                })
 
                 # Skip tracking for this session so others can still be generated
                 previous_day_volume = {}
                 continue
-            
+
             # Update previous volume for next iteration
             previous_day_volume = current_volume
-            
+
             # Track used movements and movement groups
             if current_volume:
                 # Re-fetch session to get updated content
@@ -496,39 +728,56 @@ class ProgramService:
                     ).where(Session.id == session.id)
                     result = await db.execute(stmt)
                     updated_session = result.scalar_one_or_none()
-                    
+
                     if updated_session:
                         # Track individual movements
                         session_movements = []
                         main_patterns_used = []
                         accessory_movements_used = []
-                        
+
                         if updated_session.exercises:
                             for ex in updated_session.exercises:
                                 if ex.movement:
                                     name = ex.movement.name
                                     session_movements.append(name)
-                                    
+
                                     # Treat finisher as accessory for interference
                                     if ex.exercise_role in [ExerciseRole.ACCESSORY, ExerciseRole.FINISHER]:
                                         accessory_movements_used.append(name)
-                        
+
                         # Update tracking sets
                         for movement_name in session_movements:
                             used_movements.add(movement_name)
-                        
+
                         # Track main lift patterns for this session
                         if updated_session.intent_tags:
                             main_patterns_used = updated_session.intent_tags[:2]
                             used_main_patterns[session.day_number] = main_patterns_used
-                        
+
                         # Track accessory movements for this session
                         used_accessory_movements[session.day_number] = accessory_movements_used
-                        
+
                         # Update movement group usage counts
                         await self._update_movement_group_usage(
                             db, session_movements, used_movement_groups
                         )
+
+        # Set microcycle generation_status after all sessions complete
+        async with async_session_maker() as db:
+            final_microcycle = await db.get(Microcycle, microcycle_id)
+            if final_microcycle:
+                if progress["failed_sessions"] > 0:
+                    final_microcycle.generation_status = GenerationStatus.FAILED
+                else:
+                    final_microcycle.generation_status = GenerationStatus.COMPLETED
+                db.add(final_microcycle)
+                await db.commit()
+
+        progress["status"] = "completed"
+        progress["current_session_id"] = None
+        logger.info(f"[_generate_session_content_async] COMPLETED - {progress['completed_sessions']} sessions completed, {progress['failed_sessions']} failed")
+
+        return progress
     
     async def _apply_pattern_interference_rules(
         self,
@@ -733,8 +982,8 @@ class ProgramService:
     
     async def _create_microcycle(
         self,
-        db: AsyncSession,
         program_id: int,
+        user_id: int,
         mc_index: int,
         start_date: date,
         split_config: Dict[str, Any],
@@ -742,24 +991,24 @@ class ProgramService:
     ) -> Microcycle:
         """
         Create a microcycle with sessions based on split template.
-        
+
         Args:
-            db: Database session
             program_id: Parent program ID
+            user_id: User ID for session creation
             mc_index: Microcycle index (0-based)
             start_date: Microcycle start date
             split_config: Split template configuration from heuristics
             is_deload: Whether this is a deload microcycle
-        
+
         Returns:
             Created Microcycle
         """
         days_per_cycle = split_config.get("days_per_cycle", 7)
         structure = split_config.get("structure", [])
-        
+
         # First microcycle is active, others are planned
         status = MicrocycleStatus.ACTIVE if mc_index == 0 else MicrocycleStatus.PLANNED
-        
+
         microcycle = Microcycle(
             program_id=program_id,
             sequence_number=mc_index + 1,  # 1-indexed
@@ -768,32 +1017,31 @@ class ProgramService:
             status=status,
             is_deload=is_deload,
         )
-        db.add(microcycle)
-        await db.flush()  # Get microcycle.id
-        
+        await self._program_repo.add_microcycle(microcycle)
+
         # Create sessions from split template structure
         for day_def in structure:
             day_num = day_def.get("day", 1)
             day_type = day_def.get("type", "rest")
             focus_patterns = day_def.get("focus", [])
-            
+
             # Calculate session date
             session_date = start_date + timedelta(days=day_num - 1)
-            
+
             # Map day type to SessionType enum
             session_type = self._map_day_type_to_session_type(day_type)
-            
+
             # Create session (even for rest days - they can have recovery activities)
             session = Session(
-                user_id=program.user_id,
+                user_id=user_id,
                 microcycle_id=microcycle.id,
                 date=session_date,
                 day_number=day_num,
                 session_type=session_type,
                 intent_tags=focus_patterns,
             )
-            db.add(session)
-        
+            self._program_repo.add_session(session)
+
         return microcycle
 
     def _resolve_preferred_microcycle_length_days(self, scheduling_prefs: dict[str, Any]) -> int:
@@ -1102,460 +1350,7 @@ class ProgramService:
         split_config["goal_bias_rationale"] = activity_distribution_config.BIAS_RATIONALE
         return split_config
     
-    async def _load_split_template(
-        self, db: AsyncSession, template: SplitTemplate, days_per_week: int,
-        discipline_prefs: dict = None, scheduling_prefs: dict = None
-    ) -> Dict[str, Any]:
-        """
-        Load split template configuration from heuristic configs.
-        
-        Args:
-            db: Database session
-            template: SplitTemplate enum value
-            days_per_week: User's training frequency preference (2-7)
-            discipline_prefs: User's discipline priorities
-            scheduling_prefs: User's scheduling preferences
-        
-        Returns:
-            Split template configuration dict
-        """
-        # ALWAYS use dynamic generation for user-specified days_per_week
-        # This ensures user preferences override any heuristic configs
-        return self._get_default_split_template(template, days_per_week, discipline_prefs, scheduling_prefs)
-    
-    def _get_default_split_template(
-        self, template: SplitTemplate, days_per_week: int,
-        discipline_prefs: dict = None, scheduling_prefs: dict = None
-    ) -> Dict[str, Any]:
-        """
-        Return default split template structure adapted to user's training frequency.
-        
-        Args:
-            template: Split template type
-            days_per_week: User's requested training days (2-7)
-            discipline_prefs: User's discipline priorities
-            scheduling_prefs: User's scheduling preferences
-        
-        Returns:
-            Split configuration with structure adapted to days_per_week
-        """
-        split_config = None
-        
-        if template == SplitTemplate.FULL_BODY:
-            split_config = self._generate_full_body_structure(days_per_week)
-        elif template == SplitTemplate.UPPER_LOWER:
-            split_config = self._generate_upper_lower_structure(days_per_week)
-        elif template == SplitTemplate.PPL:
-            split_config = self._generate_ppl_structure(days_per_week)
-            
-        elif template == SplitTemplate.HYBRID:
-            split_config = self._generate_hybrid_structure(days_per_week)
-            
-        else:
-            # Fallback to Full Body if unknown
-            split_config = self._generate_full_body_structure(days_per_week)
-            
-        # Apply Advanced Scheduling Preferences
-        # Logic: If user prefers dedicated days (mix_disciplines=False), convert a Rest day to that discipline
-        if split_config and scheduling_prefs and not scheduling_prefs.get("mix_disciplines", True):
-            # Check for dedicated Mobility day
-            if discipline_prefs and discipline_prefs.get("mobility", 0) >= 6:
-                # Find a rest day to convert (preferably mid-week or end)
-                rest_days = [d for d in split_config["structure"] if d["type"] == "rest"]
-                if rest_days:
-                    # Pick the first available rest day
-                    target_day = rest_days[0]
-                    target_day["type"] = "mobility"
-                    target_day["focus"] = ["mobility", "recovery"]
-                    split_config["training_days"] += 1
-                    split_config["rest_days"] -= 1
-                    logger.info(f"Converted Day {target_day['day']} to Mobility based on user preference")
-            
-            # Check for dedicated Cardio day (if not finisher preference)
-            if discipline_prefs and discipline_prefs.get("cardio", 0) >= 6:
-                if scheduling_prefs.get("cardio_preference") != "finisher":
-                     # Find another rest day
-                    rest_days = [d for d in split_config["structure"] if d["type"] == "rest"]
-                    if rest_days:
-                        target_day = rest_days[0]
-                        target_day["type"] = "cardio"
-                        target_day["focus"] = ["cardio", "endurance"]
-                        split_config["training_days"] += 1
-                        split_config["rest_days"] -= 1
-                        logger.info(f"Converted Day {target_day['day']} to Cardio based on user preference")
 
-        return split_config
-    
-    def _generate_full_body_structure(self, days_per_week: int) -> Dict[str, Any]:
-        """
-        Generate full body split structure adapted to user's training frequency.
-        
-        Args:
-            days_per_week: Requested training days (2-7)
-        
-        Returns:
-            Split configuration dict with structure for the week
-        """
-        # Pattern rotation for variety
-        focus_patterns = [
-            ["squat", "horizontal_push", "horizontal_pull"],
-            ["hinge", "vertical_push", "vertical_pull"],
-            ["lunge", "horizontal_push", "vertical_pull"],
-            ["hinge", "vertical_push", "horizontal_pull"],
-        ]
-        
-        # Generate structure based on days_per_week
-        structure = []
-        training_day_count = 0
-        
-        if days_per_week == 2:
-            # Days 1, 4 training, rest between
-            structure = [
-                {"day": 1, "type": "full_body", "focus": focus_patterns[0]},
-                {"day": 2, "type": "rest"},
-                {"day": 3, "type": "rest"},
-                {"day": 4, "type": "full_body", "focus": focus_patterns[1]},
-                {"day": 5, "type": "rest"},
-                {"day": 6, "type": "rest"},
-                {"day": 7, "type": "rest"},
-            ]
-            training_day_count = 2
-        elif days_per_week == 3:
-            # Days 1, 3, 5 training
-            structure = [
-                {"day": 1, "type": "full_body", "focus": focus_patterns[0]},
-                {"day": 2, "type": "rest"},
-                {"day": 3, "type": "full_body", "focus": focus_patterns[1]},
-                {"day": 4, "type": "rest"},
-                {"day": 5, "type": "full_body", "focus": focus_patterns[2]},
-                {"day": 6, "type": "rest"},
-                {"day": 7, "type": "rest"},
-            ]
-            training_day_count = 3
-        elif days_per_week == 4:
-            # Days 1, 3, 5, 6 training
-            structure = [
-                {"day": 1, "type": "full_body", "focus": focus_patterns[0]},
-                {"day": 2, "type": "rest"},
-                {"day": 3, "type": "full_body", "focus": focus_patterns[1]},
-                {"day": 4, "type": "rest"},
-                {"day": 5, "type": "full_body", "focus": focus_patterns[2]},
-                {"day": 6, "type": "full_body", "focus": focus_patterns[3]},
-                {"day": 7, "type": "rest"},
-            ]
-            training_day_count = 4
-        elif days_per_week == 5:
-            # Days 1, 2, 4, 5, 7 training
-            structure = [
-                {"day": 1, "type": "full_body", "focus": focus_patterns[0]},
-                {"day": 2, "type": "full_body", "focus": focus_patterns[1]},
-                {"day": 3, "type": "rest"},
-                {"day": 4, "type": "full_body", "focus": focus_patterns[2]},
-                {"day": 5, "type": "full_body", "focus": focus_patterns[3]},
-                {"day": 6, "type": "rest"},
-                {"day": 7, "type": "full_body", "focus": focus_patterns[2]},
-            ]
-            training_day_count = 5
-        elif days_per_week == 6:
-            # All days except day 4
-            structure = [
-                {"day": 1, "type": "full_body", "focus": focus_patterns[0]},
-                {"day": 2, "type": "full_body", "focus": focus_patterns[1]},
-                {"day": 3, "type": "full_body", "focus": focus_patterns[2]},
-                {"day": 4, "type": "rest"},
-                {"day": 5, "type": "full_body", "focus": focus_patterns[3]},
-                {"day": 6, "type": "full_body", "focus": focus_patterns[0]},
-                {"day": 7, "type": "full_body", "focus": focus_patterns[1]},
-            ]
-            training_day_count = 6
-        else:  # days_per_week == 7
-            # All days training
-            structure = [
-                {"day": 1, "type": "full_body", "focus": focus_patterns[0]},
-                {"day": 2, "type": "full_body", "focus": focus_patterns[1]},
-                {"day": 3, "type": "full_body", "focus": focus_patterns[2]},
-                {"day": 4, "type": "full_body", "focus": focus_patterns[3]},
-                {"day": 5, "type": "full_body", "focus": focus_patterns[0]},
-                {"day": 6, "type": "full_body", "focus": focus_patterns[1]},
-                {"day": 7, "type": "full_body", "focus": focus_patterns[2]},
-            ]
-            training_day_count = 7
-        
-        return {
-            "days_per_cycle": 7,
-            "structure": structure,
-            "training_days": training_day_count,
-            "rest_days": 7 - training_day_count,
-        }
-    
-    def _generate_hybrid_structure(self, days_per_week: int) -> Dict[str, Any]:
-        """
-        Generate hybrid split structure (mix of Upper/Lower and Full Body) adapted to user's training frequency.
-        
-        Hybrid split combines Upper/Lower days with Full Body days for variety.
-        This provides both body part focus and full-body compound movements.
-        
-        Args:
-            days_per_week: Requested training days (2-7)
-        
-        Returns:
-            Split configuration dict with structure for the week
-        """
-        structure = []
-        training_day_count = 0
-        
-        if days_per_week == 2:
-            structure = [
-                {"day": 1, "type": "upper", "focus": ["horizontal_push", "horizontal_pull"]},
-                {"day": 2, "type": "rest"},
-                {"day": 3, "type": "rest"},
-                {"day": 4, "type": "lower", "focus": ["squat", "hinge"]},
-                {"day": 5, "type": "rest"},
-                {"day": 6, "type": "rest"},
-                {"day": 7, "type": "rest"},
-            ]
-            training_day_count = 2
-        elif days_per_week == 3:
-            structure = [
-                {"day": 1, "type": "full_body", "focus": ["squat", "horizontal_push"]},
-                {"day": 2, "type": "rest"},
-                {"day": 3, "type": "upper", "focus": ["vertical_push", "vertical_pull"]},
-                {"day": 4, "type": "rest"},
-                {"day": 5, "type": "lower", "focus": ["hinge", "lunge"]},
-                {"day": 6, "type": "rest"},
-                {"day": 7, "type": "rest"},
-            ]
-            training_day_count = 3
-        elif days_per_week == 4:
-            structure = [
-                {"day": 1, "type": "upper", "focus": ["horizontal_push", "horizontal_pull"]},
-                {"day": 2, "type": "lower", "focus": ["squat", "hinge"]},
-                {"day": 3, "type": "rest"},
-                {"day": 4, "type": "full_body", "focus": ["vertical_push", "vertical_pull"]},
-                {"day": 5, "type": "lower", "focus": ["lunge", "hinge"]},
-                {"day": 6, "type": "rest"},
-                {"day": 7, "type": "rest"},
-            ]
-            training_day_count = 4
-        elif days_per_week == 5:
-            structure = [
-                {"day": 1, "type": "upper", "focus": ["horizontal_push", "horizontal_pull"]},
-                {"day": 2, "type": "lower", "focus": ["squat", "hinge"]},
-                {"day": 3, "type": "rest"},
-                {"day": 4, "type": "full_body", "focus": ["vertical_push", "vertical_pull", "lunge"]},
-                {"day": 5, "type": "upper", "focus": ["horizontal_push", "horizontal_pull"]},
-                {"day": 6, "type": "lower", "focus": ["hinge", "lunge"]},
-                {"day": 7, "type": "rest"},
-            ]
-            training_day_count = 5
-        elif days_per_week == 6:
-            structure = [
-                {"day": 1, "type": "upper", "focus": ["horizontal_push", "horizontal_pull"]},
-                {"day": 2, "type": "lower", "focus": ["squat", "hinge"]},
-                {"day": 3, "type": "full_body", "focus": ["vertical_push", "vertical_pull"]},
-                {"day": 4, "type": "rest"},
-                {"day": 5, "type": "upper", "focus": ["horizontal_push", "vertical_push"]},
-                {"day": 6, "type": "lower", "focus": ["hinge", "lunge"]},
-                {"day": 7, "type": "full_body", "focus": ["squat", "horizontal_pull"]},
-            ]
-            training_day_count = 6
-        else:
-            structure = [
-                {"day": 1, "type": "upper", "focus": ["horizontal_push", "horizontal_pull"]},
-                {"day": 2, "type": "lower", "focus": ["squat", "hinge"]},
-                {"day": 3, "type": "full_body", "focus": ["vertical_push", "vertical_pull"]},
-                {"day": 4, "type": "upper", "focus": ["horizontal_push", "vertical_push"]},
-                {"day": 5, "type": "lower", "focus": ["hinge", "lunge"]},
-                {"day": 6, "type": "full_body", "focus": ["squat", "horizontal_pull"]},
-                {"day": 7, "type": "cardio", "focus": ["cardio", "recovery"]},
-            ]
-            training_day_count = 7
-        
-        return {
-            "days_per_cycle": 7,
-            "structure": structure,
-            "training_days": training_day_count,
-            "rest_days": 7 - training_day_count,
-        }
-    
-    def _generate_upper_lower_structure(self, days_per_week: int) -> Dict[str, Any]:
-        """
-        Generate Upper/Lower split structure adapted to user's training frequency.
-        
-        Upper/Lower split focuses on specific body regions with adequate recovery.
-        
-        Args:
-            days_per_week: Requested training days (2-7)
-        
-        Returns:
-            Split configuration dict with structure for the week
-        """
-        structure = []
-        training_day_count = 0
-        
-        if days_per_week == 2:
-            structure = [
-                {"day": 1, "type": "upper", "focus": ["horizontal_push", "horizontal_pull"]},
-                {"day": 2, "type": "rest"},
-                {"day": 3, "type": "rest"},
-                {"day": 4, "type": "lower", "focus": ["squat", "hinge"]},
-                {"day": 5, "type": "rest"},
-                {"day": 6, "type": "rest"},
-                {"day": 7, "type": "rest"},
-            ]
-            training_day_count = 2
-        elif days_per_week == 3:
-            structure = [
-                {"day": 1, "type": "upper", "focus": ["horizontal_push", "horizontal_pull"]},
-                {"day": 2, "type": "lower", "focus": ["squat", "hinge"]},
-                {"day": 3, "type": "rest"},
-                {"day": 4, "type": "upper", "focus": ["vertical_push", "vertical_pull"]},
-                {"day": 5, "type": "rest"},
-                {"day": 6, "type": "rest"},
-                {"day": 7, "type": "rest"},
-            ]
-            training_day_count = 3
-        elif days_per_week == 4:
-            structure = [
-                {"day": 1, "type": "upper", "focus": ["horizontal_push", "horizontal_pull"]},
-                {"day": 2, "type": "lower", "focus": ["squat", "hinge"]},
-                {"day": 3, "type": "rest"},
-                {"day": 4, "type": "upper", "focus": ["vertical_push", "vertical_pull"]},
-                {"day": 5, "type": "lower", "focus": ["squat", "hinge"]},
-                {"day": 6, "type": "rest"},
-                {"day": 7, "type": "rest"},
-            ]
-            training_day_count = 4
-        elif days_per_week == 5:
-            structure = [
-                {"day": 1, "type": "upper", "focus": ["horizontal_push", "horizontal_pull"]},
-                {"day": 2, "type": "lower", "focus": ["squat", "hinge"]},
-                {"day": 3, "type": "rest"},
-                {"day": 4, "type": "upper", "focus": ["vertical_push", "vertical_pull"]},
-                {"day": 5, "type": "lower", "focus": ["hinge", "lunge"]},
-                {"day": 6, "type": "rest"},
-                {"day": 7, "type": "full_body", "focus": ["squat", "horizontal_push"]},
-            ]
-            training_day_count = 5
-        elif days_per_week == 6:
-            structure = [
-                {"day": 1, "type": "upper", "focus": ["horizontal_push", "horizontal_pull"]},
-                {"day": 2, "type": "lower", "focus": ["squat", "hinge"]},
-                {"day": 3, "type": "rest"},
-                {"day": 4, "type": "upper", "focus": ["vertical_push", "vertical_pull"]},
-                {"day": 5, "type": "lower", "focus": ["squat", "hinge"]},
-                {"day": 6, "type": "upper", "focus": ["horizontal_push", "vertical_push"]},
-                {"day": 7, "type": "rest"},
-            ]
-            training_day_count = 6
-        else:
-            structure = [
-                {"day": 1, "type": "upper", "focus": ["horizontal_push", "horizontal_pull"]},
-                {"day": 2, "type": "lower", "focus": ["squat", "hinge"]},
-                {"day": 3, "type": "rest"},
-                {"day": 4, "type": "upper", "focus": ["vertical_push", "vertical_pull"]},
-                {"day": 5, "type": "lower", "focus": ["squat", "hinge"]},
-                {"day": 6, "type": "upper", "focus": ["horizontal_push", "vertical_push"]},
-                {"day": 7, "type": "lower", "focus": ["hinge", "lunge"]},
-            ]
-            training_day_count = 7
-        
-        return {
-            "days_per_cycle": 7,
-            "structure": structure,
-            "training_days": training_day_count,
-            "rest_days": 7 - training_day_count,
-        }
-    
-    def _generate_ppl_structure(self, days_per_week: int) -> Dict[str, Any]:
-        """
-        Generate Push/Pull/Legs (PPL) split structure adapted to user's training frequency.
-        
-        PPL split separates movements by muscle group action pattern.
-        
-        Args:
-            days_per_week: Requested training days (2-7)
-        
-        Returns:
-            Split configuration dict with structure for the week
-        """
-        structure = []
-        training_day_count = 0
-        
-        if days_per_week == 2:
-            structure = [
-                {"day": 1, "type": "push", "focus": ["horizontal_push", "vertical_push"]},
-                {"day": 2, "type": "rest"},
-                {"day": 3, "type": "rest"},
-                {"day": 4, "type": "legs", "focus": ["squat", "hinge"]},
-                {"day": 5, "type": "rest"},
-                {"day": 6, "type": "rest"},
-                {"day": 7, "type": "rest"},
-            ]
-            training_day_count = 2
-        elif days_per_week == 3:
-            structure = [
-                {"day": 1, "type": "push", "focus": ["horizontal_push", "vertical_push"]},
-                {"day": 2, "type": "pull", "focus": ["horizontal_pull", "vertical_pull"]},
-                {"day": 3, "type": "legs", "focus": ["squat", "hinge"]},
-                {"day": 4, "type": "rest"},
-                {"day": 5, "type": "rest"},
-                {"day": 6, "type": "rest"},
-                {"day": 7, "type": "rest"},
-            ]
-            training_day_count = 3
-        elif days_per_week == 4:
-            structure = [
-                {"day": 1, "type": "push", "focus": ["horizontal_push", "vertical_push"]},
-                {"day": 2, "type": "pull", "focus": ["horizontal_pull", "vertical_pull"]},
-                {"day": 3, "type": "legs", "focus": ["squat", "hinge"]},
-                {"day": 4, "type": "rest"},
-                {"day": 5, "type": "push", "focus": ["horizontal_push", "vertical_push"]},
-                {"day": 6, "type": "pull", "focus": ["horizontal_pull", "vertical_pull"]},
-                {"day": 7, "type": "rest"},
-            ]
-            training_day_count = 4
-        elif days_per_week == 5:
-            structure = [
-                {"day": 1, "type": "push", "focus": ["horizontal_push", "vertical_push"]},
-                {"day": 2, "type": "pull", "focus": ["horizontal_pull", "vertical_pull"]},
-                {"day": 3, "type": "legs", "focus": ["squat", "hinge"]},
-                {"day": 4, "type": "rest"},
-                {"day": 5, "type": "push", "focus": ["horizontal_push", "vertical_push"]},
-                {"day": 6, "type": "pull", "focus": ["horizontal_pull", "vertical_pull"]},
-                {"day": 7, "type": "rest"},
-            ]
-            training_day_count = 5
-        elif days_per_week == 6:
-            structure = [
-                {"day": 1, "type": "push", "focus": ["horizontal_push", "vertical_push"]},
-                {"day": 2, "type": "pull", "focus": ["horizontal_pull", "vertical_pull"]},
-                {"day": 3, "type": "legs", "focus": ["squat", "hinge"]},
-                {"day": 4, "type": "rest"},
-                {"day": 5, "type": "push", "focus": ["horizontal_push", "vertical_push"]},
-                {"day": 6, "type": "pull", "focus": ["horizontal_pull", "vertical_pull"]},
-                {"day": 7, "type": "legs", "focus": ["squat", "hinge"]},
-            ]
-            training_day_count = 6
-        else:
-            structure = [
-                {"day": 1, "type": "push", "focus": ["horizontal_push", "vertical_push"]},
-                {"day": 2, "type": "pull", "focus": ["horizontal_pull", "vertical_pull"]},
-                {"day": 3, "type": "legs", "focus": ["squat", "hinge"]},
-                {"day": 4, "type": "push", "focus": ["horizontal_push", "vertical_push"]},
-                {"day": 5, "type": "pull", "focus": ["horizontal_pull", "vertical_pull"]},
-                {"day": 6, "type": "legs", "focus": ["hinge", "lunge"]},
-                {"day": 7, "type": "cardio", "focus": ["cardio", "recovery"]},
-            ]
-            training_day_count = 7
-        
-        return {
-            "days_per_cycle": 7,
-            "structure": structure,
-            "training_days": training_day_count,
-            "rest_days": 7 - training_day_count,
-        }
-    
     def _map_day_type_to_session_type(self, day_type: str) -> SessionType:
         """
         Map split template day type to SessionType enum.
@@ -1604,27 +1399,31 @@ class ProgramService:
     
     async def list_programs(
         self,
-        db: AsyncSession,
         user_id: int,
         status: Optional[str] = None,
     ) -> list:
         """
         List all programs for user, optionally filtered by status.
-        
+
         Args:
-            db: Database session
             user_id: User ID
             status: Optional ProgramStatus filter
-        
+
         Returns:
             List of Program objects
         """
-        query = select(Program).where(Program.user_id == user_id)
+        filter_dict = {"user_id": user_id}
         if status:
-            query = query.where(Program.status == status)
+            filter_dict["status"] = status
         
-        result = await db.execute(query.order_by(Program.created_at.desc()))
-        return list(result.scalars().all())
+        pagination_params = PaginationParams(
+            limit=1000,
+            cursor=None,
+            direction="next"
+        )
+        
+        result = await self._program_repo.list(filter_dict, pagination_params)
+        return result.items
 
 
 # Singleton instance

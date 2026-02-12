@@ -65,7 +65,7 @@ class AdaptationRequest(BaseModel):
     # Persona override (for this session only)
     persona_tone_override: PersonaTone | None = None
     persona_aggression_override: PersonaAggression | None = None
-    
+
     # Conversation context
     thread_id: int | None = None  # For continuing a conversation
     user_message: str | None = None  # Free-form input for conversation

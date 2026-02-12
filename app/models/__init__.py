@@ -35,6 +35,9 @@ from app.models.enums import (
     ActivityCategory,
     ActivitySource,
     MuscleRole,
+    GenerationStatus,
+    UserRole,
+    AuditActionType,
 )
 from app.models.movement import (
     Movement, 
@@ -74,8 +77,10 @@ from app.models.program import (
     ActivityMuscleMap,
     UserFatigueState,
     ActivityInstanceLink,
+    PatternRecoveryState,
 )
 from app.models.logging import WorkoutLog, TopSetLog, PatternExposure, SorenessLog, RecoverySignal, MuscleRecoveryState
+from app.models.audit_log import AuditLog
 from app.models.config import (
     HeuristicConfig,
     ConversationThread,
@@ -86,6 +91,8 @@ from app.models.config import (
     ExternalMetricStream,
 )
 from app.models.circuit import CircuitTemplate
+from app.models.refresh_token import RefreshToken
+from app.models.two_factor_auth import TwoFactorAuth
 
 __all__ = [
     # Enums
@@ -124,6 +131,7 @@ __all__ = [
     "ActivityCategory",
     "ActivitySource",
     "MuscleRole",
+    "GenerationStatus",
     # Models
     "Movement",
     "MovementRelationship",
@@ -158,7 +166,9 @@ __all__ = [
     "ActivityMuscleMap",
     "UserFatigueState",
     "ActivityInstanceLink",
+    "PatternRecoveryState",
     "WorkoutLog",
+    "AuditLog",
     "TopSetLog",
     "PatternExposure",
     "SorenessLog",
@@ -171,4 +181,5 @@ __all__ = [
     "ExternalActivityRecord",
     "ExternalMetricStream",
     "CircuitTemplate",
+    "RefreshToken",
 ]

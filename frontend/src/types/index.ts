@@ -1,4 +1,11 @@
 // ========================================
+// ANATOMY TYPES (re-exported from anatomy.ts)
+// ========================================
+
+export type { MuscleGroup, BodyZone } from './anatomy';
+export { ZONE_MAPPING, BODY_ZONE_LABELS, MUSCLE_DISPLAY_NAMES } from './anatomy';
+
+// ========================================
 // ENUMS (matching backend)
 // ========================================
 
@@ -47,6 +54,14 @@ export enum MicrocycleStatus {
   COMPLETE = 'complete',
 }
 
+export enum GenerationStatus {
+  PENDING = 'PENDING',
+  IN_PROGRESS = 'IN_PROGRESS',
+  COMPLETED = 'COMPLETED',
+  FAILED = 'FAILED',
+  ESTIMATED = 'ESTIMATED',
+}
+
 export enum MovementPattern {
   SQUAT = 'squat',
   HINGE = 'hinge',
@@ -65,6 +80,7 @@ export enum MovementPattern {
   ISOMETRIC = 'isometric',
   CONDITIONING = 'conditioning',
   CARDIO = 'cardio',
+  STRETCH = 'stretch',
 }
 
 export enum PrimaryRegion {
@@ -74,6 +90,9 @@ export enum PrimaryRegion {
   ANTERIOR_UPPER = "anterior upper",
   POSTERIOR_UPPER = "posterior upper",
   FULL_BODY = "full body",
+  LOWER_BODY = "lower body",
+  UPPER_BODY = "upper body",
+  CORE = "core",
 }
 
 export enum PrimaryMuscle {
@@ -126,13 +145,13 @@ export enum ExperienceLevel {
   BEGINNER = 'beginner',
   INTERMEDIATE = 'intermediate',
   ADVANCED = 'advanced',
-  ELITE = 'elite',
 }
 
 export enum Sex {
   MALE = 'male',
   FEMALE = 'female',
-  OTHER = 'other',
+  INTERSEX = 'intersex',
+  UNSPECIFIED = 'unspecified',
 }
 
 export enum MovementRuleType {
@@ -160,11 +179,11 @@ export enum PersonaTone {
 }
 
 export enum PersonaAggression {
-  CONSERVATIVE = 1,
-  MODERATE_CONSERVATIVE = 2,
-  BALANCED = 3,
-  MODERATE_AGGRESSIVE = 4,
-  AGGRESSIVE = 5,
+  CONSERVATIVE = 'CONSERVATIVE',
+  MODERATE_CONSERVATIVE = 'MODERATE_CONSERVATIVE',
+  BALANCED = 'BALANCED',
+  MODERATE_AGGRESSIVE = 'MODERATE_AGGRESSIVE',
+  AGGRESSIVE = 'AGGRESSIVE',
 }
 
 export enum RecoverySource {
@@ -246,6 +265,7 @@ export interface Program {
   persona_aggression?: PersonaAggression;
   is_active: boolean;
   created_at?: string;
+  upcoming_sessions?: Session[];
 }
 
 export interface ProgramUpdate {
@@ -259,7 +279,7 @@ export interface MicrocycleWithSessions extends Microcycle {
 
 export interface ProgramWithMicrocycle {
   program: Program;
-  active_microcycle?: Microcycle;
+  active_microcycle?: MicrocycleWithSessions;
   upcoming_sessions: Session[];
   microcycles?: MicrocycleWithSessions[];
 }
@@ -276,6 +296,7 @@ export interface Microcycle {
   sequence_number: number;
   status: MicrocycleStatus;
   is_deload: boolean;
+  generation_status?: GenerationStatus;
 }
 
 export interface Session {
@@ -289,6 +310,8 @@ export interface Session {
   main?: ExerciseBlock[];
   accessory?: ExerciseBlock[];
   finisher?: FinisherBlock;
+  finisher_circuit?: CircuitBlock;
+  circuit?: CircuitBlock;
   cooldown?: ExerciseBlock[];
   estimated_duration_minutes?: number;
   warmup_duration_minutes?: number;
@@ -297,6 +320,9 @@ export interface Session {
   finisher_duration_minutes?: number;
   cooldown_duration_minutes?: number;
   coach_notes?: string;
+  has_circuits?: boolean;
+  finisher_circuit_id?: number;
+  generation_status?: GenerationStatus;
 }
 
 export interface ExerciseBlock {
@@ -314,6 +340,14 @@ export interface ExerciseBlock {
   notes?: string;
 }
 
+// Session exercise with RPE display enhancements
+export interface SessionExercise extends ExerciseBlock {
+  suggestedRpeMin?: number;
+  suggestedRpeMax?: number;
+  rpeAdjustmentReason?: string;
+  rpeRangeDisplay?: string; // Calculated field for UI display
+}
+
 export interface FinisherBlock {
   type: string;
   circuit_type?: string; // e.g. AMRAP, EMOM, RFT
@@ -321,6 +355,50 @@ export interface FinisherBlock {
   rounds?: string | number; // Support text like "Max Rounds"
   exercises?: ExerciseBlock[];
   notes?: string;
+}
+
+export interface CircuitBlock {
+  circuit_id: number;
+  name: string;
+  circuit_type: string;
+  difficulty_tier: number | string | null;
+  estimated_duration_seconds: number | null;  // Can be null, frontend should handle
+  default_rounds: number | null;  // Can be null, frontend should handle
+  primary_region: string;
+  primary_muscles: string[];
+  fatigue_factor?: number;  // Optional for backward compatibility
+  stimulus_factor?: number;  // Optional for backward compatibility
+  exercises: CircuitExercise[];
+}
+
+export interface CircuitExercise {
+  movement: string;
+  movement_id: number;
+  sequence: number;
+  metric_type: string;
+  reps?: number;
+  distance_meters?: number;
+  duration_seconds?: number;
+  calories?: number;
+  rest_seconds?: number;
+  notes?: string;
+  rx_weight_male?: number;
+  rx_weight_female?: number;
+}
+
+// Circuit template exercise - used for circuit template definitions
+export interface CircuitTemplateExercise {
+  movement_id?: number | null;
+  movement_name?: string | null;
+  reps?: number | null;
+  distance_meters?: number | null;
+  duration_seconds?: number | null;
+  rest_seconds?: number | null;
+  rx_weight_male?: number | null;
+  rx_weight_female?: number | null;
+  metric_type?: string | null;
+  notes?: string | null;
+  original?: string | null;
 }
 
 // ========================================
@@ -332,7 +410,7 @@ export interface CircuitTemplate {
   name: string;
   description?: string;
   circuit_type: CircuitType;
-  exercises_json: Record<string, unknown>[];
+  exercises_json: CircuitTemplateExercise[];
   default_rounds?: number;
   default_duration_seconds?: number;
   tags: string[];
@@ -412,6 +490,20 @@ export interface AdaptedSessionPlan {
 // LOGGING TYPES
 // ========================================
 
+// Exercise completion entry in workout log
+export interface ExerciseCompleted {
+  movement_id?: number;
+  movement_name?: string;
+  sets?: number;
+  reps?: number;
+  weight?: number;
+  distance_meters?: number;
+  duration_seconds?: number;
+  rpe?: number;
+  rir?: number;
+  notes?: string;
+}
+
 export interface WorkoutLogCreate {
   session_id?: number;
   log_date?: string;
@@ -419,7 +511,7 @@ export interface WorkoutLogCreate {
   ended_at?: string;
   completed?: boolean;
   top_sets?: TopSetCreate[];
-  exercises_completed?: Record<string, unknown>[];
+  exercises_completed?: ExerciseCompleted[];
   notes?: string;
   perceived_exertion?: number;
   energy_level?: number;
@@ -448,7 +540,7 @@ export interface WorkoutLog {
   energy_level?: number;
   adherence_percentage?: number;
   coach_feedback_request?: string;
-  exercises_completed?: Record<string, unknown>[];
+  exercises_completed?: ExerciseCompleted[];
   top_sets: TopSetLog[];
   created_at?: string;
 }
@@ -468,6 +560,7 @@ export interface SorenessLogCreate {
   log_date?: string;
   body_part: string;
   soreness_1_5: number;
+  last_rpe?: number;
   notes?: string;
 }
 
@@ -479,6 +572,35 @@ export interface SorenessLog {
   notes?: string;
 }
 
+// Raw recovery payload from external devices
+export interface RecoverySignalPayload {
+  timestamp?: string;
+  device_type?: string;
+  device_model?: string;
+  battery_level?: number;
+  heart_rate_avg?: number;
+  heart_rate_min?: number;
+  heart_rate_max?: number;
+  steps?: number;
+  calories_burned?: number;
+  distance_meters?: number;
+  active_zone_minutes?: number;
+  sleep_stages?: {
+    deep?: number;
+    light?: number;
+    rem?: number;
+    awake?: number;
+  };
+  respiratory_rate?: number;
+  body_battery?: number;
+  stress_score?: number;
+  spo2?: number;
+  skin_temp_offset?: number;
+  training_load?: number;
+  recovery_time?: number;
+  [key: string]: string | number | boolean | undefined | object | null;
+}
+
 export interface RecoverySignalCreate {
   log_date?: string;
   source?: RecoverySource;
@@ -487,7 +609,7 @@ export interface RecoverySignalCreate {
   sleep_score?: number;
   sleep_hours?: number;
   readiness?: number;
-  raw_payload?: Record<string, unknown>;
+  raw_payload?: RecoverySignalPayload;
   notes?: string;
 }
 
@@ -560,7 +682,6 @@ export interface CustomWorkoutCreate {
   finisher?: CustomExerciseCreate[];
   cooldown?: CustomExerciseCreate[];
   
-  main_circuit_id?: number;
   finisher_circuit_id?: number;
 }
 
@@ -651,6 +772,16 @@ export interface EnjoyableActivity {
 }
 
 // ========================================
+// RPE DISPLAY TYPES
+// ========================================
+
+export interface RPEDisplayMode {
+  simple: boolean;      // Single value
+  range: boolean;       // Show range
+  adaptive: boolean;   // Show fatigue-adjusted
+}
+
+// ========================================
 // API RESPONSE TYPES
 // ========================================
 
@@ -702,6 +833,11 @@ export interface UserProfile {
   date_of_birth?: string;
   sex?: Sex;
   height_cm?: number;
+  onboarding_completed_at?: string;
+  onboarding_version?: string;
+  gym_comfort_level?: string;
+  equipment_familiarity?: Record<string, number>;
+  athletic_background?: Record<string, boolean | Record<string, string>>;
   discipline_preferences?: DisciplinePreferences;
   discipline_experience?: DisciplineExperience;
   scheduling_preferences?: SchedulingPreferences;
@@ -717,6 +853,11 @@ export interface UserProfileUpdate {
   date_of_birth?: string;
   sex?: Sex;
   height_cm?: number;
+  onboarding_completed_at?: string;
+  onboarding_version?: string;
+  gym_comfort_level?: string;
+  equipment_familiarity?: Record<string, number>;
+  athletic_background?: Record<string, boolean | Record<string, string>>;
   discipline_preferences?: DisciplinePreferences;
   discipline_experience?: DisciplineExperience;
   scheduling_preferences?: SchedulingPreferences;

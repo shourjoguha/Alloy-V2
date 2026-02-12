@@ -90,7 +90,7 @@ export const useUIStore = create<UIState>()(
       setTheme: (theme) => set({ theme }),
     }),
     {
-      name: 'gainsly-ui-storage',
+      name: 'alloy-ui-storage',
       partialize: (state) => ({
         activeProgramId: state.activeProgramId,
         theme: state.theme,

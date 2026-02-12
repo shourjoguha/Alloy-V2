@@ -1,0 +1,791 @@
+# ============================================================================
+# Diversity-Based Movement Scoring Configuration
+# ============================================================================
+# This configuration defines the scoring hierarchy, compatibility rules,
+# and constraints for selecting diverse movements in workout programs.
+#
+# Global Variables:
+#   DEFAULT_NORMALIZATION_ENABLED: bool = True
+#   DEFAULT_TIEBREAKER_ENABLED: bool = True
+#   DEFAULT_RELAXATION_ENABLED: bool = True
+#   DEFAULT_DEBUG_ENABLED: bool = False
+# ============================================================================
+
+# ---------------------------------------------------------------------------
+# SCORING DIMENSIONS
+# ---------------------------------------------------------------------------
+# 6-level priority hierarchy for movement selection. Lower priority levels
+# are used as tie-breakers when higher levels have equal scores.
+#
+# Priority Levels:
+#   1: Pattern alignment (movement pattern compatibility)
+#   2: Muscle coverage (primary muscle group diversity)
+#   3: Discipline preference (user's preferred training style)
+#   4: Compound bonus (compound movements over isolation)
+#   5: Specialization (focus on target muscle groups)
+#   6: Goal alignment (alignment with primary training goal)
+#   7: Time utilization (efficiency of movement for given time)
+# ---------------------------------------------------------------------------
+scoring_dimensions:
+  pattern_alignment:
+    priority_level: 1
+    weight: 1.0
+    description: "Match movement pattern to block pattern requirements"
+    penalty_mismatch: 0.5
+    bonus_exact_match: 1.0
+
+  muscle_coverage:
+    priority_level: 2
+    weight: 0.8
+    description: "Maximize primary muscle group diversity across program"
+    max_primary_repeats_per_session: 2
+    max_primary_repeats_per_microcycle: 4
+    bonus_unique_primary: 1.0
+    penalty_repeated_primary: 0.3
+
+  discipline_preference:
+    priority_level: 3
+    weight: 0.7
+    description: "Align with user's preferred training discipline"
+    bonus_matched_discipline: 1.0
+    penalty_discipline_mismatch: 0.5
+    neutral_default: 0.8
+
+  compound_bonus:
+    priority_level: 4
+    weight: 0.6
+    description: "Prefer compound movements over isolation exercises"
+    bonus_compound: 1.0
+    neutral_hybrid: 0.8
+    penalty_isolation: 0.5
+
+  specialization:
+    priority_level: 5
+    weight: 0.5
+    description: "Focus on user-defined specialization areas"
+    bonus_target_muscle: 1.0
+    neutral_non_target: 0.7
+    specialization_threshold: 0.7
+
+  goal_alignment:
+    priority_level: 6
+    weight: 0.4
+    description: "Align movement with primary training goal"
+    bonus_goal_match: 1.0
+    neutral_goal_agnostic: 0.8
+    penalty_goal_conflict: 0.4
+
+  time_utilization:
+    priority_level: 7
+    weight: 0.3
+    description: "Prefer movements with favorable time-to-benefit ratio"
+    bonus_efficient: 1.0
+    neutral_average: 0.8
+    penalty_inefficient: 0.5
+
+# ---------------------------------------------------------------------------
+# PATTERN COMPATIBILITY MATRIX
+# ---------------------------------------------------------------------------
+# Defines pattern substitution rules for when exact pattern matches are
+# unavailable. Patterns can substitute within groups based on compatibility.
+#
+# Substitution Groups:
+#   - Lower Body Chain: squat, hinge, lunge
+#   - Upper Body Push: horizontal_push, vertical_push
+#   - Upper Body Pull: horizontal_pull, vertical_pull
+#   - Core: core_stability, core_rotational, core_dynamic
+#   - Cardio: steady_cardio, hiit_cardio
+# ---------------------------------------------------------------------------
+pattern_compatibility_matrix:
+  substitution_groups:
+    lower_body_chain:
+      patterns: ["squat", "hinge", "lunge"]
+      compatibility_matrix:
+        squat:
+          hinge: 0.8
+          lunge: 0.7
+        hinge:
+          squat: 0.8
+          lunge: 0.6
+        lunge:
+          squat: 0.7
+          hinge: 0.6
+
+    upper_push_chain:
+      patterns: ["horizontal_push", "vertical_push"]
+      compatibility_matrix:
+        horizontal_push:
+          vertical_push: 0.9
+        vertical_push:
+          horizontal_push: 0.9
+
+    upper_pull_chain:
+      patterns: ["horizontal_pull", "vertical_pull"]
+      compatibility_matrix:
+        horizontal_pull:
+          vertical_pull: 0.9
+        vertical_pull:
+          horizontal_pull: 0.9
+
+    core_chain:
+      patterns: ["core_stability", "core_rotational", "core_dynamic"]
+      compatibility_matrix:
+        core_stability:
+          core_rotational: 0.7
+          core_dynamic: 0.6
+        core_rotational:
+          core_stability: 0.7
+          core_dynamic: 0.8
+        core_dynamic:
+          core_stability: 0.6
+          core_rotational: 0.8
+
+    cardio_chain:
+      patterns: ["steady_cardio", "hiit_cardio"]
+      compatibility_matrix:
+        steady_cardio:
+          hiit_cardio: 0.5
+        hiit_cardio:
+          steady_cardio: 0.5
+
+  cross_substitution_allowed: false
+  min_substitution_score: 0.6
+  exact_match_bonus: 1.0
+
+# ---------------------------------------------------------------------------
+# MUSCLE RELATIONSHIPS
+# ---------------------------------------------------------------------------
+# Defines primary, synergist, and related muscle mappings for
+# scoring muscle diversity. Movements are penalized for overusing
+# the same primary muscle within sessions and microcycles.
+#
+# Relationship Types:
+#   - primary: Main muscle group targeted by the movement
+#   - synergist: Secondary muscle groups assisting in the movement
+#   - related: Muscles that may experience indirect activation
+# ---------------------------------------------------------------------------
+muscle_relationships:
+  lower_body:
+    quadriceps:
+      primary: true
+      synergists: ["glutes", "hamstrings", "calves"]
+      related: ["adductors", "abductors"]
+    hamstrings:
+      primary: true
+      synergists: ["glutes", "quadriceps", "calves"]
+      related: ["adductors"]
+    glutes:
+      primary: true
+      synergists: ["hamstrings", "quadriceps", "core"]
+      related: ["adductors"]
+    calves:
+      primary: true
+      synergists: ["quadriceps", "hamstrings"]
+      related: ["feet"]
+
+  upper_body_push:
+    chest:
+      primary: true
+      synergists: ["shoulders", "triceps", "core"]
+      related: ["biceps"]
+    shoulders:
+      primary: true
+      synergists: ["chest", "triceps", "core"]
+      related: ["biceps", "upper_back"]
+    triceps:
+      primary: true
+      synergists: ["chest", "shoulders", "core"]
+      related: ["biceps"]
+
+  upper_body_pull:
+    lats:
+      primary: true
+      synergists: ["upper_back", "biceps", "shoulders"]
+      related: ["core"]
+    upper_back:
+      primary: true
+      synergists: ["lats", "biceps", "shoulders", "traps"]
+      related: ["chest"]
+    biceps:
+      primary: true
+      synergists: ["lats", "upper_back", "forearms"]
+      related: ["triceps"]
+    traps:
+      primary: true
+      synergists: ["upper_back", "shoulders", "neck"]
+      related: ["lats"]
+
+  core:
+    abs:
+      primary: true
+      synergists: ["obliques", "lower_back", "hip_flexors"]
+      related: ["shoulders"]
+    obliques:
+      primary: true
+      synergists: ["abs", "lower_back", "core"]
+      related: ["shoulders"]
+    lower_back:
+      primary: true
+      synergists: ["glutes", "abs", "core", "hamstrings"]
+      related: ["upper_back"]
+    hip_flexors:
+      primary: true
+      synergists: ["abs", "quadriceps", "core"]
+      related: ["hamstrings"]
+
+  full_body:
+    core:
+      primary: true
+      synergists: ["abs", "obliques", "lower_back"]
+      related: ["shoulders", "glutes"]
+
+# ---------------------------------------------------------------------------
+# GOAL PROFILES
+# ---------------------------------------------------------------------------
+# Goal-specific weight modifiers for scoring movements. Each goal profile
+# defines preferences for movement characteristics that align with that goal.
+#
+# Available Goals:
+#   - strength: Maximize force production, heavy loads
+#   - hypertrophy: Maximize muscle growth, moderate loads
+#   - endurance: Maximize work capacity, light loads, high volume
+#   - fat_loss: Maximize energy expenditure
+#   - explosiveness: Maximize power output, speed
+#   - speed: Maximize movement velocity
+#   - calisthenics: Maximize bodyweight mastery
+# ---------------------------------------------------------------------------
+goal_profiles:
+  strength:
+    primary_dimensions:
+      - compound_bonus
+      - specialization
+    weight_modifiers:
+      compound_bonus: 1.5
+      pattern_alignment: 1.2
+      muscle_coverage: 0.8
+      discipline_preference: 1.0
+      goal_alignment: 1.0
+      time_utilization: 0.7
+    preferred_patterns:
+      - squat
+      - hinge
+      - horizontal_push
+      - horizontal_pull
+    preferred_rep_range: [1, 6]
+    movement_preferences:
+      compound: 1.5
+      isolation: 0.5
+      olympic: 1.3
+      plyometric: 0.7
+
+  hypertrophy:
+    primary_dimensions:
+      - muscle_coverage
+      - compound_bonus
+      - specialization
+    weight_modifiers:
+      muscle_coverage: 1.3
+      compound_bonus: 1.2
+      specialization: 1.2
+      pattern_alignment: 1.0
+      discipline_preference: 1.0
+      goal_alignment: 1.0
+      time_utilization: 0.8
+    preferred_patterns:
+      - squat
+      - hinge
+      - horizontal_push
+      - vertical_push
+      - horizontal_pull
+      - vertical_pull
+    preferred_rep_range: [6, 15]
+    movement_preferences:
+      compound: 1.3
+      isolation: 1.0
+      olympic: 0.8
+      plyometric: 0.6
+
+  endurance:
+    primary_dimensions:
+      - time_utilization
+      - goal_alignment
+    weight_modifiers:
+      time_utilization: 1.5
+      goal_alignment: 1.3
+      muscle_coverage: 1.0
+      pattern_alignment: 0.8
+      discipline_preference: 1.0
+      compound_bonus: 0.7
+      specialization: 0.6
+    preferred_patterns:
+      - steady_cardio
+      - hiit_cardio
+      - lunge
+      - horizontal_pull
+    preferred_rep_range: [15, 30]
+    movement_preferences:
+      compound: 1.0
+      isolation: 1.0
+      olympic: 0.5
+      plyometric: 1.0
+
+  fat_loss:
+    primary_dimensions:
+      - time_utilization
+      - goal_alignment
+    weight_modifiers:
+      time_utilization: 1.4
+      goal_alignment: 1.3
+      compound_bonus: 1.2
+      muscle_coverage: 1.0
+      pattern_alignment: 0.9
+      discipline_preference: 0.8
+      specialization: 0.6
+    preferred_patterns:
+      - hiit_cardio
+      - squat
+      - hinge
+      - lunge
+    preferred_rep_range: [8, 20]
+    movement_preferences:
+      compound: 1.4
+      isolation: 0.7
+      olympic: 0.9
+      plyometric: 1.2
+
+  explosiveness:
+    primary_dimensions:
+      - goal_alignment
+      - compound_bonus
+    weight_modifiers:
+      goal_alignment: 1.5
+      compound_bonus: 1.3
+      pattern_alignment: 1.0
+      muscle_coverage: 0.7
+      discipline_preference: 1.0
+      specialization: 0.8
+      time_utilization: 0.9
+    preferred_patterns:
+      - hinge
+      - squat
+      - horizontal_push
+    preferred_rep_range: [1, 5]
+    movement_preferences:
+      compound: 1.5
+      isolation: 0.3
+      olympic: 1.5
+      plyometric: 1.5
+
+  speed:
+    primary_dimensions:
+      - goal_alignment
+      - time_utilization
+    weight_modifiers:
+      goal_alignment: 1.5
+      time_utilization: 1.3
+      pattern_alignment: 0.8
+      muscle_coverage: 0.6
+      discipline_preference: 1.0
+      compound_bonus: 0.9
+      specialization: 0.7
+    preferred_patterns:
+      - lunge
+      - hiit_cardio
+      - horizontal_pull
+    preferred_rep_range: [5, 12]
+    movement_preferences:
+      compound: 1.2
+      isolation: 0.5
+      olympic: 1.3
+      plyometric: 1.5
+
+  calisthenics:
+    primary_dimensions:
+      - goal_alignment
+      - discipline_preference
+    weight_modifiers:
+      goal_alignment: 1.5
+      discipline_preference: 1.4
+      pattern_alignment: 1.0
+      muscle_coverage: 1.0
+      compound_bonus: 0.9
+      specialization: 0.8
+      time_utilization: 0.7
+    preferred_patterns:
+      - horizontal_push
+      - vertical_push
+      - horizontal_pull
+      - vertical_pull
+      - lunge
+      - core_dynamic
+    preferred_rep_range: [5, 20]
+    movement_preferences:
+      compound: 1.3
+      isolation: 1.1
+      olympic: 0.3
+      plyometric: 1.0
+
+# ---------------------------------------------------------------------------
+# DISCIPLINE MODIFIERS
+# ---------------------------------------------------------------------------
+# Discipline-specific weight modifiers that override or enhance goal-based
+# scoring. These apply when the user has a strong discipline preference.
+#
+# Available Disciplines:
+#   - olympic: Olympic lifting focus (explosiveness, technical)
+#   - plyometric: Jump training focus (speed, power)
+#   - calisthenics: Bodyweight training focus (mastery, control)
+# ---------------------------------------------------------------------------
+discipline_modifiers:
+  olympic:
+    primary_dimensions:
+      - goal_alignment
+      - compound_bonus
+    weight_modifiers:
+      goal_alignment: 1.4
+      compound_bonus: 1.5
+      pattern_alignment: 1.2
+      muscle_coverage: 0.7
+      discipline_preference: 1.5
+      specialization: 0.8
+      time_utilization: 0.8
+    preferred_patterns:
+      - hinge
+      - squat
+    movement_bonus:
+      snatch: 2.0
+      clean_and_jerk: 2.0
+      power_snatch: 1.8
+      power_clean: 1.8
+      jerk: 1.7
+      clean: 1.7
+    movement_penalty:
+      isolation: 0.3
+      machines: 0.4
+    technical_requirement: high
+    recommended_experience_level: intermediate+
+
+  plyometric:
+    primary_dimensions:
+      - goal_alignment
+      - time_utilization
+    weight_modifiers:
+      goal_alignment: 1.4
+      time_utilization: 1.3
+      compound_bonus: 1.2
+      pattern_alignment: 1.0
+      muscle_coverage: 0.6
+      discipline_preference: 1.5
+      specialization: 0.7
+    preferred_patterns:
+      - lunge
+      - hinge
+      - squat
+    movement_bonus:
+      box_jump: 2.0
+      depth_jump: 1.9
+      broad_jump: 1.8
+      vertical_jump: 1.8
+      plyometric_pushup: 1.7
+      burpee: 1.6
+    movement_penalty:
+      isolation: 0.3
+      machines: 0.2
+      olympic: 0.5
+    rest_requirement_minutes: 3
+    recommended_experience_level: intermediate+
+
+  calisthenics:
+    primary_dimensions:
+      - discipline_preference
+      - goal_alignment
+    weight_modifiers:
+      discipline_preference: 1.6
+      goal_alignment: 1.3
+      pattern_alignment: 1.0
+      muscle_coverage: 1.1
+      compound_bonus: 1.0
+      specialization: 0.9
+      time_utilization: 0.7
+    preferred_patterns:
+      - horizontal_push
+      - vertical_push
+      - horizontal_pull
+      - vertical_pull
+      - lunge
+      - core_dynamic
+    movement_bonus:
+      pullup: 2.0
+      dip: 2.0
+      pushup: 1.8
+      muscleup: 2.0
+      planche: 1.9
+      handstand_pushup: 1.9
+      pistol_squat: 1.8
+    movement_penalty:
+      machines: 0.2
+      heavy_compound: 0.5
+    progression_required: true
+    recommended_experience_level: beginner+
+
+# ---------------------------------------------------------------------------
+# HARD CONSTRAINTS
+# ---------------------------------------------------------------------------
+# Hard constraints that must be satisfied during movement selection.
+# These are enforced before scoring and cannot be violated.
+#
+# Constraint Types:
+#   - equipment: Required equipment availability
+#   - variety: Minimum variety requirements
+#   - time: Time budget constraints
+#   - user_rules: User-defined movement rules
+# ---------------------------------------------------------------------------
+hard_constraints:
+  equipment:
+    enforce: true
+    required_equipment_priority: high
+    available_equipment_bonus: 1.0
+    unavailable_equipment_penalty: 0.0
+    equipment_substitutions_allowed: false
+    required_equipment_types:
+      - barbell
+      - dumbbell
+      - kettlebell
+      - cable
+      - machine
+      - bodyweight
+      - bands
+      - medicine_ball
+      - plyobox
+      - pullup_bar
+      - dip_station
+      - bench
+
+  variety:
+    enforce: true
+    min_unique_movements_per_session: 4
+    min_unique_movements_per_microcycle: 12
+    max_same_movement_per_microcycle: 3
+    min_pattern_variety_per_session: 2
+    max_pattern_repeats_per_session: 3
+    variety_penalty_threshold: 0.5
+
+  time:
+    enforce: true
+    max_time_per_block_minutes: 45
+    max_time_per_session_minutes: 120
+    min_time_per_movement_minutes: 2
+    recommended_time_per_movement_minutes: 5
+    time_buffer_minutes: 5
+    time_efficiency_threshold: 0.7
+
+  user_rules:
+    enforce: true
+    excluded_movements: []
+    required_movements: []
+    movement_preferences: {}
+    movement_restrictions: {}
+    injury_modifiers_enabled: true
+    pregnancy_modifiers_enabled: true
+    age_modifiers_enabled: true
+
+  safety:
+    enforce: true
+    max_difficulty_increase_per_week: 1
+    max_volume_increase_per_week: 0.1
+    require_rest_between_same_movement_days: 2
+    require_deload_frequency_weeks: 4
+    max_consecutive_high_intensity_days: 3
+
+# ---------------------------------------------------------------------------
+# REP AND SET RANGES
+# ---------------------------------------------------------------------------
+# Per-block rep and set ranges for different block types.
+# Circuits are exempt from these ranges and use circuit-specific rules.
+#
+# Block Types:
+#   - warmup: Movement preparation
+#   - main_strength: Primary strength work
+#   - main_hypertrophy: Primary hypertrophy work
+#   - accessory: Supplementary work
+#   - cooldown: Movement recovery
+# ---------------------------------------------------------------------------
+rep_set_ranges:
+  warmup:
+    sets:
+      min: 1
+      max: 3
+      default: 2
+    reps:
+      min: 5
+      max: 15
+      default: 10
+    intensity_pct: [40, 60]
+    rest_seconds: [30, 60]
+    rpe_target: [1, 3]
+    tempo: "2-0-2"
+
+  main_strength:
+    sets:
+      min: 3
+      max: 6
+      default: 4
+    reps:
+      min: 1
+      max: 8
+      default: 5
+    intensity_pct: [75, 95]
+    rest_seconds: [120, 300]
+    rpe_target: [7, 9]
+    tempo: "2-0-X"
+
+  main_hypertrophy:
+    sets:
+      min: 3
+      max: 5
+      default: 4
+    reps:
+      min: 6
+      max: 20
+      default: 12
+    intensity_pct: [60, 80]
+    rest_seconds: [60, 120]
+    rpe_target: [6, 8]
+    tempo: "3-0-2"
+
+  accessory:
+    sets:
+      min: 2
+      max: 4
+      default: 3
+    reps:
+      min: 8
+      max: 25
+      default: 15
+    intensity_pct: [50, 70]
+    rest_seconds: [45, 90]
+    rpe_target: [5, 7]
+    tempo: "3-0-3"
+
+  cooldown:
+    sets:
+      min: 1
+      max: 2
+      default: 1
+    reps:
+      min: 5
+      max: 20
+      default: 10
+    intensity_pct: [20, 40]
+    rest_seconds: [15, 30]
+    rpe_target: [1, 3]
+    tempo: "3-1-3"
+
+  circuit:
+    exempt_from_ranges: true
+    sets:
+      min: 1
+      max: 6
+      default: 3
+    reps:
+      min: 5
+      max: 20
+      default: 10
+    intensity_pct: [40, 70]
+    rest_seconds: [0, 60]
+    rpe_target: [5, 8]
+    tempo: "2-0-2"
+    circuit_types:
+      - amrap
+      - emom
+      - for_time
+      - rounds
+
+# ---------------------------------------------------------------------------
+# GLOBAL CONFIGURATION
+# ---------------------------------------------------------------------------
+# Global settings that control scoring behavior, normalization,
+# tie-breaking, and relaxation strategies.
+# ---------------------------------------------------------------------------
+global_config:
+  # Scoring normalization settings
+  normalization:
+    enabled: DEFAULT_NORMALIZATION_ENABLED
+    method: "min_max"  # Options: min_max, z_score, rank
+    normalize_per_dimension: true
+    normalize_final_score: true
+    scale_range: [0.0, 1.0]
+
+  # Tie-breaking settings
+  tie_breaker:
+    enabled: DEFAULT_TIEBREAKER_ENABLED
+    strategy: "priority_hierarchy"  # Options: priority_hierarchy, random, lexicographic
+    use_secondary_dimensions: true
+    random_seed: null  # null = use system time
+
+  # Constraint relaxation settings
+  relaxation:
+    enabled: DEFAULT_RELAXATION_ENABLED
+    strategy: "soft_constraints"  # Options: soft_constraints, penalty_based, iterative
+    relaxation_order:
+      - muscle_coverage
+      - pattern_alignment
+      - discipline_preference
+      - compound_bonus
+      - specialization
+      - goal_alignment
+      - time_utilization
+    relaxation_threshold: 0.1
+    max_relaxations: 3
+    penalty_factor: 0.5
+
+  # Debug settings
+  debug:
+    enabled: DEFAULT_DEBUG_ENABLED
+    log_scores: true
+    log_dimensions: true
+    log_penalties: true
+    log_selection_reason: true
+    output_level: "detailed"  # Options: minimal, standard, detailed, verbose
+
+# ---------------------------------------------------------------------------
+# RPE CONFIGURATION
+# ---------------------------------------------------------------------------
+# Maximum high-RPE (≥8) sets per session by movement pattern.
+# These sets can be distributed across multiple movements of the same pattern.
+# Example: Hinge pattern max is 6, can be achieved with 2 hinge movements × 3 sets each
+rpe_config:
+  max_high_rpe_sets_per_session:
+    hinge: 6
+    squat: 6
+    lunge: 6
+    olympic: 6
+    horizontal_push: 12
+    vertical_push: 12
+    horizontal_pull: 12
+    vertical_pull: 12
+
+  # Performance settings
+  performance:
+    cache_scores: true
+    cache_expiry_seconds: 300
+    parallel_scoring: false
+    max_parallel_threads: 4
+
+  # Validation settings
+  validation:
+    validate_config: true
+    validate_on_load: true
+    strict_mode: false
+    throw_on_error: false
+    log_warnings: true
+
+# ============================================================================
+# CONFIGURATION METADATA
+# ============================================================================
+metadata:
+  version: "1.0.0"
+  last_updated: "2024-01-01"
+  author: "Alloy Fitness System"
+  description: "Diversity-based movement scoring configuration for workout program generation"
+  schema_version: "1.0"

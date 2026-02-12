@@ -23,6 +23,12 @@ export function useActivityDefinitions() {
   return useQuery({
     queryKey: logsKeys.definitions(),
     queryFn: fetchActivityDefinitions,
+    staleTime: 5 * 60 * 1000, // 5 minutes - data remains fresh for this duration
+    gcTime: 10 * 60 * 1000, // 10 minutes - cache data after it's no longer in use
+    refetchOnWindowFocus: false, // Prevent refetching when window regains focus
+    refetchOnMount: false, // Prevent refetching when component remounts
+    refetchOnReconnect: true, // Still refetch on network reconnect
+    retry: 1, // Only retry failed requests once
   });
 }
 
@@ -33,7 +39,6 @@ async function logActivity(payload: ActivityInstanceCreate): Promise<{ id: numbe
 }
 
 export function useLogActivity() {
-  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: logActivity,
     onSuccess: () => {
@@ -49,7 +54,6 @@ async function logCustomWorkout(payload: CustomWorkoutCreate): Promise<{ id: num
 }
 
 export function useLogCustomWorkout() {
-  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: logCustomWorkout,
     onSuccess: () => {
@@ -62,6 +66,7 @@ interface SorenessLogCreate {
   log_date?: string;
   body_part: string;
   soreness_1_5: number;
+  last_rpe?: number;
   notes?: string;
 }
 
@@ -71,8 +76,6 @@ interface SorenessLogResponse {
   log_date?: string;
   body_part: string;
   soreness_1_5: number;
-  inferred_cause_session_id?: number;
-  inferred_cause_description?: string;
   notes?: string;
   created_at?: string;
 }

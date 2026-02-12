@@ -1,0 +1,206 @@
+# ============================================================================
+# Unified Optimization Configuration for Alloy
+# ============================================================================
+# This configuration consolidates optimization-related settings from multiple
+# sources into a single, maintainable location.
+#
+# Consolidated from:
+# - OR-Tools solver parameters (activity_distribution.py)
+# - Optimization constants (ml/scoring/constants.py)
+# - Relaxation strategy (services/optimization_v2.py)
+# ============================================================================
+
+version: "2.0.0"
+last_updated: "2026-02-10"
+
+# ---------------------------------------------------------------------------
+# OR-TOOLS SOLVER CONFIGURATION
+# ---------------------------------------------------------------------------
+or_tools:
+  min_sets_per_movement: 2
+  max_sets_per_movement: 5
+  volume_target_reduction_pct: 0.2
+  timeout_seconds: 60
+
+# ---------------------------------------------------------------------------
+# OPTIMIZATION CONSTANTS
+# ---------------------------------------------------------------------------
+constants:
+  seconds_per_minute: 60
+  seconds_per_set: 4
+  synergist_set_multiplier: 0.5
+  
+  base_score_multiplier: 1000
+  circuit_stimulus_multiplier: 100
+  cardio_score_multiplier: 10
+  
+  neutral_base_score: 0.5
+  discipline_preference_bonus: 0.2
+  compound_bonus: 0.1
+  
+  dimension_score_weight: 0.2
+  
+  min_qualified_score: 0.5
+  score_min_bound: 0.0
+  score_max_bound: 1.0
+  
+  discipline_weight_relaxation_multiplier: 0.7
+
+# ---------------------------------------------------------------------------
+# EMERGENCY MODE CONFIGURATION
+# ---------------------------------------------------------------------------
+emergency_mode:
+  volume_multiplier: 0.5
+  fatigue_multiplier: 1.5
+  duration_multiplier: 1.25
+
+# ---------------------------------------------------------------------------
+# RPE SUGGESTION CONFIGURATION
+# ---------------------------------------------------------------------------
+rpe_suggestion:
+  # RPE ranges by exercise role
+  warmup_rpe: [1, 3]
+  main_strength_rpe: [7, 9]
+  main_hypertrophy_rpe: [6, 8]
+  accessory_rpe: [5, 7]
+  cooldown_rpe: [1, 3]
+  circuit_rpe: [5, 8]
+
+  # RPE ranges by program type
+  program_type_profiles:
+    strength:
+      primary_compound_rpe: [7.5, 9.5]
+      accessory_rpe: [6, 8]
+      weekly_high_rpe_sets_max: 12
+      microcycle_progression:
+        accumulation: [6.5, 7.5]
+        intensification: [7.5, 8.5]
+        peaking: [8, 9.5]
+        deload: [4, 5.5]
+
+    hypertrophy:
+      primary_compound_rpe: [6.5, 8.5]
+      accessory_rpe: [6, 7.5]
+      weekly_high_rpe_sets_max: 16
+      microcycle_progression:
+        volume_phase: [7, 8]
+        intensity_phase: [7.5, 8.5]
+        fatigue_mgmt: [6, 7]
+        deload: [4, 6]
+
+    endurance:
+      primary_compound_rpe: [5.5, 7.5]
+      accessory_rpe: [6, 8]
+      weekly_high_rpe_sets_max: 20
+      microcycle_progression:
+        daily_undulating: true
+
+    power:
+      primary_compound_rpe: [7, 8.5]
+      accessory_rpe: [6, 8]
+      weekly_high_rpe_sets_max: 8
+      microcycle_progression:
+        wave_loading: true
+
+  # RPE adjustments by CNS load and discipline
+  cns_discipline_adjustments:
+    high_cns_olympic_powerlifting:
+      rpe_cap: 8.5
+      weekly_limit: 3
+
+    moderate_cns_compound:
+      rpe_cap: 9.5
+      weekly_limit: 6
+
+  # Recovery-based RPE reductions
+  fatigue_adjustments:
+    sleep_under_6h: -0.5
+    sleep_under_5h: -1.0
+    hrv_below_baseline_20pct: -1.0
+    soreness_above_7: -1.0
+    consecutive_high_rpe_days: -0.5
+
+  # Recovery time (hours) by RPE level
+  recovery_hours_by_rpe:
+    rpe_6_7: 24
+    rpe_8: 48
+    rpe_9: 72
+    rpe_10: 96
+
+# ---------------------------------------------------------------------------
+# PROGRESSIVE RELAXATION STRATEGY
+# ---------------------------------------------------------------------------
+progressive_relaxation:
+  enabled: true
+  max_relaxation_steps: 6
+  
+  steps:
+    - step: 0
+      name: "strict_mode"
+      description: "No relaxation - all constraints enforced"
+      pattern_compatibility_expansion: false
+      include_synergist_muscles: false
+      discipline_weight_multiplier: 1.0
+      allow_isolation_movements: false
+      allow_generic_movements: false
+      emergency_mode: false
+    
+    - step: 1
+      name: "pattern_expansion"
+      description: "Expand pattern compatibility matrix"
+      pattern_compatibility_expansion: true
+      include_synergist_muscles: false
+      discipline_weight_multiplier: 1.0
+      allow_isolation_movements: false
+      allow_generic_movements: false
+      emergency_mode: false
+    
+    - step: 2
+      name: "synergist_inclusion"
+      description: "Include synergist muscles in volume calculation"
+      pattern_compatibility_expansion: true
+      include_synergist_muscles: true
+      discipline_weight_multiplier: 1.0
+      allow_isolation_movements: false
+      allow_generic_movements: false
+      emergency_mode: false
+    
+    - step: 3
+      name: "discipline_weight_reduction"
+      description: "Reduce discipline preference weight"
+      pattern_compatibility_expansion: true
+      include_synergist_muscles: true
+      discipline_weight_multiplier: 0.7
+      allow_isolation_movements: false
+      allow_generic_movements: false
+      emergency_mode: false
+    
+    - step: 4
+      name: "isolation_allowance"
+      description: "Accept isolation movements"
+      pattern_compatibility_expansion: true
+      include_synergist_muscles: true
+      discipline_weight_multiplier: 0.7
+      allow_isolation_movements: true
+      allow_generic_movements: false
+      emergency_mode: false
+    
+    - step: 5
+      name: "generic_allowance"
+      description: "Accept generic movements (low tier)"
+      pattern_compatibility_expansion: true
+      include_synergist_muscles: true
+      discipline_weight_multiplier: 0.7
+      allow_isolation_movements: true
+      allow_generic_movements: true
+      emergency_mode: false
+    
+    - step: 6
+      name: "emergency_mode"
+      description: "Emergency mode - minimal constraints"
+      pattern_compatibility_expansion: true
+      include_synergist_muscles: true
+      discipline_weight_multiplier: 0.7
+      allow_isolation_movements: true
+      allow_generic_movements: true
+      emergency_mode: true

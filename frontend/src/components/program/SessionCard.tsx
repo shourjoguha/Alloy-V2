@@ -1,28 +1,57 @@
 import { useState } from 'react';
 import { Card } from '@/components/ui/card';
-import { ChevronDown, ChevronUp, Clock, Flame, Coffee } from 'lucide-react';
+import { ChevronDown, ChevronUp, Clock, Flame, Coffee, Dumbbell, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { Session, ExerciseBlock } from '@/types';
+import type { Session, ExerciseBlock, CircuitExercise, CircuitBlock } from '@/types';
+import { SESSION_TYPE_CONFIG } from '@/config/session-display';
 
-interface SessionCardProps {
+export interface SessionCardProps {
   session: Session;
   defaultExpanded?: boolean;
 }
 
-// Session type display config
-const SESSION_TYPE_CONFIG: Record<string, { label: string; icon: string; color: string }> = {
-  upper: { label: 'Upper Body', icon: '💪', color: 'bg-blue-500' },
-  lower: { label: 'Lower Body', icon: '🦵', color: 'bg-green-500' },
-  push: { label: 'Push', icon: '🏋️', color: 'bg-red-500' },
-  pull: { label: 'Pull', icon: '🧲', color: 'bg-purple-500' },
-  legs: { label: 'Legs', icon: '🦵', color: 'bg-green-500' },
-  full_body: { label: 'Full Body', icon: '⚡', color: 'bg-yellow-500' },
-  cardio: { label: 'Cardio', icon: '❤️', color: 'bg-pink-500' },
-  mobility: { label: 'Mobility', icon: '🧘', color: 'bg-teal-500' },
-  recovery: { label: 'Rest Day', icon: '😴', color: 'bg-gray-500' },
-  skill: { label: 'Skill', icon: '🎯', color: 'bg-orange-500' },
-  custom: { label: 'Custom', icon: '⚙️', color: 'bg-gray-500' },
-};
+// Format circuit exercise metrics
+function formatCircuitExercise(ex: CircuitExercise): string {
+  const metric = ex.metric_type?.toLowerCase() || '';
+
+  // Check for max reps pattern
+  if (ex.reps === 999 && ex.notes && ex.notes.toLowerCase().includes('max')) {
+    if (metric === 'calories') {
+      return 'max cals';
+    }
+    return 'max reps';
+  }
+
+  // Time-based metrics
+  if (metric === 'time' && ex.duration_seconds) {
+    const total = ex.duration_seconds;
+    if (total % 60 === 0) {
+      return `${total / 60} min`;
+    }
+    return `${total}s`;
+  }
+
+  // Distance-based metrics
+  if (metric === 'distance' && ex.distance_meters) {
+    const meters = ex.distance_meters;
+    if (meters >= 1000 && meters % 1000 === 0) {
+      return `${meters / 1000} km`;
+    }
+    return `${meters} m`;
+  }
+
+  // Calories-based metrics
+  if (metric === 'calories' && ex.reps) {
+    return `${ex.reps} cal`;
+  }
+
+  // Rep-based metrics (default)
+  if (ex.reps) {
+    return `${ex.reps} reps`;
+  }
+
+  return '';
+}
 
 function formatDate(dateStr: string | undefined): string {
   if (!dateStr) return '';
@@ -46,7 +75,9 @@ function ExerciseList({ exercises, title }: { exercises: ExerciseBlock[] | null 
               {exercise.sets && (
                 <>
                   {exercise.sets}×
-                  {exercise.rep_range_min && exercise.rep_range_max
+                  {exercise.reps
+                    ? `${exercise.reps} reps`
+                    : exercise.rep_range_min && exercise.rep_range_max
                     ? `${exercise.rep_range_min}-${exercise.rep_range_max}`
                     : exercise.duration_seconds
                     ? `${exercise.duration_seconds}s`
@@ -64,15 +95,105 @@ function ExerciseList({ exercises, title }: { exercises: ExerciseBlock[] | null 
   );
 }
 
+function CircuitDisplay({ circuit, title = "Circuit Block" }: { circuit: CircuitBlock; title?: string }) {
+  if (!circuit) return null;
+
+  return (
+    <div className="mt-3">
+      <h4 className="text-xs font-medium text-foreground-muted uppercase tracking-wide mb-2 flex items-center gap-1">
+        <Flame className="h-3 w-3 text-orange-500" />
+        {title}
+      </h4>
+      <div className="p-3 bg-background-input rounded-lg">
+        <div className="flex items-center justify-between mb-2">
+          <span className="font-medium text-foreground">{circuit.name}</span>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-primary bg-primary/10 px-2 py-0.5 rounded font-medium">
+              {circuit.circuit_type}
+            </span>
+            {circuit.estimated_duration_seconds && typeof circuit.estimated_duration_seconds === 'number' && circuit.estimated_duration_seconds > 0 && (
+            <span className="text-xs text-foreground-muted bg-background-input px-2 py-0.5 rounded">
+              {Math.round(circuit.estimated_duration_seconds / 60)} min
+            </span>
+          )}
+          {circuit.default_rounds && typeof circuit.default_rounds === 'number' && circuit.default_rounds > 0 && (
+            <span className="text-xs text-foreground-muted bg-background-input px-2 py-0.5 rounded">
+              {circuit.default_rounds} rounds
+            </span>
+          )}
+          </div>
+        </div>
+        
+        {circuit.primary_muscles && circuit.primary_muscles.length > 0 && (
+          <div className="flex gap-1 flex-wrap mb-2">
+            {circuit.primary_muscles.map((muscle: string, idx: number) => (
+              <span key={idx} className="text-xs px-2 py-0.5 bg-primary/10 text-primary rounded">
+                {muscle}
+              </span>
+            ))}
+          </div>
+        )}
+        
+        {circuit.exercises && circuit.exercises.length > 0 && (
+          <div className="border-t border-border/50 pt-2">
+            <div className="text-xs text-foreground-muted mb-2">Exercises:</div>
+            <div className="space-y-1">
+              {circuit.exercises.map((ex: CircuitExercise, idx: number) => (
+                <div key={idx} className="flex items-center justify-between text-sm">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-foreground font-medium">{ex.movement}</span>
+                      {(ex.rx_weight_male || ex.rx_weight_female) && (
+                        <div className="flex items-center gap-1 text-xs text-foreground-muted">
+                          <Dumbbell className="h-3 w-3" />
+                          {ex.rx_weight_male && (
+                            <span>♂ {ex.rx_weight_male}</span>
+                          )}
+                          {ex.rx_weight_female && (
+                            <span>♀ {ex.rx_weight_female}</span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-foreground-muted">
+                    <span className="bg-background-input px-2 py-0.5 rounded">
+                      {formatCircuitExercise(ex)}
+                    </span>
+                    {ex.rest_seconds && (
+                      <span className="text-foreground-muted/60">
+                        rest {ex.rest_seconds}s
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export function SessionCard({ session, defaultExpanded = false }: SessionCardProps) {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const [notesExpanded, setNotesExpanded] = useState(false);
   
-  const config = SESSION_TYPE_CONFIG[session.session_type] || SESSION_TYPE_CONFIG.custom;
+  const config = SESSION_TYPE_CONFIG[session.session_type as keyof typeof SESSION_TYPE_CONFIG] || SESSION_TYPE_CONFIG.custom;
   const hasContent = session.main && session.main.length > 0;
   const isRestDay = session.session_type === 'recovery';
   const isGenerating = !isRestDay && !hasContent;
   const hasCoachNotes = session.coach_notes && session.coach_notes.length > 0;
+  
+  // Detect error state from coach_notes
+  const isError = hasCoachNotes && session.coach_notes ? (
+    session.coach_notes.toLowerCase().includes('error') ||
+    session.coach_notes.toLowerCase().includes('failed') ||
+    session.coach_notes.toLowerCase().includes('issue') ||
+    session.coach_notes.toLowerCase().includes('problem') ||
+    session.coach_notes.toLowerCase().includes('unable')
+  ) : false;
 
   return (
     <Card variant="grouped"
@@ -81,6 +202,16 @@ export function SessionCard({ session, defaultExpanded = false }: SessionCardPro
         isRestDay && "opacity-60"
       )}
     >
+      {/* Error banner */}
+      {isError && (
+        <div className="bg-amber-500/10 border-b border-amber-500/30 px-4 py-2">
+          <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 text-sm">
+            <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+            <span>Session generation failed. Please regenerate or contact support.</span>
+          </div>
+        </div>
+      )}
+      
       {/* Header - always visible */}
       <button
         onClick={() => hasContent && setIsExpanded(!isExpanded)}
@@ -159,52 +290,13 @@ export function SessionCard({ session, defaultExpanded = false }: SessionCardPro
           {/* Exercise sections */}
           <ExerciseList exercises={session.warmup} title="Warmup" />
           <ExerciseList exercises={session.main} title="Main" />
+          
+          {/* Mutually exclusive: Either circuit block OR accessory block, never both */}
           <ExerciseList exercises={session.accessory} title="Accessory" />
           
-          {/* Finisher */}
-          {session.finisher && (
-            <div className="mt-3">
-              <h4 className="text-xs font-medium text-foreground-muted uppercase tracking-wide mb-2 flex items-center gap-1">
-                <Flame className="h-3 w-3" />
-                Finisher
-              </h4>
-              <div className="flex items-center justify-between text-sm mb-2">
-                <div className="flex items-center gap-2">
-                  <span className="text-primary font-medium uppercase">
-                    {session.finisher.circuit_type || session.finisher.type}
-                  </span>
-                  {session.finisher.duration_minutes && (
-                    <span className="text-foreground-muted text-xs bg-background-input px-1.5 py-0.5 rounded">
-                      {session.finisher.duration_minutes} min
-                    </span>
-                  )}
-                </div>
-                {session.finisher.rounds && (
-                  <span className="text-xs text-foreground-muted font-medium bg-background-input px-2 py-0.5 rounded">
-                    {session.finisher.rounds}
-                  </span>
-                )}
-              </div>
-
-              {session.finisher.exercises && session.finisher.exercises.length > 0 && (
-                <div className="space-y-1.5 border-l-2 border-background-input pl-3">
-                  {session.finisher.exercises.map((ex, idx) => (
-                    <div key={idx} className="flex items-center justify-between text-sm">
-                      <span className="text-foreground">{ex.movement}</span>
-                      <span className="text-foreground-muted text-xs font-mono">
-                        {ex.reps 
-                          ? `${ex.reps} reps`
-                          : ex.duration_seconds 
-                            ? `${ex.duration_seconds}s`
-                            : ex.rep_range_min && ex.rep_range_max
-                              ? `${ex.rep_range_min}-${ex.rep_range_max}`
-                              : ''}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+          {/* Finisher - only finisher_circuit */}
+          {session.finisher_circuit && (
+            <CircuitDisplay circuit={session.finisher_circuit} title="Finisher" />
           )}
 
           <ExerciseList exercises={session.cooldown} title="Cooldown" />

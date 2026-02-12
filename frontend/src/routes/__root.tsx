@@ -5,6 +5,10 @@ import { useAuthStore } from '@/stores/auth-store';
 import { useAuthInitialization } from '@/hooks/useAuthInitialization';
 import { useEffect } from 'react';
 
+const debugLog = (...args: unknown[]) => {
+  if (import.meta.env.DEV) console.log('[RootRoute]', ...args);
+};
+
 export const Route = createRootRoute({
   component: RootComponent,
 });
@@ -12,21 +16,35 @@ export const Route = createRootRoute({
 function RootComponent() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, _hasHydrated } = useAuthStore();
   const isAuthRoute = ['/login', '/register'].includes(location.pathname);
-  const isPublicRoute = isAuthRoute || location.pathname === '/';
+  const isLandingRoute = location.pathname === '/';
+  const isPublicRoute = isAuthRoute || isLandingRoute;
   
   useAuthInitialization();
 
   useEffect(() => {
-    if (!isAuthenticated && !isPublicRoute && !isAuthRoute) {
-      navigate({ to: '/login' } as any);
+    debugLog('Route protection check', {
+      _hasHydrated,
+      isAuthenticated,
+      isPublicRoute,
+      isAuthRoute,
+      pathname: location.pathname
+    });
+
+    // Only redirect after hydration is complete and auth check fails
+    if (_hasHydrated && !isAuthenticated && !isPublicRoute && !isAuthRoute) {
+      console.log('[RootRoute] Redirecting to login - not authenticated');
+      debugLog('Redirecting to login - not authenticated');
+      navigate({ to: '/login' });
     }
-  }, [isAuthenticated, isPublicRoute, isAuthRoute, navigate]);
+  }, [_hasHydrated, isAuthenticated, isPublicRoute, isAuthRoute, navigate, location.pathname]);
 
   return (
     <>
-      {isAuthRoute ? (
+      {isLandingRoute ? (
+        <Outlet />
+      ) : isAuthRoute ? (
         <main className="min-h-dvh bg-background">
           <Outlet />
         </main>

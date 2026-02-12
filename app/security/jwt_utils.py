@@ -1,11 +1,13 @@
 """JWT token utilities for authentication."""
 from datetime import datetime, timedelta
-from typing import Optional
+from typing import Optional, Tuple
+from secrets import token_urlsafe
 
 import bcrypt
 from jose import JWTError, jwt
 
 from app.config.settings import get_settings
+from app.models.user import UserRole
 
 settings = get_settings()
 
@@ -31,7 +33,7 @@ def create_access_token(
     """Create a JWT access token.
 
     Args:
-        data: Data to encode in the token (e.g., {"sub": user_id})
+        data: Data to encode in the token (e.g., {"sub": user_id, "role": role})
         expires_delta: Optional expiration time delta
 
     Returns:
@@ -46,7 +48,7 @@ def create_access_token(
             minutes=settings.access_token_expire_minutes
         )
 
-    to_encode.update({"exp": expire})
+    to_encode.update({"exp": expire, "role": data.get("role", UserRole.USER)})
 
     encoded_jwt = jwt.encode(
         to_encode,
@@ -97,3 +99,78 @@ def verify_token(token: str) -> Optional[int]:
         return None
 
     return int(user_id)
+
+
+def generate_refresh_token() -> str:
+    """Generate a secure random refresh token.
+
+    Returns:
+        Cryptographically secure random token string
+    """
+    return token_urlsafe(64)
+
+
+def hash_refresh_token(token: str) -> str:
+    """Hash a refresh token for secure storage.
+
+    Args:
+        token: Plain text refresh token
+
+    Returns:
+        SHA-256 hashed token (hex string)
+    """
+    import hashlib
+    return hashlib.sha256(token.encode('utf-8')).hexdigest()
+
+
+def verify_refresh_token_hash(token: str, token_hash: str) -> bool:
+    """Verify a refresh token against its stored hash.
+
+    Args:
+        token: Plain text refresh token
+        token_hash: Stored hash
+
+    Returns:
+        True if token matches hash, False otherwise
+    """
+    import hashlib
+    computed_hash = hashlib.sha256(token.encode('utf-8')).hexdigest()
+    return computed_hash == token_hash
+
+
+def create_refresh_token_expiration() -> datetime:
+    """Calculate refresh token expiration time.
+
+    Returns:
+        Expiration datetime based on settings
+    """
+    return datetime.utcnow() + timedelta(days=settings.refresh_token_expire_days)
+
+
+def verify_refresh_token_validity(
+    token: str,
+    token_hash: str,
+    expires_at: datetime,
+    revoked: bool
+) -> Tuple[bool, Optional[str]]:
+    """Verify a refresh token is valid (not expired, not revoked, matches hash).
+
+    Args:
+        token: Plain text refresh token
+        token_hash: Stored bcrypt hash
+        expires_at: Token expiration datetime
+        revoked: Whether token is revoked
+
+    Returns:
+        Tuple of (is_valid, error_message)
+    """
+    if revoked:
+        return False, "Token has been revoked"
+
+    if datetime.utcnow() > expires_at:
+        return False, "Token has expired"
+
+    if not verify_refresh_token_hash(token, token_hash):
+        return False, "Invalid token"
+
+    return True, None

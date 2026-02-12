@@ -24,6 +24,8 @@ from app.models.enums import (
     ActivityCategory,
     ActivitySource,
     MetricType,
+    GenerationStatus,
+    MovementPattern,
 )
 
 
@@ -62,7 +64,7 @@ class Program(Base):
     deload_every_n_microcycles = Column(Integer, nullable=False, default=4)
     
     # Persona snapshot (copied from user at program creation)
-    persona_tone = Column(SQLEnum('drill_sergeant', 'supportive', 'analytical', 'motivational', 'minimalist', name='personatone'), nullable=False)
+    persona_tone = Column(SQLEnum(PersonaTone), nullable=False)
     persona_aggression = Column(SQLEnum(PersonaAggression), nullable=False)
     
     # Status
@@ -115,15 +117,22 @@ class Microcycle(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     program_id = Column(Integer, ForeignKey("programs.id"), nullable=False, index=True)
-    
+
     # Timing
     start_date = Column(Date, nullable=False)
     length_days = Column(Integer, nullable=False)  # 7-14
     sequence_number = Column(Integer, nullable=False)  # 1, 2, 3, etc.
-    
+
     # Status
     status = Column(SQLEnum(MicrocycleStatus), nullable=False, default=MicrocycleStatus.PLANNED)
     is_deload = Column(Boolean, default=False)
+    
+    # RPE Tracking
+    microcycle_phase = Column(String(50), nullable=True)  # accumulation, intensification, peaking, deload
+    rpe_intensity_factor = Column(Float, nullable=True)  # 0.5 = deload, 1.0 = normal, 1.2 = peak
+    
+    # Generation Status
+    generation_status = Column(SQLEnum(GenerationStatus), nullable=False, default=GenerationStatus.PENDING)
     
     # Constraints
     __table_args__ = (
@@ -189,8 +198,12 @@ class Session(Base):
     
     # Coach reasoning
     coach_notes = Column(Text, nullable=True)
-    
+
+    # Generation Status
+    generation_status = Column(SQLEnum(GenerationStatus), nullable=False, default=GenerationStatus.PENDING)
+
     # Session Metrics (Actuals)
+    # DEPRECATED: No longer used in optimization decisions. Preserved for backward compatibility.
     total_stimulus = Column(Float, default=0.0)
     total_fatigue = Column(Float, default=0.0)
     cns_fatigue = Column(Float, default=0.0)
@@ -246,6 +259,11 @@ class SessionExercise(Base):
     # Custom Metrics
     stimulus = Column(Float, nullable=True)
     fatigue = Column(Float, nullable=True)
+    
+    # RPE Suggestion Tracking
+    suggested_rpe_min = Column(Float, nullable=True)
+    suggested_rpe_max = Column(Float, nullable=True)
+    rpe_adjustment_reason = Column(String(100), nullable=True)
 
     # Relationships
     session = relationship("Session", back_populates="exercises")
@@ -255,6 +273,32 @@ class SessionExercise(Base):
 
     def __repr__(self):
         return f"<SessionExercise(id={self.id}, session_id={self.session_id}, movement_id={self.movement_id})>"
+
+
+class PatternRecoveryState(Base):
+    """Tracks recovery status for each movement pattern."""
+    __tablename__ = "pattern_recovery_states"
+
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, primary_key=True)
+    pattern = Column(SQLEnum(MovementPattern, values_callable=lambda obj: [e.value for e in obj]), nullable=False, primary_key=True)
+    
+    # Recovery tracking
+    last_trained_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    last_rpe = Column(Float, nullable=False, default=7.0)  # RPE of last training session
+    recovery_hours_required = Column(Integer, nullable=False, default=24)  # Dynamic based on RPE
+    
+    # Recovery status
+    recovery_percentage = Column(Float, nullable=True, default=0.0)  # 0-100, 100 = fully recovered
+    is_ready = Column(Boolean, nullable=False, default=True)  # Ready for RPE 7+ work
+    
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    user = relationship("User", foreign_keys=[user_id])
+    
+    def __repr__(self):
+        return f"<PatternRecoveryState(user_id={self.user_id}, pattern={self.pattern}, recovered={self.recovery_percentage}%>"
 
 
 class MacroCycle(Base):

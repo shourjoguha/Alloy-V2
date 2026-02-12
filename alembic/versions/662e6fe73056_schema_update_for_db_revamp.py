@@ -53,8 +53,8 @@ def upgrade() -> None:
     enum_definitions = [
         ('relationshiptype', ['progression', 'regression', 'variation', 'antagonist', 'prep']),
         ('spinalcompression', ['none', 'low', 'moderate', 'high']),
-        ('movementpattern', ['squat', 'hinge', 'horizontal_push', 'vertical_push', 'horizontal_pull', 'vertical_pull', 'carry', 'core', 'lunge', 'rotation', 'plyometric', 'olympic', 'isolation', 'mobility', 'isometric', 'conditioning', 'cardio']),
-        ('primarymuscle', ['quadriceps', 'hamstrings', 'glutes', 'calves', 'chest', 'lats', 'upper_back', 'rear_delts', 'front_delts', 'side_delts', 'biceps', 'triceps', 'forearms', 'core', 'obliques', 'lower_back', 'hip_flexors', 'adductors', 'full_body']),
+        ('movementpattern', ['squat', 'hinge', 'horizontal_push', 'vertical_push', 'horizontal_pull', 'vertical_pull', 'carry', 'core', 'lunge', 'rotation', 'plyometric', 'olympic', 'isolation', 'mobility', 'stretch', 'isometric', 'conditioning', 'cardio']),
+        ('primarymuscle', ['quadriceps', 'hamstrings', 'glutes', 'calves', 'chest', 'lats', 'upper_back', 'rear_delts', 'front_delts', 'side_delts', 'biceps', 'triceps', 'forearms', 'core', 'obliques', 'lower_back', 'hip_flexors', 'adductors', 'abductors', 'full_body']),
         ('primaryregion', ['anterior lower', 'posterior lower', 'shoulder', 'anterior upper', 'posterior upper', 'full body', 'lower body', 'upper body']),
         ('cnsload', ['very_low', 'low', 'moderate', 'high', 'very_high']),
         ('skilllevel', ['beginner', 'intermediate', 'advanced', 'expert', 'elite']),
@@ -135,13 +135,13 @@ def upgrade() -> None:
     # I will stick to Lowercase consistency. 
     op.alter_column('movements', 'pattern',
                existing_type=sa.VARCHAR(length=50),
-               type_=sa.Enum('squat', 'hinge', 'horizontal_push', 'vertical_push', 'horizontal_pull', 'vertical_pull', 'carry', 'core', 'lunge', 'rotation', 'plyometric', 'olympic', 'isolation', 'mobility', 'isometric', 'conditioning', 'cardio', name='movementpattern', create_type=False),
+               type_=sa.Enum('squat', 'hinge', 'horizontal_push', 'vertical_push', 'horizontal_pull', 'vertical_pull', 'carry', 'core', 'lunge', 'rotation', 'plyometric', 'olympic', 'isolation', 'mobility', 'stretch', 'isometric', 'conditioning', 'cardio', name='movementpattern', create_type=False),
                existing_nullable=False,
                postgresql_using="LOWER(REPLACE(pattern, ' ', '_'))::movementpattern")
     
     op.alter_column('movements', 'primary_muscle',
                existing_type=sa.VARCHAR(length=50),
-               type_=sa.Enum('quadriceps', 'hamstrings', 'glutes', 'calves', 'chest', 'lats', 'upper_back', 'rear_delts', 'front_delts', 'side_delts', 'biceps', 'triceps', 'forearms', 'core', 'obliques', 'lower_back', 'hip_flexors', 'adductors', 'full_body', name='primarymuscle', create_type=False),
+               type_=sa.Enum('quadriceps', 'hamstrings', 'glutes', 'calves', 'chest', 'lats', 'upper_back', 'rear_delts', 'front_delts', 'side_delts', 'biceps', 'triceps', 'forearms', 'core', 'obliques', 'lower_back', 'hip_flexors', 'adductors', 'abductors', 'full_body', name='primarymuscle', create_type=False),
                existing_nullable=False,
                postgresql_using="LOWER(primary_muscle)::primarymuscle")
     op.alter_column('movements', 'primary_region',

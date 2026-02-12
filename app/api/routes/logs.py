@@ -2,10 +2,12 @@
 from datetime import date
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy import select, and_, func
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.exceptions import NotFoundError, ValidationError
 from app.db.database import get_db
 from app.config.settings import get_settings
 from app.models import (
@@ -63,8 +65,6 @@ async def create_custom_workout_log(
         name=log.workout_name if log.workout_name else f"Custom Workout - {log.log_date}",
         order=0,
         day_number=0,
-        total_stimulus=0.0,
-        total_fatigue=0.0,
         cns_fatigue=0.0,
         muscle_volume_json={},
     )
@@ -87,10 +87,6 @@ async def create_custom_workout_log(
         movement = await db.get(Movement, movement_id)
         if not movement:
             return
-        
-        # Stimulus/Fatigue
-        stats["total_stimulus"] += sets * (movement.stimulus_factor or 1.0)
-        stats["total_fatigue"] += sets * (movement.fatigue_factor or 1.0)
         
         # CNS
         cns_load = movement.cns_load.lower() if isinstance(movement.cns_load, str) else str(movement.cns_load).lower()
@@ -121,8 +117,6 @@ async def create_custom_workout_log(
                 target_rep_range_max=ex.reps,
                 notes=ex.notes or (f"Weight: {ex.weight}" if ex.weight else None),
                 target_duration_seconds=ex.duration_seconds,
-                stimulus=0.0, # Per-exercise stimulus could be calc here too, but schema implies session total?
-                fatigue=0.0,
                 user_id=user_id,
             )
             db.add(session_exercise)
@@ -175,8 +169,6 @@ async def create_custom_workout_log(
         order_counter = await process_exercises(log.cooldown, ExerciseRole.COOL_DOWN, order_counter)
 
     # 4. Update Session Stats
-    session.total_stimulus = stats["total_stimulus"]
-    session.total_fatigue = stats["total_fatigue"]
     session.cns_fatigue = stats["cns_fatigue"]
     session.muscle_volume_json = stats["muscle_volume"]
     db.add(session)
@@ -214,7 +206,7 @@ async def create_workout_log(
     if log.session_id is not None:
         session = await db.get(Session, log.session_id)
         if not session:
-            raise HTTPException(status_code=404, detail="Session not found")
+            raise NotFoundError("Session", details={"session_id": log.session_id})
     
     # Create workout log
     workout_log = WorkoutLog(
@@ -237,12 +229,12 @@ async def create_workout_log(
         # Get movement for e1RM calculation
         movement = await db.get(Movement, top_set.movement_id)
         if not movement:
-            raise HTTPException(status_code=404, detail=f"Movement not found: {top_set.movement_id}")
-        
+            raise NotFoundError("Movement", details={"movement_id": top_set.movement_id})
+
         try:
             pattern_enum = MovementPattern(movement.pattern)
         except Exception:
-            raise HTTPException(status_code=400, detail=f"Movement has invalid pattern: {movement.pattern}")
+            raise ValidationError("pattern", f"Movement has invalid pattern: {movement.pattern}", details={"movement_id": movement.id, "pattern": movement.pattern})
         
         # Calculate e1RM using preferred formula
         formula_enum = E1RM_FORMULAS.get(settings.default_e1rm_formula, E1RM_FORMULAS["epley"])
@@ -401,9 +393,9 @@ async def get_workout_log(
 ):
     """Get a specific workout log by ID."""
     log = await db.get(WorkoutLog, log_id)
-    
+
     if not log or log.user_id != user_id:
-        raise HTTPException(status_code=404, detail="Workout log not found")
+        raise NotFoundError("WorkoutLog", details={"log_id": log_id})
     
     # Get top sets
     top_sets_result = await db.execute(
@@ -480,20 +472,53 @@ async def create_soreness_log(
     
     now = datetime.utcnow()
     
+    # Use provided last_rpe or default to 7.0 if not provided
+    last_rpe = log.last_rpe if log.last_rpe is not None else 7.0
+    
+    # Get initial recovery percentage based on RPE
+    if last_rpe <= 7:
+        initial_recovery = settings.initial_recovery_percent_by_rpe_rpe_6_7  # 60%
+    elif last_rpe <= 8:
+        initial_recovery = settings.initial_recovery_percent_by_rpe_rpe_8  # 40%
+    elif last_rpe <= 9:
+        initial_recovery = settings.initial_recovery_percent_by_rpe_rpe_9  # 30%
+    else:
+        initial_recovery = settings.initial_recovery_percent_by_rpe_rpe_10  # 20%
+    
     if existing:
-        # Update existing state with new soreness level
-        existing.recovery_level = log.soreness_1_5
+        # Update existing state with RPE-based initial recovery
+        existing.recovery_level = initial_recovery
+        existing.last_rpe = last_rpe
         existing.last_updated_at = now
         db.add(existing)
     else:
-        # Create new state
-        recovery_state = MuscleRecoveryState(
-            user_id=user_id,
-            muscle=log.body_part,
-            recovery_level=log.soreness_1_5,
-            last_updated_at=now,
-        )
-        db.add(recovery_state)
+        # Create new state with RPE-based initial recovery
+        # Handle race condition: if another request created it concurrently,
+        # catch IntegrityError and retry with update
+        try:
+            recovery_state = MuscleRecoveryState(
+                user_id=user_id,
+                muscle=log.body_part,
+                recovery_level=initial_recovery,
+                last_rpe=last_rpe,
+                last_updated_at=now,
+            )
+            db.add(recovery_state)
+            await db.flush()
+        except IntegrityError:
+            # Another request created the state concurrently, fetch and update it
+            existing_state = await db.execute(
+                select(MuscleRecoveryState).where(
+                    MuscleRecoveryState.user_id == user_id,
+                    MuscleRecoveryState.muscle == log.body_part
+                )
+            )
+            existing = existing_state.scalar_one_or_none()
+            if existing:
+                existing.recovery_level = initial_recovery
+                existing.last_rpe = last_rpe
+                existing.last_updated_at = now
+                db.add(existing)
     
     await db.commit()
     await db.refresh(soreness)
@@ -550,8 +575,12 @@ async def get_muscle_recovery_states(
     user_id: int = Depends(get_current_user_id),
 ):
     """
-    Get current muscle recovery states with decay applied.
-    Returns recovery levels adjusted for time since last update (1 point per 10 hours decay).
+    Get current muscle recovery states with RPE-aware decay applied.
+    Returns recovery levels adjusted for time since last update using RPE-based decay rates:
+    - RPE 6-7: 1 point per 8 hours
+    - RPE 8: 1 point per 10 hours
+    - RPE 9: 1 point per 12 hours
+    - RPE 10: 1 point per 16 hours
     """
     from datetime import datetime, timedelta
     
@@ -562,22 +591,36 @@ async def get_muscle_recovery_states(
     result = await db.execute(query)
     states = list(result.scalars().all())
     
-    # Apply decay function: 1 point per 10 hours
+    # Apply RPE-aware decay function
     now = datetime.utcnow()
     decayed_states = []
     
     for state in states:
         hours_since_update = (now - state.last_updated_at).total_seconds() / 3600
-        decay_points = int(hours_since_update / 10)
         
-        # Apply decay (minimum 0)
-        decayed_level = max(0, state.recovery_level - decay_points)
+        # Get recovery rate based on last RPE (percentage recovered per hour)
+        last_rpe = state.last_rpe or 7.0
+        if last_rpe <= 7:
+            recovery_rate = settings.recovery_rate_percent_per_hour_rpe_6_7  # 1.667% per hour
+        elif last_rpe <= 8:
+            recovery_rate = settings.recovery_rate_percent_per_hour_rpe_8  # 1.250% per hour
+        elif last_rpe <= 9:
+            recovery_rate = settings.recovery_rate_percent_per_hour_rpe_9  # 0.972% per hour
+        else:
+            recovery_rate = settings.recovery_rate_percent_per_hour_rpe_10  # 0.833% per hour
+        
+        # Calculate recovery gained over time (percentage)
+        recovery_gained = hours_since_update * recovery_rate
+        
+        # Apply recovery gain (maximum 100)
+        decayed_level = min(100, state.recovery_level + recovery_gained)
         
         decayed_states.append(MuscleRecoveryStateResponse(
             id=state.id,
             user_id=state.user_id,
             muscle=state.muscle,
             recovery_level=decayed_level,
+            last_rpe=state.last_rpe,
             last_updated_at=state.last_updated_at,
             created_at=state.created_at,
         ))
@@ -592,8 +635,12 @@ async def get_muscle_recovery_state(
     user_id: int = Depends(get_current_user_id),
 ):
     """
-    Get current recovery state for a specific muscle with decay applied.
-    Returns recovery level adjusted for time since last update (1 point per 10 hours decay).
+    Get current recovery state for a specific muscle with RPE-aware recovery applied.
+    Returns recovery level adjusted for time since last update using RPE-based recovery rates:
+    - RPE 6-7: 1.667% recovery per hour (60% → 100% in 24 hours)
+    - RPE 8: 1.250% recovery per hour (40% → 100% in 48 hours)
+    - RPE 9: 0.972% recovery per hour (30% → 100% in 72 hours)
+    - RPE 10: 0.833% recovery per hour (20% → 100% in 96 hours)
     """
     from datetime import datetime, timedelta
     
@@ -604,24 +651,37 @@ async def get_muscle_recovery_state(
     
     result = await db.execute(query)
     state = result.scalar_one_or_none()
-    
+
     if not state:
-        raise HTTPException(status_code=404, detail="Muscle recovery state not found")
-    
-    # Apply decay function using config setting
+        raise NotFoundError("MuscleRecoveryState", details={"muscle": muscle})
+
+    # Apply RPE-aware recovery function
     now = datetime.utcnow()
-    decay_hours = settings.soreness_decay_hours
     hours_since_update = (now - state.last_updated_at).total_seconds() / 3600
-    decay_points = int(hours_since_update / decay_hours)
     
-    # Apply decay (minimum 0)
-    decayed_level = max(0, state.recovery_level - decay_points)
+    # Get recovery rate based on last RPE (percentage recovered per hour)
+    last_rpe = state.last_rpe or 7.0
+    if last_rpe <= 7:
+        recovery_rate = settings.recovery_rate_percent_per_hour_rpe_6_7  # 1.667% per hour
+    elif last_rpe <= 8:
+        recovery_rate = settings.recovery_rate_percent_per_hour_rpe_8  # 1.250% per hour
+    elif last_rpe <= 9:
+        recovery_rate = settings.recovery_rate_percent_per_hour_rpe_9  # 0.972% per hour
+    else:
+        recovery_rate = settings.recovery_rate_percent_per_hour_rpe_10  # 0.833% per hour
+    
+    # Calculate recovery gained over time (percentage)
+    recovery_gained = hours_since_update * recovery_rate
+    
+    # Apply recovery gain (maximum 100)
+    decayed_level = min(100, state.recovery_level + recovery_gained)
     
     return MuscleRecoveryStateResponse(
         id=state.id,
         user_id=state.user_id,
         muscle=state.muscle,
         recovery_level=decayed_level,
+        last_rpe=state.last_rpe,
         last_updated_at=state.last_updated_at,
         created_at=state.created_at,
     )
@@ -728,9 +788,9 @@ async def get_latest_recovery(
     
     result = await db.execute(query)
     signal = result.scalar_one_or_none()
-    
+
     if not signal:
-        raise HTTPException(status_code=404, detail="No recovery signal found")
+        raise NotFoundError("RecoverySignal", details={"target_date": str(target_date) if target_date else None})
     
     return RecoverySignalResponse(
         id=signal.id,

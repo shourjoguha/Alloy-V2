@@ -1,13 +1,14 @@
 from pathlib import Path
 import json
+import warnings
 
-from fastapi import APIRouter, Depends, HTTPException, status, Header
+from fastapi import APIRouter, Depends, Header
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.database import get_db
 from app.models.circuit import CircuitTemplate
-from app.models.movement import Movement  # Added
+from app.models.movement import Movement
 from app.schemas.circuit import (
     CircuitTemplateResponse,
     CircuitTemplateUpdate,
@@ -15,18 +16,38 @@ from app.schemas.circuit import (
 )
 from app.models.enums import CircuitType
 from app.config.settings import get_settings
+from app.core.exceptions import NotFoundError, AuthorizationError
 
 router = APIRouter()
 settings = get_settings()
 
 
 async def require_admin(x_admin_token: str | None = Header(default=None)) -> bool:
+    """
+    DEPRECATED: Use JWT with admin role instead. See docs/authentication/rbac
+    
+    Verify admin token for protected endpoints.
+    """
+    warnings.warn(
+        "X-Admin-Token is deprecated. Use JWT with admin role instead. "
+        "See docs/authentication/rbac for migration guide.",
+        DeprecationWarning,
+        stacklevel=2
+    )
+    
     if settings.admin_api_token:
         if x_admin_token != settings.admin_api_token:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
+            raise AuthorizationError(
+                "Admin access required",
+                code="AUTH_ADMIN_REQUIRED",
+                details={"reason": "Invalid admin token"}
+            )
     else:
         if not settings.debug:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin features disabled")
+            raise AuthorizationError(
+                "Admin features disabled",
+                details={"reason": "Debug mode is off and no admin token configured"}
+            )
     return True
 
 
@@ -93,7 +114,7 @@ async def get_circuit(
 ):
     circuit = await db.get(CircuitTemplate, circuit_id)
     if not circuit:
-        raise HTTPException(status_code=404, detail="Circuit not found")
+        raise NotFoundError("Circuit", details={"circuit_id": circuit_id})
         
     # Enrich exercises_json with movement names
     if circuit.exercises_json:
@@ -127,7 +148,7 @@ async def get_circuit_admin(
 ):
     circuit = await db.get(CircuitTemplate, circuit_id)
     if not circuit:
-        raise HTTPException(status_code=404, detail="Circuit not found")
+        raise NotFoundError("Circuit", details={"circuit_id": circuit_id})
         
     # Enrich exercises_json
     enriched_exercises = []
@@ -176,7 +197,7 @@ async def update_circuit_admin(
 ):
     circuit = await db.get(CircuitTemplate, circuit_id)
     if not circuit:
-        raise HTTPException(status_code=404, detail="Circuit not found")
+        raise NotFoundError("Circuit", details={"circuit_id": circuit_id})
     circuit.exercises_json = payload.exercises_json
     await db.commit()
     await db.refresh(circuit)

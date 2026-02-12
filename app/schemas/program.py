@@ -13,6 +13,7 @@ from app.models.enums import (
     MicrocycleStatus,
     SessionType,
     ExerciseRole,
+    GenerationStatus,
 )
 
 
@@ -92,7 +93,7 @@ class ProgramCreate(BaseModel):
     
     # Deload
     deload_every_n_microcycles: int = Field(default=4, ge=2, le=8)
-    
+
     # Persona (optional - uses user defaults if not provided)
     persona_tone: PersonaTone | None = None
     persona_aggression: PersonaAggression | None = None
@@ -143,7 +144,7 @@ class ProgramResponse(BaseModel):
     id: int
     user_id: int
     name: str | None = None
-    program_start_date: DateType | None = None  # Renamed to avoid shadowing
+    program_start_date: DateType | None = None
     duration_weeks: int
     goal_1: Goal
     goal_2: Goal
@@ -152,6 +153,8 @@ class ProgramResponse(BaseModel):
     goal_weight_2: int
     goal_weight_3: int
     split_template: SplitTemplate
+    days_per_week: int
+    max_session_duration: int = 60
     progression_style: ProgressionStyle
     hybrid_definition: dict | None = None
     deload_every_n_microcycles: int
@@ -160,7 +163,7 @@ class ProgramResponse(BaseModel):
     is_active: bool = True
     created_at: DatetimeType | None = None
     program_disciplines: list[DisciplineWeight] = []
-    
+
     class Config:
         from_attributes = True
 
@@ -173,10 +176,10 @@ class ProgramResponse(BaseModel):
                 if 'start_date' in data and 'program_start_date' not in data:
                     data['program_start_date'] = data.pop('start_date')
                 return data
-                
+
             if not hasattr(data, 'program_disciplines'):
                 return data
-            
+
             converted_disciplines = []
             for pd in data.program_disciplines:
                 if hasattr(pd, 'discipline') and hasattr(pd, 'weight'):
@@ -184,12 +187,16 @@ class ProgramResponse(BaseModel):
                         'discipline': pd.discipline,
                         'weight': pd.weight
                     })
-            
+
             data_dict = {}
             for field in cls.model_fields:
                 if hasattr(data, field):
                     data_dict[field] = getattr(data, field)
-            
+
+            # Map start_date to program_start_date for ORM instances
+            if hasattr(data, 'start_date') and 'program_start_date' in cls.model_fields:
+                data_dict['program_start_date'] = getattr(data, 'start_date')
+
             data_dict['program_disciplines'] = converted_disciplines
             return data_dict
         except Exception as e:
@@ -209,6 +216,20 @@ class MicrocycleResponse(BaseModel):
     sequence_number: int
     status: MicrocycleStatus
     is_deload: bool = False
+    generation_status: GenerationStatus = GenerationStatus.PENDING
+    
+    @model_validator(mode='before')
+    @classmethod
+    def convert_micro_start_date(cls, data: Any) -> Any:
+        """Convert start_date to micro_start_date for serialization."""
+        try:
+            if isinstance(data, dict):
+                if 'start_date' in data and 'micro_start_date' not in data:
+                    data['micro_start_date'] = data.pop('start_date')
+                return data
+            return data
+        except Exception:
+            return data
     
     class Config:
         from_attributes = True
@@ -256,14 +277,15 @@ class SessionResponse(BaseModel):
     day_number: int
     session_type: SessionType
     intent_tags: list[str] = []
-    
+    generation_status: GenerationStatus = GenerationStatus.PENDING
+
     # Sections (populated from exercises relationship)
     warmup: list[ExerciseBlock] | None = None
     main: list[ExerciseBlock] | None = None
     accessory: list[ExerciseBlock] | None = None
     finisher: FinisherBlock | None = None
     cooldown: list[ExerciseBlock] | None = None
-    
+
     # Time estimation
     estimated_duration_minutes: int | None = None
     warmup_duration_minutes: int | None = None
@@ -271,7 +293,7 @@ class SessionResponse(BaseModel):
     accessory_duration_minutes: int | None = None
     finisher_duration_minutes: int | None = None
     cooldown_duration_minutes: int | None = None
-    
+
     coach_notes: str | None
     
     class Config:
@@ -283,9 +305,14 @@ class SessionResponse(BaseModel):
         """Populate section fields from the exercises relationship."""
         # specific imports to avoid circular dependencies
         from app.models.enums import ExerciseRole
-        
+
         # If data is not an object with 'exercises' attribute, return as is
         if not hasattr(data, 'exercises'):
+            return data
+
+        # If no exercises, return data as is (skeleton session)
+        exercises = data.exercises
+        if not exercises or len(exercises) == 0:
             return data
             
         # Initialize sections
@@ -371,10 +398,11 @@ class SessionResponse(BaseModel):
         result = {
             "id": data.id,
             "microcycle_id": data.microcycle_id,
-            "date": data.date,
+            "date": data.date,  # Will be mapped to session_date via validation_alias
             "day_number": data.day_number,
             "session_type": data.session_type,
-            "intent_tags": data.intent_tags,
+            "intent_tags": data.intent_tags or [],
+            "generation_status": getattr(data, 'generation_status', GenerationStatus.PENDING),
             "warmup": warmup,
             "main": main,
             "accessory": accessory,
@@ -391,12 +419,30 @@ class SessionResponse(BaseModel):
         return result
 
 
+class ProgramWithSessionsResponse(ProgramResponse):
+    """Program response with session data for active programs."""
+    upcoming_sessions: list["SessionResponse"] = []
+
+
 class ProgramWithMicrocycleResponse(BaseModel):
     """Program with active microcycle and sessions."""
     program: ProgramResponse
     active_microcycle: MicrocycleResponse | None
     upcoming_sessions: list[SessionResponse]
     microcycles: list[MicrocycleWithSessionsResponse] = []
-    
+
     class Config:
         from_attributes = True
+
+
+# ============== Program Generation Status Schema ==============
+
+class ProgramGenerationStatusResponse(BaseModel):
+    """Program generation progress status for frontend polling."""
+    program_id: int
+    total_microcycles: int
+    completed_microcycles: int
+    in_progress_microcycles: int
+    pending_microcycles: int
+    current_session_id: int | None
+    current_microcycle_id: int | None

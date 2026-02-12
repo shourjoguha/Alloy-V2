@@ -1,7 +1,7 @@
 """API routes for favorites management."""
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, status
 from pydantic import BaseModel
 from sqlalchemy import select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -9,8 +9,14 @@ from sqlalchemy.orm import selectinload
 
 from app.db.database import get_db
 from app.models import Movement, UserMovementRule
-from app.models.enums import MovementRuleType, RuleCadence
+from app.models.enums import MovementRuleType, RuleCadence, RuleOperator
 from app.api.routes.dependencies import get_current_user_id
+from app.core.exceptions import (
+    NotFoundError,
+    ValidationError,
+    AuthorizationError,
+    ConflictError,
+)
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -122,16 +128,10 @@ async def create_favorite(
     logger.info("create_favorite called: user_id=%s, data=%s", user_id, favorite_data.model_dump())
     
     if favorite_data.movement_id is None:
-        raise HTTPException(
-            status_code=400,
-            detail="movement_id must be provided (program_id not supported)"
-        )
+        raise ValidationError("movement_id", "must be provided (program_id not supported)")
     
     if favorite_data.program_id is not None:
-        raise HTTPException(
-            status_code=400,
-            detail="Program favorites not supported with user_movement_rules"
-        )
+        raise ValidationError("program_id", "Program favorites not supported with user_movement_rules")
     
     # Check if rule already exists for this movement
     existing_result = await db.execute(
@@ -146,10 +146,7 @@ async def create_favorite(
     existing = existing_result.scalar_one_or_none()
     
     if existing:
-        raise HTTPException(
-            status_code=409,
-            detail="Favorite already exists for this movement"
-        )
+        raise ConflictError("Favorite already exists for this movement", details={"movement_id": favorite_data.movement_id})
     
     # Verify movement exists
     movement_result = await db.execute(
@@ -157,7 +154,7 @@ async def create_favorite(
     )
     movement = movement_result.scalar_one_or_none()
     if not movement:
-        raise HTTPException(status_code=404, detail="Movement not found")
+        raise NotFoundError("Movement", details={"movement_id": favorite_data.movement_id})
     
     # Create user_movement_rule with HARD_YES type
     movement_rule = UserMovementRule(
@@ -169,14 +166,9 @@ async def create_favorite(
     )
     db.add(movement_rule)
     
-    try:
-        await db.commit()
-        await db.refresh(movement_rule)
-        logger.info("create_favorite: created movement_rule id=%s for user_id=%s", movement_rule.id, user_id)
-    except Exception as e:
-        await db.rollback()
-        logger.exception("Error creating favorite: %s", e)
-        raise HTTPException(status_code=500, detail="Internal server error") from e
+    await db.commit()
+    await db.refresh(movement_rule)
+    logger.info("create_favorite: created movement_rule id=%s for user_id=%s", movement_rule.id, user_id)
     
     return FavoriteResponse(
         id=movement_rule.id,
@@ -201,10 +193,10 @@ async def delete_favorite(
     rule = rule_result.scalar_one_or_none()
     
     if not rule:
-        raise HTTPException(status_code=404, detail="Favorite not found")
+        raise NotFoundError("Favorite", details={"favorite_id": favorite_id})
     
     if rule.user_id != user_id:
-        raise HTTPException(status_code=403, detail="Not authorized to delete this favorite")
+        raise AuthorizationError("Not authorized to delete this favorite", details={"favorite_id": favorite_id, "user_id": user_id})
     
     await db.delete(rule)
     await db.commit()

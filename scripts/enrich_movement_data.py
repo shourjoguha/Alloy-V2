@@ -59,11 +59,10 @@ def calculate_metrics(m: Movement):
     # 3. Injury Risk Factor (0.0 - 1.0)
     # Driven by Skill Level and Complexity
     skill_map = {
-        SkillLevel.ELITE: 0.9,      # High risk if you fail
-        SkillLevel.EXPERT: 0.8,
-        SkillLevel.ADVANCED: 0.6,
-        SkillLevel.INTERMEDIATE: 0.4,
-        SkillLevel.BEGINNER: 0.2
+        SkillLevel.EXPERT: 0.9,      # Maps ELITE to EXPERT (0.9 fatigue factor)
+        SkillLevel.ADVANCED: 0.8,
+        SkillLevel.INTERMEDIATE: 0.6,
+        SkillLevel.BEGINNER: 0.4
     }
     risk = skill_map.get(SkillLevel(m.skill_level), 0.3)
     

@@ -2,8 +2,7 @@
 import pytest
 import asyncio
 from types import SimpleNamespace
-from unittest.mock import Mock
-from sqlalchemy.ext.asyncio import AsyncSession
+from unittest.mock import Mock, AsyncMock
 
 from app.services.circuit_metrics import CircuitMetricsCalculator
 from app.models.circuit import CircuitTemplate
@@ -11,9 +10,11 @@ from app.models.enums import CircuitType
 
 
 @pytest.fixture
-def mock_db():
-    """Create a mock database session."""
-    return Mock(spec=AsyncSession)
+def mock_movement_repository():
+    """Create a mock movement repository."""
+    repo = Mock()
+    repo.list_by_ids = AsyncMock(return_value=[])
+    return repo
 
 
 @pytest.fixture
@@ -64,15 +65,13 @@ class TestCircuitMetricsCalculator:
     """Test suite for CircuitMetricsCalculator."""
     
     @pytest.mark.asyncio
-    async def test_calculate_basic_metrics(self, mock_db, sample_circuit, sample_movement):
+    async def test_calculate_basic_metrics(self, mock_movement_repository, sample_circuit, sample_movement):
         """Test basic metrics calculation for a simple circuit."""
-        # Setup mock database to return movement
-        mock_result = Mock()
-        mock_result.scalars.return_value.all.return_value = [sample_movement]
-        mock_db.execute.return_value = mock_result
+        # Setup mock repository to return movement
+        mock_movement_repository.list_by_ids.return_value = [sample_movement]
         
-        calculator = CircuitMetricsCalculator()
-        metrics = await calculator.calculate_circuit_metrics(mock_db, sample_circuit, rounds=3, duration_seconds=600)
+        calculator = CircuitMetricsCalculator(mock_movement_repository)
+        metrics = await calculator.calculate_circuit_metrics(sample_circuit, rounds=3, duration_seconds=600)
         
         # Verify metrics are calculated
         assert "fatigue_factor" in metrics
@@ -85,17 +84,15 @@ class TestCircuitMetricsCalculator:
         assert "effective_work_volume" in metrics
     
     @pytest.mark.asyncio
-    async def test_circuit_type_modifiers(self, mock_db, sample_circuit, sample_movement):
+    async def test_circuit_type_modifiers(self, mock_movement_repository, sample_circuit, sample_movement):
         """Test that different circuit types apply correct fatigue modifiers."""
-        mock_result = Mock()
-        mock_result.scalars.return_value.all.return_value = [sample_movement]
-        mock_db.execute.return_value = mock_result
+        mock_movement_repository.list_by_ids.return_value = [sample_movement]
         
-        calculator = CircuitMetricsCalculator()
+        calculator = CircuitMetricsCalculator(mock_movement_repository)
         
         # Test ROUNDS_FOR_TIME (+15% modifier)
         sample_circuit.circuit_type = CircuitType.ROUNDS_FOR_TIME
-        metrics_rft = await calculator.calculate_circuit_metrics(mock_db, sample_circuit, rounds=3)
+        metrics_rft = await calculator.calculate_circuit_metrics(sample_circuit, rounds=3)
         
         # Test AMRAP (+15% modifier)
         sample_circuit.circuit_type = CircuitType.AMRAP
@@ -103,11 +100,11 @@ class TestCircuitMetricsCalculator:
         
         # Test LADDER (+10% modifier)
         sample_circuit.circuit_type = CircuitType.LADDER
-        metrics_ladder = await calculator.calculate_circuit_metrics(mock_db, sample_circuit, rounds=3)
+        metrics_ladder = await calculator.calculate_circuit_metrics(sample_circuit, rounds=3)
         
         # Test EMOM (0% modifier)
         sample_circuit.circuit_type = CircuitType.EMOM
-        metrics_emom = await calculator.calculate_circuit_metrics(mock_db, sample_circuit, rounds=3)
+        metrics_emom = await calculator.calculate_circuit_metrics(sample_circuit, rounds=3)
         
         # Verify fatigue differences based on modifiers
         assert metrics_rft["fatigue_factor"] > 0
@@ -116,25 +113,23 @@ class TestCircuitMetricsCalculator:
         assert metrics_emom["fatigue_factor"] > 0
     
     @pytest.mark.asyncio
-    async def test_recovery_hour_modifiers(self, mock_db, sample_circuit, sample_movement):
+    async def test_recovery_hour_modifiers(self, mock_movement_repository, sample_circuit, sample_movement):
         """Test that different circuit types apply correct recovery modifiers."""
-        mock_result = Mock()
-        mock_result.scalars.return_value.all.return_value = [sample_movement]
-        mock_db.execute.return_value = mock_result
+        mock_movement_repository.list_by_ids.return_value = [sample_movement]
         
-        calculator = CircuitMetricsCalculator()
+        calculator = CircuitMetricsCalculator(mock_movement_repository)
         
         # Test ROUNDS_FOR_TIME (+12 hours)
         sample_circuit.circuit_type = CircuitType.ROUNDS_FOR_TIME
-        metrics_rft = await calculator.calculate_circuit_metrics(mock_db, sample_circuit, rounds=3)
+        metrics_rft = await calculator.calculate_circuit_metrics(sample_circuit, rounds=3)
         
         # Test AMRAP (+8 hours)
         sample_circuit.circuit_type = CircuitType.AMRAP
-        metrics_amrap = await calculator.calculate_circuit_metrics(mock_db, sample_circuit, rounds=3)
+        metrics_amrap = await calculator.calculate_circuit_metrics(sample_circuit, rounds=3)
         
         # Test EMOM (+4 hours)
         sample_circuit.circuit_type = CircuitType.EMOM
-        metrics_emom = await calculator.calculate_circuit_metrics(mock_db, sample_circuit, rounds=3)
+        metrics_emom = await calculator.calculate_circuit_metrics(sample_circuit, rounds=3)
         
         # Verify recovery hours
         base_recovery = sample_movement.min_recovery_hours
@@ -143,14 +138,12 @@ class TestCircuitMetricsCalculator:
         assert metrics_emom["min_recovery_hours"] == base_recovery + 4
     
     @pytest.mark.asyncio
-    async def test_muscle_volume_aggregation(self, mock_db, sample_circuit, sample_movement):
+    async def test_muscle_volume_aggregation(self, mock_movement_repository, sample_circuit, sample_movement):
         """Test that muscle volume is correctly aggregated from exercises."""
-        mock_result = Mock()
-        mock_result.scalars.return_value.all.return_value = [sample_movement]
-        mock_db.execute.return_value = mock_result
+        mock_movement_repository.list_by_ids.return_value = [sample_movement]
         
-        calculator = CircuitMetricsCalculator()
-        metrics = await calculator.calculate_circuit_metrics(mock_db, sample_circuit, rounds=3)
+        calculator = CircuitMetricsCalculator(mock_movement_repository)
+        metrics = await calculator.calculate_circuit_metrics(sample_circuit, rounds=3)
         
         # Verify muscle volume is populated
         assert len(metrics["muscle_volume"]) > 0
@@ -164,7 +157,7 @@ class TestCircuitMetricsCalculator:
             assert hamstrings_volume < quadriceps_volume
     
     @pytest.mark.asyncio
-    async def test_empty_circuit(self, mock_db):
+    async def test_empty_circuit(self, mock_movement_repository):
         """Test handling of circuits with no exercises."""
         circuit = CircuitTemplate(
             id=1,
@@ -174,8 +167,8 @@ class TestCircuitMetricsCalculator:
             default_rounds=1
         )
         
-        calculator = CircuitMetricsCalculator()
-        metrics = await calculator.calculate_circuit_metrics(mock_db, circuit)
+        calculator = CircuitMetricsCalculator(mock_movement_repository)
+        metrics = await calculator.calculate_circuit_metrics(circuit)
         
         # Should return default metrics for empty circuits
         assert metrics["fatigue_factor"] == 1.0
@@ -185,7 +178,7 @@ class TestCircuitMetricsCalculator:
         assert metrics["estimated_work_seconds"] == 0
     
     @pytest.mark.asyncio
-    async def test_circuit_with_multiple_exercises(self, mock_db, sample_circuit):
+    async def test_circuit_with_multiple_exercises(self, mock_movement_repository, sample_circuit):
         """Test circuit with multiple different exercises."""
         # Create multiple movements
         squat = SimpleNamespace(
@@ -245,12 +238,10 @@ class TestCircuitMetricsCalculator:
         ]
         
         # Setup mock
-        mock_result = Mock()
-        mock_result.scalars.return_value.all.return_value = [squat, pushup, deadlift]
-        mock_db.execute.return_value = mock_result
+        mock_movement_repository.list_by_ids.return_value = [squat, pushup, deadlift]
         
-        calculator = CircuitMetricsCalculator()
-        metrics = await calculator.calculate_circuit_metrics(mock_db, sample_circuit, rounds=3)
+        calculator = CircuitMetricsCalculator(mock_movement_repository)
+        metrics = await calculator.calculate_circuit_metrics(sample_circuit, rounds=3)
         
         # Verify total reps
         assert metrics["total_reps"] == (10 + 15 + 5) * 3  # 90 reps total
@@ -262,18 +253,16 @@ class TestCircuitMetricsCalculator:
         assert 1.5 <= metrics["fatigue_factor"] <= 3.0
     
     @pytest.mark.asyncio
-    async def test_rounds_multiplier(self, mock_db, sample_circuit, sample_movement):
+    async def test_rounds_multiplier(self, mock_movement_repository, sample_circuit, sample_movement):
         """Test that rounds correctly multiply volume and fatigue."""
-        mock_result = Mock()
-        mock_result.scalars.return_value.all.return_value = [sample_movement]
-        mock_db.execute.return_value = mock_result
+        mock_movement_repository.list_by_ids.return_value = [sample_movement]
         
-        calculator = CircuitMetricsCalculator()
+        calculator = CircuitMetricsCalculator(mock_movement_repository)
         
         # Test with different round counts
-        metrics_1_round = await calculator.calculate_circuit_metrics(mock_db, sample_circuit, rounds=1)
-        metrics_3_rounds = await calculator.calculate_circuit_metrics(mock_db, sample_circuit, rounds=3)
-        metrics_5_rounds = await calculator.calculate_circuit_metrics(mock_db, sample_circuit, rounds=5)
+        metrics_1_round = await calculator.calculate_circuit_metrics(sample_circuit, rounds=1)
+        metrics_3_rounds = await calculator.calculate_circuit_metrics(sample_circuit, rounds=3)
+        metrics_5_rounds = await calculator.calculate_circuit_metrics(sample_circuit, rounds=5)
         
         # Verify muscle volume scales with rounds
         if "quadriceps" in metrics_1_round["muscle_volume"]:

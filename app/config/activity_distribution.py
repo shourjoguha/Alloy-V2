@@ -1,13 +1,28 @@
 """
 Centralized program-distribution and goal-bias configuration.
 
-This module intentionally includes plain-text bias rationale so the system’s
+This module intentionally includes plain-text bias rationale so the system's
 implicit choices are inspectable (e.g., why fat loss tends to add cardio blocks
 or metabolic finishers).
+
+BACKWARD COMPATIBILITY:
+This module now provides backward compatibility by reading from optimization_config.yaml
+when available, falling back to legacy constants otherwise. During migration, code
+that previously accessed OR-Tools constants directly will work transparently.
 """
 
 from __future__ import annotations
 
+from pathlib import Path
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    pass
+
+
+# ============================================================================
+# Legacy Constants (for backward compatibility)
+# ============================================================================
 
 mobility_max_pct: float = 0.30
 cardio_max_pct: float = 0.75
@@ -50,8 +65,8 @@ goal_finisher_presets = {
         "duration_minutes": 10,
         "notes": "Endurance intervals",
         "exercises": [
-            {"movement": "Row", "duration_seconds": 60},
-            {"movement": "Easy Cardio", "duration_seconds": 30},
+            {"movement": "Rowing Machine", "duration_seconds": 60},
+            {"movement": "Cardio Intervals", "duration_seconds": 30},
         ],
     },
 }
@@ -68,12 +83,129 @@ endurance_heavy_dedicated_cardio_day_default: bool = True
 endurance_heavy_dedicated_cardio_day_min_weight: int = 6
 endurance_heavy_dedicated_cardio_day_min_cycle_length_days: int = 7
 
-# OR-Tools Constraint Solver Configuration
-or_tools_max_fatigue: float = 8.0
-or_tools_solver_timeout_seconds: int = 60
-or_tools_min_sets_per_movement: int = 2
-or_tools_max_sets_per_movement: int = 5
-or_tools_volume_target_reduction_pct: float = 0.2
+
+# ============================================================================
+# Backward Compatibility Functions
+# ============================================================================
+
+def get_or_tools_max_fatigue() -> float:
+    """Get OR-Tools max fatigue from unified config (backward compatibility).
+
+    Returns:
+        Max fatigue value from optimization_config.yaml or legacy default.
+
+    Example:
+        >>> from app.config.activity_distribution import get_or_tools_max_fatigue
+        >>> max_fatigue = get_or_tools_max_fatigue()
+    """
+    try:
+        from app.config.optimization_config_loader import (
+            get_optimization_config,
+            OptimizationConfigLoadError,
+        )
+        config = get_optimization_config()
+        return config.or_tools.max_fatigue
+    except (ImportError, OptimizationConfigLoadError, Exception):
+        # Fall back to legacy constant
+        return 8.0
+
+
+def get_or_tools_solver_timeout_seconds() -> int:
+    """Get OR-Tools solver timeout from unified config (backward compatibility).
+
+    Returns:
+        Solver timeout in seconds from optimization_config.yaml or legacy default.
+
+    Example:
+        >>> from app.config.activity_distribution import get_or_tools_solver_timeout_seconds
+        >>> timeout = get_or_tools_solver_timeout_seconds()
+    """
+    try:
+        from app.config.optimization_config_loader import (
+            get_optimization_config,
+            OptimizationConfigLoadError,
+        )
+        config = get_optimization_config()
+        return config.or_tools.timeout_seconds
+    except (ImportError, OptimizationConfigLoadError, Exception):
+        # Fall back to legacy constant
+        return 60
+
+
+def get_or_tools_min_sets_per_movement() -> int:
+    """Get OR-Tools min sets from unified config (backward compatibility).
+
+    Returns:
+        Minimum sets per movement from optimization_config.yaml or legacy default.
+
+    Example:
+        >>> from app.config.activity_distribution import get_or_tools_min_sets_per_movement
+        >>> min_sets = get_or_tools_min_sets_per_movement()
+    """
+    try:
+        from app.config.optimization_config_loader import (
+            get_optimization_config,
+            OptimizationConfigLoadError,
+        )
+        config = get_optimization_config()
+        return config.or_tools.min_sets_per_movement
+    except (ImportError, OptimizationConfigLoadError, Exception):
+        # Fall back to legacy constant
+        return 2
+
+
+def get_or_tools_max_sets_per_movement() -> int:
+    """Get OR-Tools max sets from unified config (backward compatibility).
+
+    Returns:
+        Maximum sets per movement from optimization_config.yaml or legacy default.
+
+    Example:
+        >>> from app.config.activity_distribution import get_or_tools_max_sets_per_movement
+        >>> max_sets = get_or_tools_max_sets_per_movement()
+    """
+    try:
+        from app.config.optimization_config_loader import (
+            get_optimization_config,
+            OptimizationConfigLoadError,
+        )
+        config = get_optimization_config()
+        return config.or_tools.max_sets_per_movement
+    except (ImportError, OptimizationConfigLoadError, Exception):
+        # Fall back to legacy constant
+        return 5
+
+
+def get_or_tools_volume_target_reduction_pct() -> float:
+    """Get OR-Tools volume reduction from unified config (backward compatibility).
+
+    Returns:
+        Volume target reduction percentage from optimization_config.yaml or legacy default.
+
+    Example:
+        >>> from app.config.activity_distribution import get_or_tools_volume_target_reduction_pct
+        >>> reduction = get_or_tools_volume_target_reduction_pct()
+    """
+    try:
+        from app.config.optimization_config_loader import (
+            get_optimization_config,
+            OptimizationConfigLoadError,
+        )
+        config = get_optimization_config()
+        return config.or_tools.volume_target_reduction_pct
+    except (ImportError, OptimizationConfigLoadError, Exception):
+        # Fall back to legacy constant
+        return 0.2
+
+
+# Legacy OR-Tools constants (kept for backward compatibility, deprecated)
+# These are deprecated and will be removed in a future version.
+# Use the getter functions above instead.
+or_tools_max_fatigue: float = 8.0  # Deprecated: use get_or_tools_max_fatigue()
+or_tools_solver_timeout_seconds: int = 60  # Deprecated: use get_or_tools_solver_timeout_seconds()
+or_tools_min_sets_per_movement: int = 2  # Deprecated: use get_or_tools_min_sets_per_movement()
+or_tools_max_sets_per_movement: int = 5  # Deprecated: use get_or_tools_max_sets_per_movement()
+or_tools_volume_target_reduction_pct: float = 0.2  # Deprecated: use get_or_tools_volume_target_reduction_pct()
 
 BIAS_RATIONALE = {
     "fat_loss": "Bias toward higher weekly energy expenditure via cardio blocks and/or metabolic finishers while keeping lifting exposure for lean mass retention.",
@@ -86,6 +218,5 @@ BIAS_RATIONALE = {
 
 HARD_CODED_BIAS_LOCATIONS = [
     "app/services/program.py:create_program split-template selection (days_per_week-based)",
-    "app/services/program.py:_get_default_split_template (discipline_preference-driven cardio/mobility days)",
     "app/config/activity_distribution.py:goal_bucket_weights and goal_finisher_thresholds",
 ]

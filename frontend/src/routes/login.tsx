@@ -5,11 +5,13 @@ import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { useAuthStore } from '@/stores/auth-store';
 import { login } from '@/api/auth';
 import { useUIStore } from '@/stores/ui-store';
 import { useState } from 'react';
+import { AuthBackground } from '@/components/auth/AuthBackground';
+import '@/styles/landing.css';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -40,32 +42,35 @@ function LoginPage() {
     setIsLoading(true);
     try {
       const response = await login(data.email, data.password);
+      
+      console.log('[Login] Login successful, setting auth state', {
+        userId: response.user_id,
+        tokenLength: response.access_token.length
+      });
+      
       setToken(response.access_token);
       setAuthenticated(true);
-      // We also need to get user details, but login returns user_id. 
-      // We can verify token to get full user details or just fetch it.
-      // For now, we'll verify the token to get user data.
-      // Actually, let's just navigate and let the app handle fetching user if needed,
-      // or do a quick verify.
       
-      // Let's verify to get user object
-      try {
-        const { verifyToken } = await import('@/api/auth');
-        const user = await verifyToken(response.access_token);
-        setUser(user);
-      } catch (e) {
-        console.error('Failed to fetch user details', e);
-      }
+      setUser({
+        id: response.user_id,
+        email: data.email,
+        is_active: true,
+        name: null
+      });
 
       addToast({
         type: 'success',
         message: 'Logged in successfully',
       });
-      navigate({ to: '/' });
-    } catch (error: any) {
+      
+      console.log('[Login] Navigating to dashboard');
+      navigate({ to: '/dashboard' });
+    } catch (error: unknown) {
+      console.error('[Login] Login failed:', error);
+      const err = error as { response?: { data?: { detail?: string } } };
       addToast({
         type: 'error',
-        message: error.response?.data?.detail || 'Login failed. Please check your credentials.',
+        message: err.response?.data?.detail || 'Login failed. Please check your credentials.',
       });
     } finally {
       setIsLoading(false);
@@ -73,55 +78,61 @@ function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold">Login</CardTitle>
-          <CardDescription>
-            Enter your email and password to access your account
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="m@example.com"
-                error={!!form.formState.errors.email}
-                {...form.register('email')}
-              />
-              {form.formState.errors.email && (
-                <p className="text-xs text-error">{form.formState.errors.email.message}</p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                error={!!form.formState.errors.password}
-                {...form.register('password')}
-              />
-              {form.formState.errors.password && (
-                <p className="text-xs text-error">{form.formState.errors.password.message}</p>
-              )}
-            </div>
-            <Button type="submit" className="w-full" isLoading={isLoading}>
-              Login
-            </Button>
-          </form>
-        </CardContent>
-        <CardFooter className="flex flex-col gap-2">
-          <div className="text-center text-sm text-muted-foreground">
-            Don't have an account?{' '}
-            <Link to="/register" className="text-primary hover:underline">
-              Register
-            </Link>
-          </div>
-        </CardFooter>
-      </Card>
-    </div>
+    <AuthBackground>
+      <div className="auth-container">
+        <Card variant="auth">
+          <CardHeader>
+            <CardTitle>Welcome Back</CardTitle>
+            <CardDescription>Enter your credentials to access Alloy</CardDescription>
+          </CardHeader>
+
+          <CardContent>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="auth-form">
+              <div className="form-group">
+                <Label htmlFor="email" className="auth-label">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="your@email.com"
+                  variant="auth"
+                  error={!!form.formState.errors.email}
+                  {...form.register('email')}
+                />
+                {form.formState.errors.email && (
+                  <p className="auth-error">{form.formState.errors.email.message}</p>
+                )}
+              </div>
+
+              <div className="form-group">
+                <Label htmlFor="password" className="auth-label">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  variant="auth"
+                  error={!!form.formState.errors.password}
+                  {...form.register('password')}
+                />
+                {form.formState.errors.password && (
+                  <p className="auth-error">{form.formState.errors.password.message}</p>
+                )}
+              </div>
+
+              <Button type="submit" variant="auth" size="lg" isLoading={isLoading}>
+                Login
+              </Button>
+            </form>
+          </CardContent>
+
+          <CardFooter>
+            <p className="auth-footer-text">
+              Don't have an account?{' '}
+              <Link to="/register" className="auth-link">
+                Register
+              </Link>
+            </p>
+          </CardFooter>
+        </Card>
+      </div>
+    </AuthBackground>
   );
 }

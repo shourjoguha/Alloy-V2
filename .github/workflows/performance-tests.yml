@@ -1,0 +1,205 @@
+name: Performance Regression Tests
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'app/**'
+      - 'tests/performance/**'
+      - 'requirements.txt'
+      - '.github/workflows/performance-tests.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'app/**'
+      - 'tests/performance/**'
+      - 'requirements.txt'
+      - '.github/workflows/performance-tests.yml'
+  schedule:
+    # Run daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+jobs:
+  performance-tests:
+    name: Performance Regression Tests
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        python-version: ['3.12']
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y sqlite3
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Create performance data directory
+        run: |
+          mkdir -p tests/performance_data
+
+      - name: Run performance tests
+        run: |
+          pytest tests/performance/ \
+            --benchmark-only \
+            --benchmark-json=benchmark_results.json \
+            --benchmark-autosave \
+            --benchmark-storage=file://./.benchmarks \
+            -v
+        env:
+          DATABASE_URL: sqlite+aiosqlite:///:memory:
+          ENVIRONMENT: test
+
+      - name: Generate performance report
+        if: always()
+        run: |
+          python -c "
+          import json
+          import sys
+          from pathlib import Path
+
+          # Load benchmark results
+          try:
+              with open('benchmark_results.json', 'r') as f:
+                  data = json.load(f)
+          except FileNotFoundError:
+              print('No benchmark results found')
+              sys.exit(0)
+
+          # Calculate summary
+          total_tests = len(data.get('benchmarks', []))
+          failed_tests = len([b for b in data.get('benchmarks', []) if b.get('stats', {}).get('has_regression', False)])
+
+          print(f'\n{'='*60}')
+          print(f'PERFORMANCE TEST SUMMARY')
+          print(f'{'='*60}')
+          print(f'Total benchmarks: {total_tests}')
+          print(f'Regressions detected: {failed_tests}')
+          print(f'{'='*60}\n')
+
+          # Print individual benchmark results
+          print('Benchmark Results:')
+          print('-' * 60)
+          for bench in data.get('benchmarks', []):
+              name = bench.get('name', 'Unknown')
+              stats = bench.get('stats', {})
+              median = stats.get('median', 'N/A')
+              mean = stats.get('mean', 'N/A')
+              has_regression = stats.get('has_regression', False)
+              regression_pct = stats.get('degradation_percent', 0)
+
+              status = 'REGRESSION' if has_regression else 'PASS'
+              print(f'{name}:')
+              print(f'  Median: {median:.2f}ms, Mean: {mean:.2f}ms')
+              print(f'  Status: {status}')
+              if has_regression:
+                  print(f'  Degradation: +{regression_pct:.1f}%')
+              print()
+
+          # Exit with error if regressions found
+          if failed_tests > 0:
+              print(f'\n❌ PERFORMANCE REGRESSION DETECTED: {failed_tests} benchmarks degraded beyond 10% threshold')
+              sys.exit(1)
+          else:
+              print(f'\n✅ All performance baselines maintained')
+          "
+
+      - name: Upload benchmark results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-results-${{ matrix.python-version }}
+          path: |
+            benchmark_results.json
+            .benchmarks/
+            tests/performance_data/
+          retention-days: 30
+
+      - name: Comment PR with results
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            try {
+              const data = JSON.parse(fs.readFileSync('benchmark_results.json', 'utf8'));
+              const benchmarks = data.benchmarks || [];
+              const regressions = benchmarks.filter(b => b.stats?.has_regression);
+
+              let comment = '## Performance Test Results\n\n';
+              comment += `**Total Benchmarks:** ${benchmarks.length}\n`;
+              comment += `**Regressions:** ${regressions.length}\n\n`;
+
+              if (regressions.length > 0) {
+                comment += '### ⚠️ Performance Regressions Detected\n\n';
+                for (const reg of regressions) {
+                  const degradation = reg.stats?.degradation_percent || 0;
+                  comment += `- **${reg.name}**: +${degradation.toFixed(1)}% degradation\n`;
+                }
+                comment += '\nPlease review and optimize before merging.\n';
+              } else {
+                comment += '### ✅ All Performance Baselines Maintained\n\n';
+                comment += 'No performance regressions detected.\n';
+              }
+
+              comment += '\n---\n*Generated by performance regression tests*';
+
+              const { data: comments } = await github.rest.issues.listComments({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+              });
+
+              const botComment = comments.find(c => c.user.type === 'Bot' && c.body.includes('Performance Test Results'));
+
+              if (botComment) {
+                await github.rest.issues.updateComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  comment_id: botComment.id,
+                  body: comment,
+                });
+              } else {
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: context.issue.number,
+                  body: comment,
+                });
+              }
+            } catch (error) {
+              console.log('Could not comment on PR:', error.message);
+            }
+
+      - name: Update performance baselines
+        if: github.event_name == 'schedule' || contains(github.event.head_commit.message, '[update-baselines]')
+        run: |
+          pytest tests/performance/ \
+            --benchmark-only \
+            --benchmark-autosave \
+            --benchmark-storage=file://./.benchmarks \
+            --benchmark-update-baselines
+
+      - name: Commit updated baselines
+        if: github.event_name == 'schedule' || contains(github.event.head_commit.message, '[update-baselines]')
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add tests/performance_data/performance_baselines.json
+          git diff --quiet && git diff --staged --quiet || git commit -m "Update performance baselines [skip ci]"
+          git push

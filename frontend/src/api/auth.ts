@@ -23,7 +23,7 @@ export async function register(email: string, password: string, name?: string): 
   return data;
 }
 
-export async function verifyToken(token: string): Promise<UserResponse> {
-  const { data } = await apiClient.get<UserResponse>('/auth/verify-token', { params: { token } });
+export async function verifyToken(): Promise<UserResponse> {
+  const { data } = await apiClient.get<UserResponse>('/auth/verify-token');
   return data;
 }

@@ -16,12 +16,15 @@ const buttonVariants = cva(
         ghost: 'text-primary hover:bg-background-secondary',
         destructive: 'bg-error text-white hover:bg-error/90 active:scale-[0.98]',
         link: 'text-primary underline-offset-4 hover:underline',
+        landing: 'bg-gradient-to-r from-[var(--color-background-secondary)] to-[var(--color-primary)] text-[var(--color-foreground)] rounded-full shadow-lg shadow-[var(--color-primary)]/50 hover:shadow-xl hover:shadow-[var(--color-primary)]/70 hover:scale-105 active:scale-100 border border-[var(--color-primary)]/30',
+        auth: 'bg-gradient-to-r from-[var(--color-background-secondary)] to-[var(--color-primary)] text-[var(--color-foreground)] rounded-xl shadow-md shadow-[var(--color-primary)]/40 hover:shadow-lg hover:shadow-[var(--color-primary)]/60 hover:scale-[0.98] active:scale-95 border border-[var(--color-primary)]/20',
       },
       size: {
         default: 'h-10 px-4 py-2',
         sm: 'h-9 rounded-md px-3 text-xs',
         lg: 'h-12 rounded-xl px-6 text-base',
         icon: 'h-10 w-10',
+        landing: 'h-16 px-12 py-4 text-lg',
       },
     },
     defaultVariants: {
@@ -39,15 +42,16 @@ export interface ButtonProps
 }
 
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, isLoading = false, children, disabled, ...props }, ref) => {
+  ({ className, variant, size, asChild = false, isLoading = false, children, disabled, type, ...props }, ref) => {
     const Comp = asChild ? Slot : 'button';
-    
+
     return (
       <Comp
         className={cn(buttonVariants({ variant, size, className }))}
         ref={ref}
         disabled={disabled || isLoading}
         {...props}
+        type={type || 'button'}
       >
         {isLoading ? (
           <>

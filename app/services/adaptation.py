@@ -18,8 +18,9 @@ from app.models.user import (
     UserMovementRule, UserEnjoyableActivity
 )
 from app.models.movement import Movement
-from app.models.program import Session, Microcycle, Program, SessionExercise
+from app.models.program import Session, Microcycle, Program, SessionExercise, PatternRecoveryState
 from app.schemas.daily import AdaptationRequest
+from app.config.settings import get_settings
 
 
 class AdaptationService:
@@ -506,6 +507,95 @@ class AdaptationService:
         return {
             "recovery_score": max(0, min(100, recovery_score)),
             "components": components,
+        }
+    
+    async def calculate_pattern_recovery_hours(
+        self,
+        db: AsyncSession,
+        user_id: int,
+        pattern: str,
+        last_rpe: float | None = None,
+    ) -> Dict[str, Any]:
+        """
+        Calculate recovery hours for a pattern based on RPE.
+        
+        Uses RPE-based recovery hours from config:
+        - RPE 6-7: 24 hours
+        - RPE 8: 48 hours
+        - RPE 9: 72 hours
+        - RPE 10: 96 hours
+        
+        Args:
+            db: Database session
+            user_id: User ID
+            pattern: Movement pattern name
+            last_rpe: Optional RPE of last training session (defaults to 7.0)
+        
+        Returns:
+            Dict with recovery_hours, last_trained_at, recovery_status
+        """
+        from datetime import datetime
+        from app.config.settings import get_settings
+        
+        settings = get_settings()
+        
+        # Get pattern recovery state from database
+        result = await db.execute(
+            select(PatternRecoveryState).where(
+                PatternRecoveryState.user_id == user_id,
+                PatternRecoveryState.pattern == pattern
+            )
+        )
+        state = result.scalar_one_or_none()
+        
+        if not state:
+            return {
+                "pattern": pattern,
+                "recovery_hours": 24,  # Default for RPE 6-7
+                "last_trained_at": None,
+                "recovery_status": "not_trained",
+                "is_ready": True,
+            }
+        
+        # Use provided last_rpe or fall back to state's last_rpe
+        effective_last_rpe = last_rpe or state.last_rpe or 7.0
+        
+        # Get recovery hours based on RPE
+        if effective_last_rpe <= 7:
+            recovery_hours = 24
+        elif effective_last_rpe <= 8:
+            recovery_hours = 48
+        elif effective_last_rpe <= 9:
+            recovery_hours = 72
+        else:
+            recovery_hours = 96
+        
+        # Calculate time since last training
+        now = datetime.utcnow()
+        hours_since_training = (now - state.last_trained_at).total_seconds() / 3600
+        
+        # Determine recovery status
+        is_ready = hours_since_training >= recovery_hours
+        recovery_percentage = min(100, (hours_since_training / recovery_hours) * 100)
+        
+        if is_ready:
+            recovery_status = "ready"
+        elif recovery_percentage >= 75:
+            recovery_status = "mostly_recovered"
+        elif recovery_percentage >= 50:
+            recovery_status = "partially_recovered"
+        else:
+            recovery_status = "recovering"
+        
+        return {
+            "pattern": pattern,
+            "recovery_hours": recovery_hours,
+            "last_trained_at": state.last_trained_at,
+            "last_rpe": effective_last_rpe,
+            "hours_since_training": hours_since_training,
+            "recovery_percentage": recovery_percentage,
+            "recovery_status": recovery_status,
+            "is_ready": is_ready,
         }
 
 

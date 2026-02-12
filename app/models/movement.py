@@ -117,6 +117,7 @@ class Movement(Base):
     is_unilateral = Column(Boolean, default=False)
     
     # Fitness Function Metrics (RL Reward Signals)
+    # DEPRECATED: No longer used in optimization decisions. Preserved for backward compatibility.
     fatigue_factor = Column(Float, nullable=False, default=1.0)  # Systemic fatigue cost (for SFR)
     stimulus_factor = Column(Float, nullable=False, default=1.0) # Raw hypertrophy/strength stimulus (for SFR)
     injury_risk_factor = Column(Float, nullable=False, default=1.0) # Base injury risk (for Biomechanical Match)

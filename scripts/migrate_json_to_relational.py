@@ -13,7 +13,7 @@ from app.models.movement import (
 from app.models.program import Session, SessionExercise
 from app.models.circuit import CircuitTemplate
 from app.models.enums import (
-    MuscleRole, DisciplineType, SessionSection, ExerciseRole, CircuitType,
+    MuscleRole, DisciplineType, ExerciseRole, CircuitType,
     PrimaryMuscle, PrimaryRegion
 )
 
@@ -247,9 +247,9 @@ async def migrate_sessions(session):
         session_has_exercises = False
         
         # Helper to process section
-        async def process_section(json_data, section_enum, role_enum):
+        async def process_section(json_data, role_enum):
             nonlocal count_exercises
-            
+
             def parse_json(val):
                 if isinstance(val, str):
                     try:
@@ -260,17 +260,15 @@ async def migrate_sessions(session):
 
             data = parse_json(json_data)
             if not data:
-                # print(f"No data for section {section_enum.value} in session {row.id}")
                 return False
-            
+
             exercises = []
             if isinstance(data, dict) and 'exercises' in data:
                 exercises = data['exercises']
             elif isinstance(data, list):
                 exercises = data
-            
+
             if not exercises:
-                # print(f"No exercises in section {section_enum.value} for session {row.id}")
                 return False
 
             added_any = False
@@ -316,12 +314,11 @@ async def migrate_sessions(session):
                     max_reps = reps
 
                 # Debug what we are inserting
-                print(f"Inserting SessionExercise: section={section_enum.value}, role={role_enum.value}, mov_id={mov_id}")
+                print(f"Inserting SessionExercise: role={role_enum.value}, mov_id={mov_id}")
 
                 se = SessionExercise(
                     session_id=row.id,
                     movement_id=mov_id,
-                    session_section=section_enum.value,
                     role=role_enum.value,
                     order_in_session=i,
                     target_sets=safe_int(ex.get('sets')) or 1,
@@ -336,9 +333,9 @@ async def migrate_sessions(session):
             
             return added_any
 
-        h1 = await process_section(row.warmup_json, SessionSection.WARMUP, ExerciseRole.WARMUP)
-        h2 = await process_section(row.main_json, SessionSection.MAIN, ExerciseRole.MAIN)
-        h3 = await process_section(row.accessory_json, SessionSection.ACCESSORY, ExerciseRole.ACCESSORY)
+        h1 = await process_section(row.warmup_json, ExerciseRole.WARMUP)
+        h2 = await process_section(row.main_json, ExerciseRole.MAIN)
+        h3 = await process_section(row.accessory_json, ExerciseRole.ACCESSORY)
 
         # Special handling for Finisher Circuit metadata
         if row.finisher_json:
@@ -390,8 +387,8 @@ async def migrate_sessions(session):
             except Exception as e:
                 print(f"Error migrating finisher for session {row.id}: {e}")
 
-        h4 = await process_section(row.finisher_json, SessionSection.FINISHER, ExerciseRole.FINISHER)
-        h5 = await process_section(row.cooldown_json, SessionSection.COOLDOWN, ExerciseRole.COOLDOWN)
+        h4 = await process_section(row.finisher_json, ExerciseRole.FINISHER)
+        h5 = await process_section(row.cooldown_json, ExerciseRole.COOLDOWN)
         
         if h1 or h2 or h3 or h4 or h5:
             count_sessions_processed += 1

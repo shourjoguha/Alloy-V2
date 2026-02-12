@@ -1,16 +1,17 @@
 """
-SessionGeneratorService - Generates workout session content using LLM.
+SessionGeneratorService - Generates workout session content using ML optimization.
 
-Uses Ollama with llama3.1:8b to create exercise blocks for sessions
-based on program goals, session type, and movement library.
+Uses greedy optimization with GlobalMovementScorer
+to create exercise blocks for sessions based on program goals, session type, and movement library.
 """
 
 import asyncio
-import httpx
 import json
 import logging
-import time
+import traceback
+from datetime import datetime
 from typing import Any
+from asyncio import TimeoutError
 
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
@@ -18,11 +19,19 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import activity_distribution as activity_distribution_config
 from app.config.settings import get_settings
-from app.llm import get_llm_provider, LLMConfig, Message
 from app.models import Movement, Session, Program, Microcycle, UserMovementRule, UserProfile, SessionExercise
 from app.models.circuit import CircuitTemplate
-from app.models.enums import SessionType, MovementRuleType, SkillLevel, ExerciseRole, MuscleRole
-from app.services.optimization import ConstraintSolver, OptimizationRequest, SolverMovement, SolverCircuit
+from app.models.enums import SessionType, MovementRuleType, SkillLevel, ExerciseRole, MuscleRole, GenerationStatus
+from app.services.optimization_types import (
+    OptimizationRequestV2,
+    SolverMovement,
+    SolverCircuit,
+)
+from app.services.greedy_optimizer import GreedyOptimizationService
+from app.services.rpe_suggestion_service import (
+    get_rpe_suggestion_service,
+    RPESuggestion,
+)
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
@@ -30,122 +39,16 @@ settings = get_settings()
 
 class SessionGeneratorService:
     """
-    Generates workout session content using LLM.
+    Generates workout session content using ML optimization.
     
     Takes session shells (with type and intent_tags) and populates them
-    with warmup, main, accessory, finisher, and cooldown exercise blocks.
+    with warmup, main, accessory, finisher, and cooldown exercise blocks
+    using constraint satisfaction and diversity optimization.
     """
     
-    # Retry configuration
-    MAX_RETRIES = 3
-    INITIAL_RETRY_DELAY = 2.0  # seconds
-    RETRY_BACKOFF_MULTIPLIER = 2.0
-    MAX_RETRY_DELAY = 10.0  # seconds
-    
     def __init__(self):
-        self.optimizer = ConstraintSolver()
-    
-    async def _call_llm_with_retry(
-        self,
-        provider,
-        messages: list,
-        config,
-        session_id: int | None = None,
-        session_type: str | None = None,
-    ) -> dict[str, Any]:
-        """
-        Call LLM with exponential backoff retry logic.
-        
-        Args:
-            provider: LLM provider instance
-            messages: List of messages for the LLM
-            config: LLM configuration
-            session_id: Optional session ID for logging context
-            session_type: Optional session type for logging context
-            
-        Returns:
-            Parsed JSON response from LLM
-            
-        Raises:
-            Exception: After all retries exhausted
-        """
-        last_exception = None
-        delay = self.INITIAL_RETRY_DELAY
-        
-        for attempt in range(self.MAX_RETRIES):
-            try:
-                start_time = time.time()
-                response = await provider.chat(messages, config)
-                elapsed = time.time() - start_time
-                
-                # Parse response
-                if response.structured_data:
-                    content = response.structured_data
-                else:
-                    content = json.loads(response.content)
-                
-                # Log success
-                if attempt > 0:
-                    logger.info(
-                        f"LLM call succeeded on attempt {attempt + 1}/{self.MAX_RETRIES} "
-                        f"after {elapsed:.1f}s (session_id={session_id}, type={session_type})"
-                    )
-                
-                return content
-                
-            except httpx.TimeoutException as e:
-                last_exception = e
-                logger.warning(
-                    f"LLM request timed out on attempt {attempt + 1}/{self.MAX_RETRIES} "
-                    f"(session_id={session_id}, type={session_type}). "
-                    f"Retrying in {delay:.1f}s..."
-                )
-                
-            except httpx.ConnectError as e:
-                last_exception = e
-                logger.warning(
-                    f"Cannot connect to Ollama on attempt {attempt + 1}/{self.MAX_RETRIES} "
-                    f"(session_id={session_id}, type={session_type}). "
-                    f"Base URL: {provider.base_url}. Retrying in {delay:.1f}s..."
-                )
-                
-            except json.JSONDecodeError as e:
-                last_exception = e
-                content_preview = getattr(response, 'content', 'N/A')[:200] if 'response' in locals() else 'N/A'
-                logger.warning(
-                    f"LLM returned invalid JSON on attempt {attempt + 1}/{self.MAX_RETRIES} "
-                    f"(session_id={session_id}, type={session_type}). "
-                    f"Content preview: {content_preview}. Retrying in {delay:.1f}s..."
-                )
-                
-            except httpx.HTTPStatusError as e:
-                # Don't retry on HTTP errors (4xx/5xx from Ollama)
-                logger.error(
-                    f"Ollama returned HTTP {e.response.status_code} "
-                    f"(session_id={session_id}, type={session_type}): {e.response.text[:200]}"
-                )
-                raise
-                
-            except Exception as e:
-                last_exception = e
-                logger.warning(
-                    f"Unexpected error on attempt {attempt + 1}/{self.MAX_RETRIES} "
-                    f"(session_id={session_id}, type={session_type}): "
-                    f"{type(e).__name__}: {str(e)[:200]}. Retrying in {delay:.1f}s..."
-                )
-            
-            # Don't sleep after last attempt
-            if attempt < self.MAX_RETRIES - 1:
-                await asyncio.sleep(delay)
-                delay = min(delay * self.RETRY_BACKOFF_MULTIPLIER, self.MAX_RETRY_DELAY)
-        
-        # All retries exhausted
-        logger.error(
-            f"LLM call failed after {self.MAX_RETRIES} attempts "
-            f"(session_id={session_id}, type={session_type}). "
-            f"Last error: {type(last_exception).__name__}: {last_exception}"
-        )
-        raise last_exception
+        self.diversity_optimizer = GreedyOptimizationService()
+        self._rpe_service = get_rpe_suggestion_service()
     
     async def generate_session_exercises(
         self,
@@ -190,7 +93,19 @@ class SessionGeneratorService:
                 draft_content = self._convert_optimization_result_to_content(draft_result, session.session_type)
                 logger.info(f"Generated optimal draft for session {session.id}")
         except Exception as e:
-            logger.warning(f"Failed to generate draft session: {e}")
+            logger.error(
+                f"Draft generation failed for session {session.id}",
+                extra={
+                    "event": "draft_generation_failed",
+                    "session_id": session.id,
+                    "session_type": session.session_type.value if hasattr(session.session_type, 'value') else str(session.session_type),
+                    "intent_tags": session.intent_tags,
+                    "exception_type": type(e).__name__,
+                    "exception_message": str(e),
+                    "traceback": traceback.format_exc(),
+                },
+                exc_info=True
+            )
 
         if session.session_type == SessionType.CUSTOM and "conditioning" in (session.intent_tags or []):
             all_movements = await self._load_all_movements(db)
@@ -219,7 +134,7 @@ class SessionGeneratorService:
                     content["finisher"] = finisher
 
         content = self._normalize_session_content(content, session.session_type, session.intent_tags or [], goal_weights)
-        content["reasoning"] = await self._generate_jerome_notes(
+        content["reasoning"] = self._generate_jerome_notes(
             session.session_type,
             session.intent_tags or [],
             goal_weights,
@@ -248,140 +163,211 @@ class SessionGeneratorService:
         
         logger.info(f"[populate_session_by_id] START - session_id={session_id}, program_id={program_id}, microcycle_id={microcycle_id}")
         
-        # 1. Fetch all necessary context (short DB transaction)
-        context_data = {}
-        async with async_session_maker() as db:
-            from sqlalchemy.orm import selectinload
-            session = await db.get(Session, session_id)
-            program = await db.get(Program, program_id, options=[selectinload(Program.program_disciplines)])
-            microcycle = await db.get(Microcycle, microcycle_id)
+        try:
+            # Set generation_status to IN_PROGRESS at the start
+            async with async_session_maker() as db:
+                session = await db.get(Session, session_id)
+                if session:
+                    session.generation_status = GenerationStatus.IN_PROGRESS
+                    db.add(session)
+                    await db.commit()
+                    logger.info(f"[populate_session_by_id] Set generation_status=IN_PROGRESS for session {session_id}")
             
-            if not session or not program or not microcycle:
-                logger.error(f"[populate_session_by_id] FAILED - session={session}, program={program}, microcycle={microcycle}")
+            # 1. Fetch all necessary context (short DB transaction)
+            context_data = {}
+            async with async_session_maker() as db:
+                from sqlalchemy.orm import selectinload
+                session = await db.get(Session, session_id)
+                program = await db.get(Program, program_id, options=[selectinload(Program.program_disciplines)])
+                microcycle = await db.get(Microcycle, microcycle_id)
+                
+                if not session or not program or not microcycle:
+                    logger.error(f"[populate_session_by_id] FAILED - session={session}, program={program}, microcycle={microcycle}")
+                    missing = []
+                    if not session:
+                        missing.append("session")
+                    if not program:
+                        missing.append("program")
+                    if not microcycle:
+                        missing.append("microcycle")
+                    raise ValueError(f"Missing required {', '.join(missing)} for session_id={session_id}, program_id={program_id}, microcycle_id={microcycle_id}")
+                
+                logger.info(f"[populate_session_by_id] Fetched session type={session.session_type}, day={session.day_number}")
+                
+                # Fetch supporting data
+                movements_by_pattern = await self._load_movements_by_pattern(db)
+                movement_rules = await self._load_user_movement_rules(db, program.user_id)
+                user_profile = await db.get(UserProfile, program.user_id)
+                all_movements = await self._load_all_movements(db)
+                
+                # Load program disciplines from junction table
+                program_disciplines = []
+                for pd in program.program_disciplines:
+                    program_disciplines.append({
+                        "discipline": pd.discipline_type,
+                        "weight": pd.weight
+                    })
+                
+                # Store in context (convert Enums to values for safety)
+                context_data = {
+                    "program": {
+                        "goal_1": program.goal_1,
+                        "goal_2": program.goal_2,
+                        "goal_3": program.goal_3,
+                        "goal_weight_1": program.goal_weight_1,
+                        "goal_weight_2": program.goal_weight_2,
+                        "goal_weight_3": program.goal_weight_3,
+                        "split_template": program.split_template,
+                        "days_per_week": program.days_per_week,
+                        "progression_style": program.progression_style,
+                        "duration_weeks": program.duration_weeks,
+                        "deload_every_n_microcycles": program.deload_every_n_microcycles,
+                        "disciplines_json": program_disciplines,
+                        "user_id": program.user_id,
+                        "max_session_duration": program.max_session_duration,
+                    },
+                    "session": {
+                        "id": session.id,
+                        "session_type": session.session_type,
+                        "intent_tags": session.intent_tags,
+                        "day_number": session.day_number,
+                    },
+                    "microcycle": {
+                        "is_deload": microcycle.is_deload,
+                        "sequence_number": microcycle.sequence_number,
+                        "microcycle_phase": microcycle.microcycle_phase,
+                    },
+                    "movements_by_pattern": movements_by_pattern,
+                    "movement_rules": movement_rules,
+                    # Detach objects manually or use dictionaries
+                    "all_movements": all_movements, 
+                    "discipline_preferences": user_profile.discipline_preferences if user_profile else None,
+                    "scheduling_preferences": user_profile.scheduling_preferences if user_profile else None,
+                    "equipment_available": user_profile.equipment_available if user_profile else None,
+                }
+
+            # 2. Generate Content (Long running, NO DB connection)
+            # We pass the context data instead of DB objects where possible
+
+            # Determine fatigued muscles
+            fatigued_muscles = []
+            if previous_day_volume:
+                fatigued_muscles = [m for m, v in previous_day_volume.items() if v > 2]
+
+            # Set timeout based on session type (10s per session generation)
+            # 140s max per microcycle (14 sessions × 10s each)
+            session_type = context_data["session"]["session_type"]
+            is_llm_session = session_type == SessionType.CUSTOM and "conditioning" in (context_data["session"].get("intent_tags") or [])
+            timeout_seconds = 10
+
+            try:
+                content = await asyncio.wait_for(
+                    self.generate_session_exercises_offline(
+                        context_data,
+                        used_movements,
+                        used_movement_groups,
+                        used_accessory_movements,
+                        fatigued_muscles
+                    ),
+                    timeout=timeout_seconds
+                )
+                logger.info(f"[populate_session_by_id] Generated content: {list(content.keys())}")
+            except TimeoutError:
+                # Mark session as FAILED with timeout error message
+                timeout_msg = f"Session generation timed out after {timeout_seconds}s (session_type={session_type})"
+                logger.error(f"[populate_session_by_id] {timeout_msg}")
+
+                async with async_session_maker() as db:
+                    session = await db.get(Session, session_id)
+                    if session:
+                        session.generation_status = GenerationStatus.FAILED
+                        session.coach_notes = f"Generation timeout ({timeout_seconds}s). Please try regenerating."
+                        db.add(session)
+                        await db.commit()
+                        logger.info(f"[populate_session_by_id] Set generation_status=FAILED (timeout) for session {session_id}")
+
+                # Continue to next session by returning empty volume
+                logger.info(f"[populate_session_by_id] Continuing to next session after timeout")
                 return {}
             
-            logger.info(f"[populate_session_by_id] Fetched session type={session.session_type}, day={session.day_number}")
-            
-            # Fetch supporting data
-            movements_by_pattern = await self._load_movements_by_pattern(db)
-            movement_rules = await self._load_user_movement_rules(db, program.user_id)
-            user_profile = await db.get(UserProfile, program.user_id)
-            all_movements = await self._load_all_movements(db)
-            
-            # Load program disciplines from junction table
-            program_disciplines = []
-            for pd in program.program_disciplines:
-                program_disciplines.append({
-                    "discipline": pd.discipline_type,
-                    "weight": pd.weight
-                })
-            
-            # Store in context (convert Enums to values for safety)
-            context_data = {
-                "program": {
-                    "goal_1": program.goal_1,
-                    "goal_2": program.goal_2,
-                    "goal_3": program.goal_3,
-                    "goal_weight_1": program.goal_weight_1,
-                    "goal_weight_2": program.goal_weight_2,
-                    "goal_weight_3": program.goal_weight_3,
-                    "split_template": program.split_template,
-                    "days_per_week": program.days_per_week,
-                    "progression_style": program.progression_style,
-                    "duration_weeks": program.duration_weeks,
-                    "deload_every_n_microcycles": program.deload_every_n_microcycles,
-                    "disciplines_json": program_disciplines,
-                    "user_id": program.user_id,
-                    "max_session_duration": program.max_session_duration,
-                },
-                "session": {
-                    "id": session.id,
-                    "session_type": session.session_type,
-                    "intent_tags": session.intent_tags,
-                    "day_number": session.day_number,
-                },
-                "microcycle": {
-                    "is_deload": microcycle.is_deload,
-                    "sequence_number": microcycle.sequence_number,
-                },
-                "movements_by_pattern": movements_by_pattern,
-                "movement_rules": movement_rules,
-                # Detach objects manually or use dictionaries
-                "all_movements": all_movements, 
-                "discipline_preferences": user_profile.discipline_preferences if user_profile else None,
-                "scheduling_preferences": user_profile.scheduling_preferences if user_profile else None,
-            }
+            # Post-processing (duplicates removal)
+            if used_accessory_movements:
+                current_day = context_data["session"]["day_number"]
+                previous_days = [d for d in used_accessory_movements.keys() if d < current_day]
+                if previous_days:
+                    last_day = max(previous_days)
+                    previous_accessories = used_accessory_movements.get(last_day) or []
+                    if previous_accessories:
+                        content = self._remove_cross_session_accessory_duplicates(
+                            content, set(previous_accessories), context_data["session"]["session_type"]
+                        )
 
-        # 2. Generate Content (Long running, NO DB connection)
-        # We pass the context data instead of DB objects where possible
-        
-        # Determine fatigued muscles
-        fatigued_muscles = []
-        if previous_day_volume:
-            fatigued_muscles = [m for m, v in previous_day_volume.items() if v > 2]
-
-        content = await self.generate_session_exercises_offline(
-            context_data,
-            used_movements,
-            used_movement_groups,
-            used_accessory_movements,
-            fatigued_muscles
-        )
-        
-        logger.info(f"[populate_session_by_id] Generated content: {list(content.keys())}")
-        
-        # Post-processing (duplicates removal)
-        if used_accessory_movements:
-            current_day = context_data["session"]["day_number"]
-            previous_days = [d for d in used_accessory_movements.keys() if d < current_day]
-            if previous_days:
-                last_day = max(previous_days)
-                previous_accessories = used_accessory_movements.get(last_day) or []
-                if previous_accessories:
-                    content = self._remove_cross_session_accessory_duplicates(
-                        content, set(previous_accessories), context_data["session"]["session_type"]
+            # 3. Save Results (Short DB transaction)
+            current_session_volume = {}
+            logger.info("[populate_session_by_id] SAVING to database...")
+            async with async_session_maker() as db:
+                session = await db.get(Session, session_id)
+                if session:
+                    # session.warmup_json = content.get("warmup") # DEPRECATED
+                    # session.main_json = content.get("main") # DEPRECATED
+                    # session.accessory_json = content.get("accessory") # DEPRECATED
+                    # session.finisher_json = content.get("finisher") # DEPRECATED
+                    # session.cooldown_json = content.get("cooldown") # DEPRECATED
+                    session.estimated_duration_minutes = content.get("estimated_duration_minutes", 60)
+                    session.coach_notes = content.get("reasoning")
+                    
+                    # Create movement map from context for ID lookup
+                    all_movements = context_data.get("all_movements", [])
+                    movement_map = {}
+                    for m in all_movements:
+                        # Handle both object and dict just in case
+                        m_name = getattr(m, "name", None) or m.get("name")
+                        m_id = getattr(m, "id", None) or m.get("id")
+                        if m_name and m_id:
+                            movement_map[m_name] = m_id
+                    
+                    # Determine program type from goals
+                    program_type = self._determine_program_type(context_data["program"])
+                    
+                    # Get microcycle phase
+                    microcycle_phase = context_data["microcycle"].get("microcycle_phase", "accumulation")
+                    
+                    # Save normalized session exercises
+                    await self._save_session_exercises(
+                        db,
+                        session,
+                        content,
+                        movement_map,
+                        context_data["program"]["user_id"],
+                        program_type=program_type,
+                        microcycle_phase=microcycle_phase,
                     )
 
-        # 3. Save Results (Short DB transaction)
-        current_session_volume = {}
-        logger.info("[populate_session_by_id] SAVING to database...")
-        async with async_session_maker() as db:
-            session = await db.get(Session, session_id)
-            if session:
-                # session.warmup_json = content.get("warmup") # DEPRECATED
-                # session.main_json = content.get("main") # DEPRECATED
-                # session.accessory_json = content.get("accessory") # DEPRECATED
-                # session.finisher_json = content.get("finisher") # DEPRECATED
-                # session.cooldown_json = content.get("cooldown") # DEPRECATED
-                session.estimated_duration_minutes = content.get("estimated_duration_minutes", 60)
-                session.coach_notes = content.get("reasoning")
-                
-                # Create movement map from context for ID lookup
-                all_movements = context_data.get("all_movements", [])
-                movement_map = {}
-                for m in all_movements:
-                    # Handle both object and dict just in case
-                    m_name = getattr(m, "name", None) or m.get("name")
-                    m_id = getattr(m, "id", None) or m.get("id")
-                    if m_name and m_id:
-                        movement_map[m_name] = m_id
-                
-                # Save normalized session exercises
-                await self._save_session_exercises(
-                    db,
-                    session,
-                    content,
-                    movement_map,
-                    context_data["program"]["user_id"]
-                )
-
-                db.add(session)
-                await db.commit()
-                
-                # Calculate volume (needs DB for movement lookup)
-                current_session_volume = await self._calculate_session_volume(db, session)
-        
-        return current_session_volume
+                    db.add(session)
+                    await db.commit()
+                    
+                    # Set generation_status to COMPLETED after successful save
+                    session.generation_status = GenerationStatus.COMPLETED
+                    db.add(session)
+                    await db.commit()
+                    
+                    logger.info(f"[populate_session_by_id] Set generation_status=COMPLETED for session {session_id}")
+                    
+                    # Calculate volume (needs DB for movement lookup)
+                    current_session_volume = await self._calculate_session_volume(db, session)
+            
+            return current_session_volume
+        except Exception as e:
+            # Set generation_status to FAILED on any exception
+            logger.error(f"[populate_session_by_id] FAILED for session {session_id}: {e}")
+            async with async_session_maker() as db:
+                session = await db.get(Session, session_id)
+                if session:
+                    session.generation_status = GenerationStatus.FAILED
+                    db.add(session)
+                    await db.commit()
+                    logger.info(f"[populate_session_by_id] Set generation_status=FAILED for session {session_id}")
+            raise
 
     async def generate_session_exercises_offline(
         self,
@@ -423,19 +409,44 @@ class SessionGeneratorService:
         draft_content = None
         try:
             draft_result = await self._generate_draft_session_offline(
-                context["all_movements"], 
-                session_type, 
+                context["all_movements"],
+                session_type,
                 used_movements,
                 goal_weights=goal_weights,
                 preferred_movement_ids=preferred_ids,
                 excluded_movement_ids=hard_no_ids,
                 required_movement_ids=hard_yes_ids,
+                disciplines_json=context.get("program", {}).get("disciplines_json"),
+                user_profile_data={
+                    "discipline_preferences": context.get("discipline_preferences"),
+                    "scheduling_preferences": context.get("scheduling_preferences"),
+                },
+                session_context={
+                    "id": context.get("session", {}).get("id"),
+                    "session_type": context.get("session", {}).get("session_type"),
+                    "intent_tags": context.get("session", {}).get("intent_tags"),
+                    "day_number": context.get("session", {}).get("day_number"),
+                    "equipment_available": context.get("equipment_available"),
+                },
             )
             if draft_result.status in ["OPTIMAL", "FEASIBLE"] and draft_result.selected_movements:
                 draft_content = self._convert_optimization_result_to_content(draft_result, session_type)
                 logger.info(f"Generated optimal draft for session {context['session']['id']}")
         except Exception as e:
-            logger.warning(f"Failed to generate draft session: {e}")
+            logger.error(
+                f"Draft generation failed for session {context['session']['id']}",
+                extra={
+                    "event": "draft_generation_failed",
+                    "session_id": context.get("session", {}).get("id"),
+                    "session_type": str(session_type),
+                    "intent_tags": context.get("session", {}).get("intent_tags"),
+                    "day_number": context.get("session", {}).get("day_number"),
+                    "exception_type": type(e).__name__,
+                    "exception_message": str(e),
+                    "traceback": traceback.format_exc(),
+                },
+                exc_info=True
+            )
         if session_type == SessionType.CUSTOM and "conditioning" in (context["session"]["intent_tags"] or []):
             conditioning_names = self._get_conditioning_movement_names(context["all_movements"])
             content = self._get_fast_conditioning_session_content(conditioning_names, context["program"]["max_session_duration"])
@@ -462,7 +473,7 @@ class SessionGeneratorService:
                     content["finisher"] = finisher
 
         content = self._normalize_session_content(content, session_type, context["session"]["intent_tags"] or [], goal_weights)
-        content["reasoning"] = await self._generate_jerome_notes(
+        content["reasoning"] = self._generate_jerome_notes(
             session_type,
             context["session"]["intent_tags"] or [],
             goal_weights,
@@ -471,6 +482,81 @@ class SessionGeneratorService:
         )
         return content
 
+    async def _get_user_recovery_state(
+        self,
+        db: AsyncSession,
+        user_id: int,
+    ) -> dict[str, Any]:
+        """
+        Fetch user recovery signals from database.
+        
+        Returns:
+            Dict with sleep_hours, hrv_percentage_change, soreness, etc.
+        """
+        try:
+            from app.models.logging import RecoverySignals
+            
+            result = await db.execute(
+                select(RecoverySignals).where(RecoverySignals.user_id == user_id)
+                .order_by(RecoverySignals.date.desc())
+                .limit(1)
+            )
+            signals = result.scalar_one_or_none()
+            
+            if signals:
+                return {
+                    "sleep_hours": signals.sleep_hours or 8.0,
+                    "hrv_percentage_change": signals.hrv_percentage_change or 0,
+                    "soreness": signals.soreness or 0,
+                    "energy": signals.energy or 5,
+                    "consecutive_high_rpe_days": signals.consecutive_high_rpe_days or 0,
+                }
+            
+            return {
+                "sleep_hours": 8.0,
+                "hrv_percentage_change": 0,
+                "soreness": 0,
+                "energy": 5,
+                "consecutive_high_rpe_days": 0,
+            }
+        except Exception as e:
+            logger.warning(f"Failed to get user recovery state: {e}")
+            return {
+                "sleep_hours": 8.0,
+                "hrv_percentage_change": 0,
+                "soreness": 0,
+                "energy": 5,
+                "consecutive_high_rpe_days": 0,
+            }
+    
+    async def _get_pattern_recovery_hours(
+        self,
+        db: AsyncSession,
+        user_id: int,
+    ) -> dict[str, datetime | None]:
+        """
+        Fetch pattern recovery state from PatternRecoveryState table.
+        
+        Returns:
+            Dict mapping MovementPattern to last_trained_at datetime
+        """
+        try:
+            from app.models.program import PatternRecoveryState
+            
+            result = await db.execute(
+                select(PatternRecoveryState).where(PatternRecoveryState.user_id == user_id)
+            )
+            recovery_states = result.scalars().all()
+            
+            pattern_recovery = {}
+            for state in recovery_states:
+                pattern_recovery[state.pattern.value] = state.last_trained_at
+            
+            return pattern_recovery
+        except Exception as e:
+            logger.warning(f"Failed to get pattern recovery hours: {e}")
+            return {}
+    
     async def _save_session_exercises(
         self,
         db: AsyncSession,
@@ -478,9 +564,20 @@ class SessionGeneratorService:
         content: dict[str, Any],
         movement_map: dict[str, int],
         user_id: int,
+        program_type: str | None = None,
+        microcycle_phase: str | None = None,
     ) -> None:
         """
         Convert content dict to SessionExercise objects and save to DB using bulk operations.
+        
+        Args:
+            db: Database session
+            session: Session to save exercises for
+            content: Content dict with warmup, main, accessory, cooldown sections
+            movement_map: Dict mapping movement names to movement IDs
+            user_id: User ID for the session
+            program_type: Primary program type (strength, hypertrophy, endurance, etc.)
+            microcycle_phase: Current microcycle phase (accumulation, intensification, peaking, deload)
         """
         from sqlalchemy import delete
         
@@ -496,9 +593,44 @@ class SessionGeneratorService:
         total_exercises = 0
         exercises_to_save = []
         
+        # Track high-RPE sets per pattern for this session
+        pattern_high_rpe_count: dict[str, int] = {}
+        
+        # Fetch user recovery state
+        user_recovery_state = await self._get_user_recovery_state(db, user_id)
+        
+        # Fetch pattern recovery hours
+        pattern_recovery_hours = await self._get_pattern_recovery_hours(db, user_id)
+        
+        # Load movement objects for RPE suggestion service
+        movement_id_map = {v: k for k, v in movement_map.items()}  # ID -> name
+        movement_objects: dict[int, Movement] = {}
+        if movement_id_map:
+            result = await db.execute(
+                select(Movement).where(Movement.id.in_(list(movement_id_map.keys())))
+            )
+            for movement in result.scalars().all():
+                movement_objects[movement.id] = movement
+        
+        # Determine default program_type if not provided
+        if program_type is None:
+            program_type = "strength"  # Default fallback
+        
+        # Determine default microcycle_phase if not provided
+        if microcycle_phase is None:
+            microcycle_phase = "accumulation"  # Default fallback
+        
+        # Get training days per week (default to 4)
+        training_days_per_week = 4
+        
+        logger.info(
+            f"[_save_session_exercises] RPE context: program_type={program_type}, "
+            f"microcycle_phase={microcycle_phase}, training_days={training_days_per_week}"
+        )
+        
         # Helper to process a section
         async def process_section(section_name: str, exercise_role: ExerciseRole):
-            nonlocal order_counter, missing_movements, total_exercises, exercises_to_save
+            nonlocal order_counter, missing_movements, total_exercises, exercises_to_save, pattern_high_rpe_count
             exercises = content.get(section_name)
             if not exercises:
                 return
@@ -516,6 +648,49 @@ class SessionGeneratorService:
                     missing_movements.append(movement_name)
                     continue
                 
+                movement = movement_objects.get(movement_id)
+                
+                # Get RPE suggestion from service
+                suggested_rpe_min: float | None = None
+                suggested_rpe_max: float | None = None
+                rpe_adjustment_reason: str | None = None
+                
+                if movement and self._rpe_service:
+                    try:
+                        # Track high-RPE sets for this pattern
+                        movement_pattern = str(movement.pattern) if hasattr(movement, 'pattern') else "other"
+                        session_high_rpe_sets_count = pattern_high_rpe_count.get(movement_pattern, 0)
+                        
+                        # Get RPE suggestion
+                        rpe_suggestion = await self._rpe_service.suggest_rpe_for_movement(
+                            movement=movement,
+                            exercise_role=exercise_role,
+                            program_type=program_type,
+                            microcycle_phase=microcycle_phase,
+                            training_days_per_week=training_days_per_week,
+                            session_high_rpe_sets_count=session_high_rpe_sets_count,
+                            user_recovery_state=user_recovery_state,
+                            pattern_recovery_hours=pattern_recovery_hours,
+                        )
+                        
+                        suggested_rpe_min = rpe_suggestion.min_rpe
+                        suggested_rpe_max = rpe_suggestion.max_rpe
+                        rpe_adjustment_reason = rpe_suggestion.adjustment_reason
+                        
+                        # Update high-RPE count tracking
+                        if suggested_rpe_max >= 8.0:
+                            pattern_high_rpe_count[movement_pattern] = session_high_rpe_sets_count + 1
+                        
+                        logger.debug(
+                            f"[_save_session_exercises] RPE suggestion for {movement_name}: "
+                            f"{suggested_rpe_min}-{suggested_rpe_max}"
+                            + (f" (reason: {rpe_adjustment_reason})" if rpe_adjustment_reason else "")
+                        )
+                    except Exception as e:
+                        logger.warning(
+                            f"[_save_session_exercises] Failed to get RPE suggestion for {movement_name}: {e}"
+                        )
+                
                 # Create SessionExercise
                 session_ex = SessionExercise(
                     session_id=session.id,
@@ -530,7 +705,10 @@ class SessionGeneratorService:
                     target_duration_seconds=ex.get("duration_seconds"),
                     default_rest_seconds=ex.get("rest_seconds"),
                     notes=ex.get("notes"),
-                    superset_group=None
+                    superset_group=None,
+                    suggested_rpe_min=suggested_rpe_min,
+                    suggested_rpe_max=suggested_rpe_max,
+                    rpe_adjustment_reason=rpe_adjustment_reason,
                 )
                 
                 exercises_to_save.append(session_ex)
@@ -554,6 +732,49 @@ class SessionGeneratorService:
                     if not movement_id:
                         missing_movements.append(movement_name)
                         continue
+                    
+                    movement = movement_objects.get(movement_id)
+                    
+                    # Get RPE suggestion from service for finisher
+                    suggested_rpe_min: float | None = None
+                    suggested_rpe_max: float | None = None
+                    rpe_adjustment_reason: str | None = None
+                    
+                    if movement and self._rpe_service:
+                        try:
+                            # Track high-RPE sets for this pattern
+                            movement_pattern = str(movement.pattern) if hasattr(movement, 'pattern') else "other"
+                            session_high_rpe_sets_count = pattern_high_rpe_count.get(movement_pattern, 0)
+                            
+                            # Get RPE suggestion
+                            rpe_suggestion = await self._rpe_service.suggest_rpe_for_movement(
+                                movement=movement,
+                                exercise_role=ExerciseRole.FINISHER,
+                                program_type=program_type,
+                                microcycle_phase=microcycle_phase,
+                                training_days_per_week=training_days_per_week,
+                                session_high_rpe_sets_count=session_high_rpe_sets_count,
+                                user_recovery_state=user_recovery_state,
+                                pattern_recovery_hours=pattern_recovery_hours,
+                            )
+                            
+                            suggested_rpe_min = rpe_suggestion.min_rpe
+                            suggested_rpe_max = rpe_suggestion.max_rpe
+                            rpe_adjustment_reason = rpe_suggestion.adjustment_reason
+                            
+                            # Update high-RPE count tracking
+                            if suggested_rpe_max >= 8.0:
+                                pattern_high_rpe_count[movement_pattern] = session_high_rpe_sets_count + 1
+                            
+                            logger.debug(
+                                f"[_save_session_exercises] RPE suggestion for finisher {movement_name}: "
+                                f"{suggested_rpe_min}-{suggested_rpe_max}"
+                                + (f" (reason: {rpe_adjustment_reason})" if rpe_adjustment_reason else "")
+                            )
+                        except Exception as e:
+                            logger.warning(
+                                f"[_save_session_exercises] Failed to get RPE suggestion for finisher {movement_name}: {e}"
+                            )
                         
                     session_ex = SessionExercise(
                         session_id=session.id,
@@ -566,6 +787,9 @@ class SessionGeneratorService:
                         target_rep_range_max=ex.get("reps") if isinstance(ex.get("reps"), int) else None,
                         target_duration_seconds=ex.get("duration_seconds"),
                         notes=ex.get("notes"),
+                        suggested_rpe_min=suggested_rpe_min,
+                        suggested_rpe_max=suggested_rpe_max,
+                        rpe_adjustment_reason=rpe_adjustment_reason,
                     )
                     exercises_to_save.append(session_ex)
                     order_counter += 1
@@ -580,12 +804,33 @@ class SessionGeneratorService:
         # Validate missing movements threshold
         if missing_movements and total_exercises > 0:
             missing_percentage = len(missing_movements) / total_exercises
-            if missing_percentage > 0.25:
+            if missing_percentage > 0.10:
                 error_msg = f"Critical: {len(missing_movements)}/{total_exercises} movements not found in database: {missing_movements[:5]}"
-                logger.error(f"[_save_session_exercises] {error_msg}")
+                logger.error(
+                    f"[_save_session_exercises] {error_msg}",
+                    extra={
+                        "event": "movement_lookup_failure_critical",
+                        "session_id": session.id,
+                        "total_exercises": total_exercises,
+                        "missing_movements_count": len(missing_movements),
+                        "missing_movements": missing_movements,
+                        "missing_percentage": missing_percentage,
+                        "movement_map_keys": list(movement_map.keys())[:20],
+                    }
+                )
                 raise ValueError(error_msg)
             else:
-                logger.warning(f"[_save_session_exercises] {len(missing_movements)} movements not found: {missing_movements}")
+                logger.warning(
+                    f"[_save_session_exercises] {len(missing_movements)} movements not found: {missing_movements}",
+                    extra={
+                        "event": "movement_lookup_failure",
+                        "session_id": session.id,
+                        "total_exercises": total_exercises,
+                        "missing_movements_count": len(missing_movements),
+                        "missing_movements": missing_movements,
+                        "missing_percentage": missing_percentage,
+                    }
+                )
 
     async def _calculate_session_volume(self, db: AsyncSession, session: Session) -> dict[str, int]:
         """Helper to calculate volume after session is saved."""
@@ -692,30 +937,138 @@ class SessionGeneratorService:
         preferred_movement_ids: list[int] | None = None,
         excluded_movement_ids: list[int] | None = None,
         required_movement_ids: list[int] | None = None,
+        disciplines_json: list[dict] | None = None,
+        user_profile_data: dict | None = None,
+        session_context: dict | None = None,
     ) -> Any:
         """
-        Offline version of _generate_draft_session.
+        Offline version of _generate_draft_session using DiversityOptimizationService.
+        
+        Args:
+            all_movements: List of all available movements
+            session_type: Type of session being generated
+            used_movements: List of movement names already used
+            goal_weights: Dictionary mapping goals to weights
+            preferred_movement_ids: List of preferred movement IDs
+            excluded_movement_ids: List of excluded movement IDs
+            required_movement_ids: List of required movement IDs
+            disciplines_json: List of discipline preferences with weights
+            user_profile_data: User profile data including preferences
+            session_context: Additional session context data
         """
+        return await self._generate_draft_with_diversity_optimizer(
+            all_movements=all_movements,
+            session_type=session_type,
+            used_movements=used_movements,
+            goal_weights=goal_weights,
+            preferred_movement_ids=preferred_movement_ids,
+            excluded_movement_ids=excluded_movement_ids,
+            required_movement_ids=required_movement_ids,
+            disciplines_json=disciplines_json,
+            user_profile_data=user_profile_data,
+            session_context=session_context,
+        )
+    
+    async def _generate_draft_with_diversity_optimizer(
+        self,
+        all_movements: list[Movement],
+        session_type: SessionType,
+        used_movements: list[str] | None = None,
+        goal_weights: dict[str, int] | None = None,
+        preferred_movement_ids: list[int] | None = None,
+        excluded_movement_ids: list[int] | None = None,
+        required_movement_ids: list[int] | None = None,
+        disciplines_json: list[dict] | None = None,
+        user_profile_data: dict | None = None,
+        session_context: dict | None = None,
+    ) -> Any:
+        """
+        Generate draft session using DiversityOptimizationService.
+        
+        This method creates an OptimizationRequestV2 with enhanced context including
+        user goals, discipline preferences, and session movements for diversity scoring.
+        
+        Args:
+            all_movements: List of all available movements
+            session_type: Type of session being generated
+            used_movements: List of movement names already used
+            goal_weights: Dictionary mapping goals to weights
+            preferred_movement_ids: List of preferred movement IDs
+            excluded_movement_ids: List of excluded movement IDs
+            required_movement_ids: List of required movement IDs
+            disciplines_json: List of discipline preferences with weights
+            user_profile_data: User profile data including preferences
+            session_context: Additional session context data
+            
+        Returns:
+            OptimizationResultV2 with selected movements
+            
+        Raises:
+            Exception: If optimization fails
+        """
+        # Filter movements for session type
         filtered_movements = self._filter_movements_for_session_type(all_movements, session_type)
         
-        # Convert to DTOs for thread safety
-        solver_movements = self._to_solver_movements(filtered_movements)
+        # Convert to SolverMovement DTOs with additional fields
+        solver_movements = self._to_solver_movements(filtered_movements, all_movements)
         
+        # Get muscle targets for session
         targets = self._get_muscle_targets_for_session(session_type)
         
+        # Build excluded IDs list
         excluded_ids: list[int] = list(excluded_movement_ids or [])
         if used_movements:
             name_to_id = {m.name: m.id for m in all_movements}
             for name in used_movements:
                 if name in name_to_id:
                     excluded_ids.append(name_to_id[name])
-
-        req = OptimizationRequest(
+        
+        # Extract user goals from goal_weights
+        user_goals = []
+        if goal_weights:
+            user_goals = [goal for goal, weight in goal_weights.items() if weight > 0]
+        
+        # Build discipline preferences from disciplines_json
+        discipline_preferences = {}
+        if disciplines_json:
+            for disc in disciplines_json:
+                discipline_type = disc.get("discipline")
+                weight = disc.get("weight", 0)
+                if discipline_type and weight > 0:
+                    discipline_preferences[discipline_type] = weight
+        
+        # Extract session movements for diversity scoring
+        session_movements = []
+        if session_context:
+            session_id = session_context.get("id")
+            if session_id:
+                # In a real implementation, you'd fetch movements already in this session
+                pass
+        
+        # Extract microcycle movements from context
+        microcycle_movements = []
+        if session_context and used_movements:
+            name_to_id = {m.name: m.id for m in all_movements}
+            microcycle_movements = [
+                name_to_id[name] for name in used_movements if name in name_to_id
+            ]
+        
+        # Extract target muscles from session type
+        target_muscles = list(targets.keys())
+        
+        # Extract required pattern from session context/intent
+        required_pattern = None
+        if session_context:
+            intent_tags = session_context.get("intent_tags", [])
+            if intent_tags:
+                # Use first intent tag as required pattern
+                required_pattern = intent_tags[0] if intent_tags else None
+        
+        # Create optimization request V2
+        req = OptimizationRequestV2(
             available_movements=solver_movements,
             available_circuits=[],
             target_muscle_volumes=targets,
-            max_fatigue=activity_distribution_config.or_tools_max_fatigue,
-            min_stimulus=2.0,
             user_skill_level=SkillLevel.INTERMEDIATE,
             excluded_movement_ids=excluded_ids,
             required_movement_ids=list(required_movement_ids or []),
@@ -724,11 +1077,28 @@ class SessionGeneratorService:
             allow_circuits=False,
             goal_weights=goal_weights,
             preferred_movement_ids=preferred_movement_ids,
+            # V2-specific fields
+            user_profile=None,  # Would be fetched from DB in full implementation
+            session_movements=session_movements,
+            microcycle_movements=microcycle_movements,
+            user_goals=user_goals,
+            discipline_preferences=discipline_preferences,
+            required_pattern=required_pattern,
+            target_muscles=target_muscles,
+            available_equipment=set(session_context.get("equipment_available", [])),
+            max_relaxation_steps=6,
         )
-        # Solve in a separate thread to avoid blocking the event loop
+        
+        # Solve using diversity optimizer
         import asyncio
         loop = asyncio.get_running_loop()
-        return await loop.run_in_executor(None, self.optimizer.solve_session, req)
+        result = await loop.run_in_executor(
+            None,
+            self.diversity_optimizer.solve_session_with_diversity_scoring,
+            req
+        )
+        
+        return result
 
     # Kept for backward compatibility if needed, but not used by populate_session_by_id anymore
     async def populate_session(
@@ -801,8 +1171,18 @@ class SessionGeneratorService:
             stmt = select(Movement.name, Movement.id).where(Movement.name.in_(list(all_movement_names)))
             result = await db.execute(stmt)
             movement_map = {name: id for name, id in result.all()}
-            
-        await self._save_session_exercises(db, session, content, movement_map, program.user_id)
+        
+        # Determine program type from goals
+        program_type = self._determine_program_type_from_program(program)
+        
+        # Get microcycle phase
+        microcycle_phase = microcycle.microcycle_phase if microcycle else "accumulation"
+        
+        await self._save_session_exercises(
+            db, session, content, movement_map, program.user_id,
+            program_type=program_type,
+            microcycle_phase=microcycle_phase,
+        )
         
         db.add(session)
         await db.flush()
@@ -882,8 +1262,8 @@ class SessionGeneratorService:
         if not content.get("warmup") or len(content.get("warmup", [])) == 0:
             logger.warning(f"Missing warmup for {session_type} session, adding default")
             content["warmup"] = [
-                {"movement": "Dynamic Stretching", "sets": 2, "reps": 10, "notes": "Full body prep"},
-                {"movement": "Light Cardio", "duration_seconds": 300, "notes": "5 min warm-up"},
+                {"movement": "Dynamic Back Stretch", "sets": 2, "reps": 10, "notes": "Full body prep"},
+                {"movement": "Rope Jumping", "duration_seconds": 300, "notes": "5 min warm-up"},
             ]
         
         if not content.get("main") or len(content.get("main", [])) == 0:
@@ -895,7 +1275,7 @@ class SessionGeneratorService:
         if not content.get("cooldown") or len(content.get("cooldown", [])) == 0:
             logger.warning(f"Missing cooldown for {session_type} session, adding default")
             content["cooldown"] = [
-                {"movement": "Static Stretching", "duration_seconds": 300, "notes": "Focus on trained muscles"},
+                {"movement": "Hamstring Stretch", "duration_seconds": 300, "notes": "Focus on trained muscles"},
                 {"movement": "Foam Rolling", "duration_seconds": 180, "notes": "Target tight areas"},
             ]
         
@@ -912,15 +1292,13 @@ class SessionGeneratorService:
         is_deload: bool,
         goal_weights: dict[str, int],
     ) -> dict[str, Any]:
-        from app.llm.optimization import PromptCache
-
         content = dict(draft_content)
 
         if not content.get("warmup") or len(content.get("warmup", [])) < 2:
-            content["warmup"] = PromptCache.get_pattern_based_warmup(intent_tags or [], session_type)
+            content["warmup"] = self._get_pattern_based_warmup(intent_tags or [], session_type)
 
         if not content.get("cooldown") or len(content.get("cooldown", [])) < 2:
-            content["cooldown"] = PromptCache.get_pattern_based_cooldown(intent_tags or [])
+            content["cooldown"] = self._get_pattern_based_cooldown(intent_tags or [])
         return self._normalize_session_content(content, session_type, intent_tags, goal_weights)
     
     def _normalize_session_content(
@@ -1025,8 +1403,78 @@ class SessionGeneratorService:
             if goal in goal_weights:
                 goal_weights[goal] += weight
         return goal_weights
+    
+    def _determine_program_type(self, program_info: dict[str, Any]) -> str:
+        """
+        Determine the primary program type based on goal weights.
+        
+        Args:
+            program_info: Program info dict with goal_1, goal_2, goal_3 and weights
+        
+        Returns:
+            Primary program type string (strength, hypertrophy, endurance, fat_loss, mobility)
+        """
+        goal_weights = {
+            "strength": 0,
+            "hypertrophy": 0,
+            "endurance": 0,
+            "fat_loss": 0,
+            "mobility": 0,
+        }
+        
+        for goal, weight in [
+            (program_info["goal_1"].value, program_info["goal_weight_1"]),
+            (program_info["goal_2"].value, program_info["goal_weight_2"]),
+            (program_info["goal_3"].value, program_info["goal_weight_3"]),
+        ]:
+            if goal in goal_weights:
+                goal_weights[goal] += weight
+        
+        # Return the goal with highest weight
+        primary_goal = max(goal_weights.items(), key=lambda x: x[1])[0]
+        
+        # Default to strength if all weights are 0 or equal
+        if goal_weights[primary_goal] == 0:
+            return "strength"
+        
+        return primary_goal
+    
+    def _determine_program_type_from_program(self, program: Program) -> str:
+        """
+        Determine the primary program type from a Program object.
+        
+        Args:
+            program: Program model object
+        
+        Returns:
+            Primary program type string (strength, hypertrophy, endurance, fat_loss, mobility)
+        """
+        goal_weights = {
+            "strength": 0,
+            "hypertrophy": 0,
+            "endurance": 0,
+            "fat_loss": 0,
+            "mobility": 0,
+        }
+        
+        for goal, weight in [
+            (program.goal_1.value, program.goal_weight_1),
+            (program.goal_2.value, program.goal_weight_2),
+            (program.goal_3.value, program.goal_weight_3),
+        ]:
+            if goal in goal_weights:
+                goal_weights[goal] += weight
+        
+        # Return the goal with highest weight
+        primary_goal = max(goal_weights.items(), key=lambda x: x[1])[0]
+        
+        # Default to strength if all weights are 0 or equal
+        if goal_weights[primary_goal] == 0:
+            return "strength"
+        
+        return primary_goal
 
-    async def _generate_jerome_notes(
+    def _generate_jerome_notes(
         self,
         session_type: SessionType,
         intent_tags: list[str],
@@ -1034,40 +1482,77 @@ class SessionGeneratorService:
         content: dict[str, Any],
         is_deload: bool,
     ) -> str:
+        """
+        Generate coach notes using simple template-based approach (no LLM calls).
+        """
         main_moves = [ex.get("movement") for ex in (content.get("main") or []) if ex.get("movement")]
         accessory_moves = [ex.get("movement") for ex in (content.get("accessory") or []) if ex.get("movement")]
         finisher_type = content.get("finisher", {}).get("type") if content.get("finisher") else None
         goals_summary = ", ".join([f"{k}:{v}" for k, v in goal_weights.items() if v > 0])
         summary = f"Type: {session_type.value}. Patterns: {', '.join(intent_tags)}. Goals: {goals_summary}."
 
-        prompt = "Write 1-2 sentences in Jerome's voice explaining why this session fits the user's goals and recovery. "
-        prompt += f"{summary} Main: {', '.join(main_moves[:4])}. "
-        if accessory_moves:
-            prompt += f"Accessories: {', '.join(accessory_moves[:4])}. "
+        note = f"Optimization-first {session_type.value} session aligned to your goals and recovery."
+        if is_deload:
+            note = f"Optimization-first deload {session_type.value} session focused on recovery and quality."
         if finisher_type:
-            prompt += f"Finisher: {finisher_type}. "
-        if is_deload:
-            prompt += "Deload week. "
-
-        try:
-            provider = get_llm_provider()
-            config = LLMConfig(model=settings.ollama_model, temperature=0.2, max_tokens=1200)
-            messages = [Message(role="user", content=prompt)]
-            response = await self._call_llm_with_retry(
-                provider,
-                messages,
-                config,
-                session_type=session_type.value,
-            )
-            if response:
-                return str(response)[:1100].rstrip()
-        except Exception:
-            pass
-
-        note = "Optimization-first session aligned to your goals and recovery."
-        if is_deload:
-            note = "Optimization-first deload session focused on recovery and quality."
+            note += f" Includes {finisher_type} finisher for metabolic conditioning."
         return note[:1100].rstrip()
+
+    def _get_pattern_based_warmup(self, intent_tags: list[str], session_type: SessionType) -> list[dict[str, Any]]:
+        """
+        Generate warmup based on session patterns and type.
+        Inline implementation (no LLM imports).
+        """
+        base_warmup = [
+            {"movement": "Dynamic Back Stretch", "sets": 1, "duration_seconds": 180, "notes": "Full body mobility prep"}
+        ]
+        
+        # Add pattern-specific warmup movements
+        pattern_warmups = {
+            "squat": {"movement": "Goblet Squat", "sets": 2, "reps": 8, "notes": "Hip and ankle mobility"},
+            "hinge": {"movement": "Good Morning", "sets": 2, "reps": 10, "notes": "Hip hinge pattern prep"},
+            "horizontal_push": {"movement": "Push-Up", "sets": 2, "reps": 10, "notes": "Shoulder and chest activation"},
+            "vertical_push": {"movement": "Shoulder Circles", "sets": 2, "reps": 10, "notes": "Shoulder mobility"},
+            "horizontal_pull": {"movement": "Face Pull", "sets": 2, "reps": 15, "notes": "Rear delt activation"},
+            "vertical_pull": {"movement": "Lat Pulldown", "sets": 2, "reps": 8, "notes": "Lat activation"},
+        }
+        
+        # Add pattern-specific movements for main patterns
+        for pattern in intent_tags[:2]:  # First 2 patterns are main
+            if pattern in pattern_warmups:
+                base_warmup.append(pattern_warmups[pattern])
+        
+        return base_warmup
+
+    def _get_pattern_based_cooldown(self, intent_tags: list[str]) -> list[dict[str, Any]]:
+        """
+        Generate cooldown based on patterns used in session.
+        Targets muscles/areas that were trained.
+        Inline implementation (no LLM imports).
+        """
+        base_cooldown = [
+            {"movement": "Hamstring Stretch", "duration_seconds": 300, "notes": "Focus on trained muscles"}
+        ]
+        
+        # Add pattern-specific stretches
+        pattern_stretches = {
+            "squat": {"movement": "Hip Flexor Stretch", "duration_seconds": 120, "notes": "Counter hip flexion"},
+            "hinge": {"movement": "Hamstring Stretch", "duration_seconds": 120, "notes": "Lengthen posterior chain"},
+            "horizontal_push": {"movement": "Chest Stretch", "duration_seconds": 90, "notes": "Open chest and shoulders"},
+            "vertical_push": {"movement": "Chest Stretch", "duration_seconds": 90, "notes": "Shoulder mobility"},
+            "horizontal_pull": {"movement": "Upper Back Stretch", "duration_seconds": 90, "notes": "Lengthen lats"},
+            "vertical_pull": {"movement": "Doorway Stretch", "duration_seconds": 90, "notes": "Counter pulling posture"},
+        }
+        
+        # Add stretches for patterns used
+        for pattern in intent_tags:
+            if pattern in pattern_stretches:
+                base_cooldown.append(pattern_stretches[pattern])
+        
+        # Always end with foam rolling
+        base_cooldown.append({"movement": "Foam Rolling", "duration_seconds": 180, "notes": "Target tight areas"})
+        
+        return base_cooldown
 
     def _build_goal_finisher(self, goal_weights: dict[str, int]) -> dict[str, Any] | None:
         thresholds = activity_distribution_config.goal_finisher_thresholds
@@ -1084,13 +1569,13 @@ class SessionGeneratorService:
         max_session_duration: int | None,
     ) -> dict[str, Any]:
         total_minutes = max_session_duration or 30
-        warmup = [{"movement": "Easy Cardio", "duration_seconds": 300, "notes": "Build pace"}]
-        cooldown = [{"movement": "Static Stretching", "duration_seconds": 300, "notes": "Full body"}]
+        warmup = [{"movement": "Rope Jumping", "duration_seconds": 300, "notes": "Build pace"}]
+        cooldown = [{"movement": "Hamstring Stretch", "duration_seconds": 300, "notes": "Full body"}]
 
         if session_type == SessionType.MOBILITY:
             main = [
-                {"movement": "Dynamic Stretching", "duration_seconds": 600, "notes": "Full body"},
-                {"movement": "Mobility Flow", "duration_seconds": max(300, (total_minutes - 15) * 60)},
+                {"movement": "Dynamic Back Stretch", "duration_seconds": 600, "notes": "Full body"},
+                {"movement": "Hip Flexor Stretch", "duration_seconds": max(300, (total_minutes - 15) * 60)},
             ]
             return {
                 "warmup": warmup,
@@ -1123,10 +1608,10 @@ class SessionGeneratorService:
         total_minutes = max_session_duration or 45
         main_minutes = max(30, total_minutes - 10)
         warmup = [
-            {"movement": "Easy Cardio", "duration_seconds": 300, "notes": "Build pace"},
-            {"movement": "Dynamic Stretching", "duration_seconds": 300, "notes": "Prep joints"},
+            {"movement": "Rope Jumping", "duration_seconds": 300, "notes": "Build pace"},
+            {"movement": "Dynamic Back Stretch", "duration_seconds": 300, "notes": "Prep joints"},
         ]
-        cooldown = [{"movement": "Static Stretching", "duration_seconds": 300, "notes": "Full body"}]
+        cooldown = [{"movement": "Hamstring Stretch", "duration_seconds": 300, "notes": "Full body"}]
 
         candidates = list(dict.fromkeys(conditioning_movement_names or []))
         if len(candidates) < 5:
@@ -1273,15 +1758,15 @@ class SessionGeneratorService:
             # Rear delts alternatives (primary focus)
             "rear_delts": ["Face Pull", "Reverse Fly", "Band Pull-Apart", "Prone Y Raise", "Cable Reverse Fly"],
             # Chest alternatives
-            "chest": ["Push-Up", "Dumbbell Fly", "Cable Fly", "Incline Push-Up", "Chest Dip"],
+            "chest": ["Push-Up", "Dumbbell Flyes", "Incline Cable Flye", "Incline Push-Up", "Chest Dip"],
             # Back alternatives  
-            "lats": ["Lat Pulldown", "Pull-Up", "Chin-Up", "Cable Row", "T-Bar Row"],
-            "upper_back": ["Face Pull", "Shrug", "Upright Row", "High Pull", "Band Pull-Apart"],
+            "lats": ["Lat Pulldown", "Pull-Up", "Chin-Up", "Seated Cable Row", "Barbell Row"],
+            "upper_back": ["Face Pull", "Barbell Shrug", "Upright Row", "High Pull", "Cable Rear Delt Fly"],
             # Shoulder alternatives
             "front_delts": ["Front Raise", "Arnold Press", "Pike Push-Up", "Handstand Push-Up"],
             "side_delts": ["Lateral Raise", "Upright Row", "Cable Lateral Raise", "Dumbbell Lateral Raise"],
             # Arm alternatives
-            "biceps": ["Bicep Curl", "Hammer Curl", "Cable Curl", "Chin-Up", "Preacher Curl"],
+            "biceps": ["Bicep Curl", "Hammer Curl", "Cable Curl", "Chin-Up", "Machine Preacher Curls"],
             "triceps": ["Tricep Extension", "Close-Grip Push-Up", "Tricep Dip", "Overhead Extension"],
             # Leg alternatives
             "quadriceps": ["Leg Extension", "Lunge", "Step-Up", "Wall Sit", "Jump Squat"],
@@ -1292,8 +1777,8 @@ class SessionGeneratorService:
         
         # Movement pattern alternatives
         pattern_alternatives = {
-            "horizontal_push": ["Push-Up", "Dumbbell Fly", "Cable Fly"],
-            "horizontal_pull": ["Cable Row", "Band Pull-Apart", "Inverted Row"],
+            "horizontal_push": ["Push-Up", "Dumbbell Flyes", "Incline Cable Flye"],
+            "horizontal_pull": ["Seated Cable Row", "Face Pull", "Inverted Row"],
             "vertical_push": ["Pike Push-Up", "Handstand Push-Up", "Arnold Press"],
             "vertical_pull": ["Pull-Up", "Lat Pulldown", "High Pull"],
         }
@@ -1644,12 +2129,12 @@ class SessionGeneratorService:
         # Preferred accessory movements by pattern
         preferred_accessories = {
             "squat": ["Leg Extension", "Leg Curl", "Calf Raise", "Walking Lunge"],
-            "hinge": ["Leg Curl", "Leg Extension", "Hip Thrust", "Back Extension"],
-            "lunge": ["Leg Extension", "Calf Raise", "Split Squat", "Step Up"],
-            "horizontal_push": ["Lateral Raise", "Face Pull", "Tricep Pushdown", "Fly"],
-            "horizontal_pull": ["Bicep Curl", "Face Pull", "Rear Delt Fly", "Hammer Curl"],
+            "hinge": ["Leg Curl", "Leg Extension", "Hip Thrust", "Hyperextensions (Back Extensions)"],
+            "lunge": ["Leg Extension", "Calf Raise", "Bulgarian Split Squat", "Dumbbell Step Ups"],
+            "horizontal_push": ["Lateral Raise", "Face Pull", "Dips Triceps Version", "Dumbbell Flyes"],
+            "horizontal_pull": ["Bicep Curl", "Face Pull", "Cable Rear Delt Fly", "Hammer Curl"],
             "vertical_push": ["Lateral Raise", "Face Pull", "Tricep Extension", "Upright Row"],
-            "vertical_pull": ["Bicep Curl", "Hammer Curl", "Preacher Curl", "Shrug"],
+            "vertical_pull": ["Bicep Curl", "Hammer Curl", "Machine Preacher Curls", "Barbell Shrug"],
         }
         
         # Build main exercises from intent tags
@@ -1697,7 +2182,7 @@ class SessionGeneratorService:
         
         # Build warmup based on session type
         warmup = [
-            {"movement": "Dynamic Stretching", "sets": 1, "duration_seconds": 180, "notes": "Full body mobility"},
+            {"movement": "Dynamic Back Stretch", "sets": 1, "duration_seconds": 180, "notes": "Full body mobility"},
         ]
         
         # Add pattern-specific warmup
@@ -1710,7 +2195,7 @@ class SessionGeneratorService:
         
         # Build cooldown
         cooldown = [
-            {"movement": "Static Stretching", "duration_seconds": 300, "notes": "Focus on trained muscles"},
+            {"movement": "Hamstring Stretch", "duration_seconds": 300, "notes": "Focus on trained muscles"},
         ]
         
         # Estimate duration: warmup (10) + main (25-30) + accessory (10-15) + cooldown (5) = ~55 min
@@ -1732,8 +2217,8 @@ class SessionGeneratorService:
         fallbacks = {
             SessionType.UPPER: {
                 "warmup": [
-                    {"movement": "Arm Circles", "sets": 2, "reps": 10},
-                    {"movement": "Band Pull-Aparts", "sets": 2, "reps": 15},
+                    {"movement": "Shoulder Circles", "sets": 2, "reps": 10},
+                    {"movement": "Face Pull", "sets": 2, "reps": 15},
                 ],
                 "main": [
                     {"movement": "Barbell Bench Press", "sets": 4, "rep_range_min": 6, "rep_range_max": 8, "target_rpe": 7.5, "rest_seconds": 120},
@@ -1746,14 +2231,14 @@ class SessionGeneratorService:
                 ],
                 "finisher": None,
                 "cooldown": [
-                    {"movement": "Static Stretching", "duration_seconds": 300},
+                    {"movement": "Chest Stretch", "duration_seconds": 300},
                 ],
                 "estimated_duration_minutes": 55,
                 "reasoning": "Fallback upper body session - LLM generation failed.",
             },
             SessionType.LOWER: {
                 "warmup": [
-                    {"movement": "Dynamic Stretching", "sets": 1, "duration_seconds": 180},
+                    {"movement": "Dynamic Back Stretch", "sets": 1, "duration_seconds": 180},
                     {"movement": "Goblet Squat", "sets": 2, "reps": 8},
                 ],
                 "main": [
@@ -1767,14 +2252,14 @@ class SessionGeneratorService:
                 "finisher": None,
                 "cooldown": [
                     {"movement": "Hip Flexor Stretch", "duration_seconds": 120},
-                    {"movement": "Static Stretching", "duration_seconds": 180},
+                    {"movement": "Hamstring Stretch", "duration_seconds": 180},
                 ],
                 "estimated_duration_minutes": 55,
                 "reasoning": "Fallback lower body session - LLM generation failed.",
             },
             SessionType.FULL_BODY: {
                 "warmup": [
-                    {"movement": "Dynamic Stretching", "sets": 1, "duration_seconds": 180},
+                    {"movement": "Dynamic Back Stretch", "sets": 1, "duration_seconds": 180},
                     {"movement": "Goblet Squat", "sets": 2, "reps": 8},
                 ],
                 "main": [
@@ -1788,7 +2273,7 @@ class SessionGeneratorService:
                 ],
                 "finisher": None,
                 "cooldown": [
-                    {"movement": "Static Stretching", "duration_seconds": 300},
+                    {"movement": "Hamstring Stretch", "duration_seconds": 300},
                 ],
                 "estimated_duration_minutes": 60,
                 "reasoning": "Fallback full body session - LLM generation failed.",
@@ -1798,7 +2283,7 @@ class SessionGeneratorService:
         # Default fallback for other session types (PPL, etc.)
         default = {
             "warmup": [
-                {"movement": "Dynamic Stretching", "sets": 1, "duration_seconds": 180},
+                {"movement": "Dynamic Back Stretch", "sets": 1, "duration_seconds": 180},
             ],
             "main": [
                 {"movement": "Back Squat", "sets": 4, "rep_range_min": 8, "rep_range_max": 10, "target_rpe": 7, "rest_seconds": 120},
@@ -1809,7 +2294,7 @@ class SessionGeneratorService:
             ],
             "finisher": None,
             "cooldown": [
-                {"movement": "Static Stretching", "duration_seconds": 300},
+                {"movement": "Hamstring Stretch", "duration_seconds": 300},
             ],
             "estimated_duration_minutes": 50,
             "reasoning": "Fallback session - LLM generation failed.",
@@ -1824,7 +2309,6 @@ class SessionGeneratorService:
     
     async def _load_all_circuits(self, db: AsyncSession) -> list[SolverCircuit]:
         """Load all circuits and convert to SolverCircuit format."""
-        from app.services.optimization import SolverCircuit
         from app.models.circuit import CircuitTemplate
         
         result = await db.execute(select(CircuitTemplate))
@@ -1917,24 +2401,48 @@ class SessionGeneratorService:
                 
         return filtered
 
-    def _to_solver_movements(self, movements: list[Movement]) -> list[SolverMovement]:
-        """Convert SQLAlchemy models to picklable DTOs for the solver thread."""
+    def _to_solver_movements(
+        self, movements: list[Movement], all_movements: list[Movement]
+    ) -> list[SolverMovement]:
+        """Convert SQLAlchemy models to SolverMovement DTOs with additional fields.
+        
+        Args:
+            movements: Filtered list of movements to convert
+            all_movements: Full list of movements for reference (e.g., disciplines lookup)
+            
+        Returns:
+            List of SolverMovement objects with pattern and disciplines populated
+        """
+        # Build a movement-to-disciplines map from all movements
+        movement_disciplines = {}
+        for m in all_movements:
+            if hasattr(m, 'disciplines') and m.disciplines:
+                movement_disciplines[m.id] = [d.value for d in m.disciplines]
+            else:
+                movement_disciplines[m.id] = []
+        
+        # Build a movement-to-equipment map
+        movement_equipment = {}
+        for m in all_movements:
+            if hasattr(m, 'equipment') and m.equipment:
+                movement_equipment[m.id] = [me.equipment.name for me in m.equipment]
+            else:
+                movement_equipment[m.id] = []
+        
         return [
             SolverMovement(
                 id=m.id,
                 name=m.name,
                 primary_muscle=str(m.primary_muscle.value) if hasattr(m.primary_muscle, 'value') else str(m.primary_muscle),
-                fatigue_factor=m.fatigue_factor,
-                stimulus_factor=m.stimulus_factor,
                 compound=m.compound,
-                is_complex_lift=m.is_complex_lift
+                is_complex_lift=m.is_complex_lift,
+                pattern=str(m.pattern) if hasattr(m, 'pattern') and m.pattern else "other",
+                disciplines=movement_disciplines.get(m.id, []),
+                equipment_needed=movement_equipment.get(m.id, []),
+                tier="silver",  # Default tier, could be enhanced based on movement attributes
             )
             for m in movements
         ]
-    
-    def _to_solver_circuits(self, circuits: list[SolverCircuit]) -> list[SolverCircuit]:
-        """Circuits are already in SolverCircuit format."""
-        return circuits
     
     def _filter_circuits_for_session_type(self, circuits: list[SolverCircuit], session_type: SessionType) -> list[SolverCircuit]:
         """Filter circuits that are appropriate for session type."""
@@ -1950,7 +2458,7 @@ class SessionGeneratorService:
         goal_weights: dict[str, int] | None = None,
     ) -> Any:
         """
-        Generate a draft session using the Optimization Engine (OR-Tools).
+        Generate a draft session using the DiversityOptimizationService (V2).
         This serves as the 'Draft Generator' in the Chain of Reasoning.
         """
         # Load all movements for the solver
@@ -1966,8 +2474,8 @@ class SessionGeneratorService:
         filtered_circuits = self._filter_circuits_for_session_type(all_circuits, session.session_type)
         
         # Convert to DTOs for thread safety
-        solver_movements = self._to_solver_movements(filtered_movements)
-        solver_circuits = self._to_solver_circuits(filtered_circuits)
+        solver_movements = self._to_solver_movements(filtered_movements, all_movements)
+        solver_circuits = filtered_circuits  # Already in SolverCircuit format
         
         # Determine targets based on session type
         targets = self._get_muscle_targets_for_session(session.session_type)
@@ -1979,14 +2487,27 @@ class SessionGeneratorService:
             for name in used_movements:
                 if name in name_to_id:
                     excluded_ids.append(name_to_id[name])
+        
+        # Extract user goals from goal_weights
+        user_goals = []
+        if goal_weights:
+            user_goals = [goal for goal, weight in goal_weights.items() if weight > 0]
+        
+        # Extract target muscles from targets
+        target_muscles = list(targets.keys())
+        
+        # Extract required pattern from session context/intent
+        required_pattern = None
+        intent_tags = session.intent_tags or []
+        if intent_tags:
+            # Use first intent tag as required pattern
+            required_pattern = intent_tags[0] if intent_tags else None
 
         # Build request
-        req = OptimizationRequest(
+        req = OptimizationRequestV2(
             available_movements=solver_movements,
             available_circuits=solver_circuits,
             target_muscle_volumes=targets,
-            max_fatigue=activity_distribution_config.or_tools_max_fatigue,
-            min_stimulus=2.0,
             user_skill_level=SkillLevel.INTERMEDIATE,
             excluded_movement_ids=excluded_ids,
             required_movement_ids=[],
@@ -1994,41 +2515,46 @@ class SessionGeneratorService:
             allow_complex_lifts=True,
             allow_circuits=True,
             goal_weights=goal_weights,
+            # V2-specific fields
+            user_profile=None,  # Would be fetched from DB in full implementation
+            session_movements=[],
+            microcycle_movements=[],
+            user_goals=user_goals,
+            discipline_preferences={},
+            required_pattern=required_pattern,
+            target_muscles=target_muscles,
+            available_equipment=set(),
+            max_relaxation_steps=6,
         )
         
         # Solve in a separate thread to avoid blocking the event loop
         import asyncio
         loop = asyncio.get_running_loop()
-        return await loop.run_in_executor(None, self.optimizer.solve_session, req)
-
-    def _format_draft_for_llm(self, draft_content: dict) -> str:
-        """Format the draft session content into a string for the LLM prompt."""
-        lines = ["Based on mathematical optimization, here is a starting point:"]
-        
-        if draft_content.get("main"):
-            lines.append("Main Lifts:")
-            for ex in draft_content["main"]:
-                lines.append(f"- {ex['movement']} ({ex['sets']} sets)")
-        
-        if draft_content.get("accessory"):
-            lines.append("Accessories:")
-            for ex in draft_content["accessory"]:
-                lines.append(f"- {ex['movement']} ({ex['sets']} sets)")
-                
-        return "\n".join(lines)
+        return await loop.run_in_executor(
+            None,
+            self.diversity_optimizer.solve_session_with_diversity_scoring,
+            req
+        )
 
     def _convert_optimization_result_to_content(self, result: Any, session_type: SessionType) -> dict[str, Any]:
-        """Convert OptimizationResult to session content dict."""
+        """Convert OptimizationResultV2 to session content dict.
         
+        Args:
+            result: Optimization result from DiversityOptimizationService
+            session_type: Type of session being generated
+            
+        Returns:
+            Session content dictionary with warmup, main, accessory, finisher, cooldown sections
+        """
         main_exercises = []
         accessory_exercises = []
         
         # Heuristic to split into Main vs Accessory
-        # Compound + High Fatigue -> Main
-        # Isolation / Low Fatigue -> Accessory
-        
+        # Compound + Complex Lift -> Main
+        # Isolation / Non-Complex -> Accessory
+
         for m in result.selected_movements:
-            is_main = m.compound and (m.fatigue_factor > 0.6 or m.is_complex_lift)
+            is_main = m.compound and m.is_complex_lift
             
             exercise = {
                 "movement": m.name,
@@ -2061,19 +2587,24 @@ class SessionGeneratorService:
                 "notes": f"Could not generate valid session. Status: {result.status}. Please try regenerating or editing manually."
             })
             
+        # Build reasoning message - include relaxation step if available
+        reasoning = f"Optimization Engine generated session. Status: {result.status}."
+        if hasattr(result, 'relaxation_step_used') and result.relaxation_step_used > 0:
+            reasoning += f" (Relaxed constraints at step {result.relaxation_step_used})"
+            
         return {
             "warmup": [
-                {"movement": "Dynamic Stretching", "sets": 1, "duration_seconds": 300, "notes": "General prep"},
-                {"movement": "Light Cardio", "duration_seconds": 300, "notes": "Raise body temp"}
+                {"movement": "Dynamic Back Stretch", "sets": 1, "duration_seconds": 300, "notes": "General prep"},
+                {"movement": "Rope Jumping", "duration_seconds": 300, "notes": "Raise body temp"}
             ],
             "main": main_exercises,
             "accessory": accessory_exercises,
             "finisher": None,
             "cooldown": [
-                {"movement": "Static Stretching", "duration_seconds": 300, "notes": "Full body"}
+                {"movement": "Hamstring Stretch", "duration_seconds": 300, "notes": "Full body"}
             ],
             "estimated_duration_minutes": result.estimated_duration + 10, # +10 for warmup/cool
-            "reasoning": f"Optimization Engine generated session. Status: {result.status}. Stimulus: {result.total_stimulus:.2f}, Fatigue: {result.total_fatigue:.2f}"
+            "reasoning": reasoning
         }
 
 

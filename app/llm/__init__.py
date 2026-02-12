@@ -7,14 +7,9 @@ from app.llm.base import (
     StreamChunk,
     PromptBuilder,
 )
-from app.llm.ollama_provider import (
-    OllamaProvider,
+from app.llm.schemas import (
     SESSION_PLAN_SCHEMA,
     ADAPTATION_RESPONSE_SCHEMA,
-)
-from app.llm.prompts import (
-    JEROME_SYSTEM_PROMPT,
-    build_full_session_prompt,
 )
 
 __all__ = [
@@ -24,7 +19,6 @@ __all__ = [
     "Message",
     "StreamChunk",
     "PromptBuilder",
-    "OllamaProvider",
     "SESSION_PLAN_SCHEMA",
     "ADAPTATION_RESPONSE_SCHEMA",
     "get_llm_provider",
@@ -41,10 +35,10 @@ def get_llm_provider() -> LLMProvider:
     Get the singleton LLM provider instance.
     
     Returns the appropriate provider based on settings.
-    Currently only Ollama is implemented; future providers
-    (OpenAI, Anthropic, etc.) can be added here.
-    
     Uses singleton pattern to reuse HTTP connections and prevent resource leaks.
+    
+    Note: Session generation uses ML optimization (GreedyOptimizationService),
+    NOT LLM. The LLM provider is only used for daily adaptation/coaching features.
     """
     global _provider_instance
     
@@ -55,10 +49,13 @@ def get_llm_provider() -> LLMProvider:
     
     settings = get_settings()
     
-    if settings.llm_provider == "ollama":
-        _provider_instance = OllamaProvider()
+    if settings.llm_provider == "openai":
+        from app.llm.openai_provider import OpenAIProvider
+        _provider_instance = OpenAIProvider()
+    elif settings.llm_provider == "anthropic":
+        # Future: Add Anthropic provider
+        raise ValueError("Anthropic provider not yet implemented")
     else:
-        # Future: Add other providers
         raise ValueError(f"Unknown LLM provider: {settings.llm_provider}")
     
     return _provider_instance

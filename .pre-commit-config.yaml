@@ -1,0 +1,8 @@
+repos:
+  - repo: local
+    hooks:
+      - id: validate-api-contracts
+        name: Validate API contracts
+        entry: python scripts/validate_contracts.py
+        language: system
+        files: ^app/api/routes/.*\.py$

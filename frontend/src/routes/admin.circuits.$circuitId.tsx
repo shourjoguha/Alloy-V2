@@ -4,39 +4,30 @@ import { Trash, ArrowUp, ArrowDown } from 'lucide-react';
 import { useCircuitAdmin, useUpdateCircuitAdmin } from '@/api/circuits';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Spinner } from '@/components/common/Spinner';
+import { Spinner } from '@/components/ui';
+import { type CircuitTemplateExercise } from '@/types';
 
 export const Route = createFileRoute('/admin/circuits/$circuitId')({
   component: AdminCircuitEditorPage,
 });
 
-interface EditableExercise {
-  movement_name?: string | null;
-  reps?: number | null;
-  duration_seconds?: number | null;
-  distance_meters?: number | null;
-  rest_seconds?: number | null;
-  rx_weight_male?: number | null;
-  rx_weight_female?: number | null;
-  metric_type?: string | null;
-  notes?: string | null;
-  original?: string | null;
-}
+// Alias for clarity in admin context
+type EditableExercise = CircuitTemplateExercise;
 
 function normalizeExercises(exercises: unknown[]): EditableExercise[] {
   return (exercises ?? []).map((raw) => {
-    const ex = raw as Record<string, unknown>;
+    const ex = raw as Partial<CircuitTemplateExercise>;
     return {
-      movement_name: (ex.movement_name as string) ?? '',
-      reps: (ex.reps as number) ?? null,
-      duration_seconds: (ex.duration_seconds as number) ?? null,
-      distance_meters: (ex.distance_meters as number) ?? null,
-      rest_seconds: (ex.rest_seconds as number) ?? null,
-      rx_weight_male: (ex.rx_weight_male as number) ?? null,
-      rx_weight_female: (ex.rx_weight_female as number) ?? null,
-      metric_type: (ex.metric_type as string) ?? 'reps',
-      notes: (ex.notes as string) ?? '',
-      original: (ex.original as string) ?? '',
+      movement_name: ex.movement_name ?? null,
+      reps: ex.reps ?? null,
+      duration_seconds: ex.duration_seconds ?? null,
+      distance_meters: ex.distance_meters ?? null,
+      rest_seconds: ex.rest_seconds ?? null,
+      rx_weight_male: ex.rx_weight_male ?? null,
+      rx_weight_female: ex.rx_weight_female ?? null,
+      metric_type: ex.metric_type ?? 'reps',
+      notes: ex.notes ?? null,
+      original: ex.original ?? null,
     };
   });
 }

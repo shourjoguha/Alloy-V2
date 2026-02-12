@@ -5,6 +5,11 @@ from app.services.interference import InterferenceService, interference_service
 from app.services.program import ProgramService, program_service
 from app.services.deload import DeloadService, deload_service
 from app.services.adaptation import AdaptationService, adaptation_service
+from app.services.circuit_metrics import (
+    CircuitMetricsCalculator,
+    calculate_circuit_metrics,
+)
+from app.services.audit_service import AuditService
 
 __all__ = [
     "MetricsService",
@@ -20,4 +25,7 @@ __all__ = [
     "deload_service",
     "AdaptationService",
     "adaptation_service",
+    "CircuitMetricsCalculator",
+    "calculate_circuit_metrics",
+    "AuditService",
 ]

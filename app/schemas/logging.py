@@ -95,6 +95,7 @@ class SorenessLogCreate(BaseModel):
     log_date: DateType | None = None
     body_part: str
     soreness_1_5: int = Field(ge=0, le=5)
+    last_rpe: float | None = Field(default=None, ge=6.0, le=10.0, description="RPE of the workout that caused this soreness")
     notes: str | None = None
 
 
@@ -151,8 +152,6 @@ class SorenessLogResponse(BaseModel):
     log_date: DateType | None = None
     body_part: str
     soreness_1_5: int
-    inferred_cause_session_id: int | None = None
-    inferred_cause_description: str | None = None
     notes: str | None = None
     created_at: DatetimeType | None = None
     
@@ -202,6 +201,7 @@ class MuscleRecoveryStateResponse(BaseModel):
     user_id: int | None = None
     muscle: str
     recovery_level: int
+    last_rpe: float | None = None
     last_updated_at: DatetimeType | None = None
     created_at: DatetimeType | None = None
     
