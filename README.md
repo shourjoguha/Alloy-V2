@@ -6,7 +6,8 @@ An AI-enabled workout coach that creates adaptive 8-12 week strength/fitness pro
 
 - **Program Generation**: Create personalized 8-12 week programs based on 3 weighted goals
 - **Multiple Split Templates**: Upper/Lower, PPL, Full Body, or custom Hybrid splits
-- **Daily Adaptation**: Real-time session adjustments based on constraints and recovery
+- **Daily Adaptation**: Real-time session adjustments based on RPE-based autoregulation, constraints, and recovery signals
+- **Interactive Onboarding**: Adaptive wizard-style onboarding flow for personalized user profiling
 - **Diversity-Based Scoring**: Multi-dimensional movement scoring (7 scoring dimensions) with progressive constraint relaxation
 - **Progress Tracking**: e1RM calculation with multiple formulas (Epley, Brzycki, Lombardi, O'Conner)
 - **Pattern Strength Index (PSI)**: Track strength across movement patterns
@@ -20,6 +21,7 @@ An AI-enabled workout coach that creates adaptive 8-12 week strength/fitness pro
 - **Circuit Support**: CrossFit-style circuits with AMRAP, EMOM, and other formats
 - **Goals System**: Long-term macro cycles with versioned goals and check-ins
 - **External Integrations**: Data lake architecture for Strava, Garmin, Apple Health, WHOOP, Oura
+- **Rich Media Library**: Local exercise database with JSON definitions and instructional images
 - **Custom Workout Logging**: Log ad-hoc activities and custom workouts with detailed metrics
 - **Historic Tracking**: View and manage past programs and sessions
 - **Feature Flags**: Gradual rollout system with configurable feature toggles
@@ -663,6 +665,8 @@ For detailed architecture decisions, development patterns, and implementation no
 ## Roadmap & Future Enhancements
 
 ### Recently Completed (2026-02)
+- ✅ **RPE-Based Autoregulation**: Replaced rigid stimulus/fatigue models with flexible RPE-based adaptation (ADR-001)
+- ✅ **Interactive Onboarding Flow**: Complete wizard-style user profiling and goal setting
 - ✅ **Diversity-Based Scoring System**: Multi-dimensional movement scoring with 7 scoring dimensions
 - ✅ **Progressive Constraint Relaxation**: 6-step relaxation strategy for optimization
 - ✅ **Session Quality KPIs**: Block-specific validation, pattern rotation, muscle coverage tracking

@@ -71,6 +71,7 @@ class Program(Base):
     is_active = Column(Boolean, default=True)
     is_template = Column(Boolean, default=False)  # Reusable template
     visibility = Column(SQLEnum(Visibility), default=Visibility.PRIVATE, nullable=False)
+    generation_in_progress = Column(Boolean, default=False, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
     
     # Constraints

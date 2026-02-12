@@ -25,6 +25,11 @@ from datetime import datetime, timedelta
 from enum import Enum
 from typing import Any, Optional, Protocol
 
+# Import for type hints in docstrings (lazy import)
+def _get_time_estimation_service():
+    from app.services.time_estimation import TimeEstimationService
+    return TimeEstimationService()
+
 logger = logging.getLogger(__name__)
 
 
@@ -250,7 +255,8 @@ def is_feature_enabled(feature_name: str, user_id: Optional[int] = None) -> bool
         
     Example:
         >>> if is_feature_enabled("use_greedy_optimizer", user_id=123):
-        ...     return GreedyOptimizationService()
+        ...     from app.services.time_estimation import TimeEstimationService
+        ...     return GreedyOptimizationService(time_estimation_service=TimeEstimationService())
         >>> else:
         ...     return LegacyOptimizer()
     """

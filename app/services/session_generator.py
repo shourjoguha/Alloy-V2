@@ -32,6 +32,7 @@ from app.services.rpe_suggestion_service import (
     get_rpe_suggestion_service,
     RPESuggestion,
 )
+from app.services.time_estimation import TimeEstimationService
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
@@ -47,7 +48,10 @@ class SessionGeneratorService:
     """
     
     def __init__(self):
-        self.diversity_optimizer = GreedyOptimizationService()
+        self._time_estimation_service = TimeEstimationService()
+        self.diversity_optimizer = GreedyOptimizationService(
+            time_estimation_service=self._time_estimation_service
+        )
         self._rpe_service = get_rpe_suggestion_service()
     
     async def generate_session_exercises(
@@ -1072,7 +1076,7 @@ class SessionGeneratorService:
             user_skill_level=SkillLevel.INTERMEDIATE,
             excluded_movement_ids=excluded_ids,
             required_movement_ids=list(required_movement_ids or []),
-            session_duration_minutes=60,
+            session_duration_minutes=session_context.get("program", {}).get("max_session_duration", 60),
             allow_complex_lifts=True,
             allow_circuits=False,
             goal_weights=goal_weights,
@@ -2459,8 +2463,12 @@ class SessionGeneratorService:
     ) -> Any:
         """
         Generate a draft session using the DiversityOptimizationService (V2).
-        This serves as the 'Draft Generator' in the Chain of Reasoning.
+        This serves as 'Draft Generator' in the Chain of Reasoning.
         """
+        # Fetch program to get max_session_duration
+        program = await db.get(Program, session.program_id)
+        max_session_duration = program.max_session_duration if program else 60
+
         # Load all movements for the solver
         all_movements = await self._load_all_movements(db)
         
@@ -2511,7 +2519,7 @@ class SessionGeneratorService:
             user_skill_level=SkillLevel.INTERMEDIATE,
             excluded_movement_ids=excluded_ids,
             required_movement_ids=[],
-            session_duration_minutes=60,
+            session_duration_minutes=max_session_duration,
             allow_complex_lifts=True,
             allow_circuits=True,
             goal_weights=goal_weights,

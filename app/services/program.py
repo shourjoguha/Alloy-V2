@@ -14,6 +14,7 @@ from typing import Optional, Dict, Any
 import logging
 import traceback
 import asyncio
+import time
 from sqlalchemy import select, and_, or_, cast, String
 from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -256,9 +257,56 @@ class ProgramService:
             Progress tracking dict
         """
         from app.db.database import async_session_maker
+        from sqlalchemy import update as sa_update
         
+        structure_start = time.monotonic()
         logger.info("[STRUCTURE] Starting program structure generation for program_id=%s", program_id)
         
+        # Atomically acquire generation lock to prevent duplicate structure generation
+        async with async_session_maker() as lock_db:
+            program = await lock_db.get(Program, program_id)
+            if not program:
+                logger.error("[STRUCTURE] Program not found: %s", program_id)
+                return {"status": "failed", "error": "Program not found"}
+
+            result = await lock_db.execute(
+                sa_update(Program)
+                .where(Program.id == program_id, Program.generation_in_progress == False)  # noqa: E712
+                .values(generation_in_progress=True)
+            )
+            await lock_db.commit()
+
+            if result.rowcount == 0:
+                logger.warning("[STRUCTURE] CONCURRENT GENERATION DETECTED - program_id=%s, skipping", program_id)
+                return {"status": "skipped", "reason": "Generation already in progress"}
+        
+        logger.info("[STRUCTURE] LOCK ACQUIRED for program_id=%s", program_id)
+
+        try:
+            return await self._generate_structure_inner(program_id, structure_start)
+        finally:
+            # Release lock
+            try:
+                async with async_session_maker() as unlock_db:
+                    prog = await unlock_db.get(Program, program_id)
+                    if prog:
+                        prog.generation_in_progress = False
+                        unlock_db.add(prog)
+                        await unlock_db.commit()
+                logger.info("[STRUCTURE] LOCK RELEASED for program_id=%s, elapsed_ms=%.2f",
+                           program_id, (time.monotonic() - structure_start) * 1000)
+            except Exception as unlock_err:
+                logger.error("[STRUCTURE] FAILED TO RELEASE LOCK for program_id=%s: %s",
+                            program_id, unlock_err, exc_info=True)
+
+    async def _generate_structure_inner(
+        self,
+        program_id: int,
+        structure_start: float,
+    ) -> dict[str, Any]:
+        """Inner implementation of structure generation (called under lock)."""
+        from app.db.database import async_session_maker
+
         async with async_session_maker() as db:
             program = await db.get(Program, program_id)
             if not program:
@@ -470,44 +518,150 @@ class ProgramService:
     ) -> dict[str, Any]:
         from app.db.database import async_session_maker
 
-        logger.info(f"[generate_active_microcycle_sessions] START - program_id={program_id}")
+        start_time = time.monotonic()
+        logger.info(f"[generate_active_microcycle_sessions] START - program_id={program_id}, timestamp={datetime.utcnow().isoformat()}")
 
-        async with async_session_maker() as db:
-            program = await db.get(Program, program_id)
+        # Atomically acquire generation lock using UPDATE ... WHERE to prevent races
+        from sqlalchemy import update as sa_update
+        async with async_session_maker() as lock_db:
+            # Check program exists first
+            program = await lock_db.get(Program, program_id)
             if not program:
                 logger.error(f"[generate_active_microcycle_sessions] Program not found: {program_id}")
                 return {"status": "failed", "error": "Program not found"}
 
-            result = await db.execute(
-                select(Microcycle).where(
-                    Microcycle.program_id == program_id,
-                    Microcycle.status == MicrocycleStatus.ACTIVE,
-                )
+            # Atomic compare-and-swap: only sets True if currently False
+            result = await lock_db.execute(
+                sa_update(Program)
+                .where(Program.id == program_id, Program.generation_in_progress == False)  # noqa: E712
+                .values(generation_in_progress=True)
             )
-            microcycle = result.scalar_one_or_none()
-            if not microcycle:
-                logger.error(f"[generate_active_microcycle_sessions] Active microcycle not found for program {program_id}")
-                return {"status": "failed", "error": "Active microcycle not found"}
+            await lock_db.commit()
 
-            # Set microcycle generation status to IN_PROGRESS
-            microcycle.generation_status = GenerationStatus.IN_PROGRESS
-            db.add(microcycle)
-            await db.commit()
-            await db.refresh(microcycle)
+            if result.rowcount == 0:
+                # Lock was already held — another task is generating
+                lock_acquisition_time = time.monotonic() - start_time
+                logger.warning(
+                    f"[generate_active_microcycle_sessions] CONCURRENT GENERATION DETECTED - program_id={program_id}, "
+                    f"lock_check_elapsed_ms={lock_acquisition_time * 1000:.2f}"
+                )
+                return {
+                    "status": "skipped",
+                    "reason": "Generation already in progress",
+                    "program_id": program_id,
+                }
 
-        logger.info(f"[generate_active_microcycle_sessions] Found active microcycle {microcycle.id}, starting generation...")
+        lock_acquisition_time = time.monotonic() - start_time
+        logger.info(
+            f"[generate_active_microcycle_sessions] LOCK ACQUIRED - program_id={program_id}, "
+            f"lock_acquisition_elapsed_ms={lock_acquisition_time * 1000:.2f}"
+        )
 
-        # Generate sessions sequentially and track progress
-        progress = await self._generate_session_content_async(program_id, microcycle.id)
+        try:
+            async with async_session_maker() as db:
+                # Refresh program in new session
+                program = await db.get(Program, program_id)
 
-        logger.info(f"[generate_active_microcycle_sessions] COMPLETED for program {program_id}")
+                result = await db.execute(
+                    select(Microcycle).where(
+                        Microcycle.program_id == program_id,
+                        Microcycle.status == MicrocycleStatus.ACTIVE,
+                    )
+                )
+                microcycle = result.scalar_one_or_none()
+                if not microcycle:
+                    logger.error(f"[generate_active_microcycle_sessions] Active microcycle not found for program {program_id}")
+                    return {"status": "failed", "error": "Active microcycle not found"}
 
-        return progress
+                microcycle_fetch_time = time.monotonic() - start_time
+                logger.info(
+                    f"[generate_active_microcycle_sessions] MICROCYCLE FETCHED - program_id={program_id}, "
+                    f"microcycle_id={microcycle.id}, "
+                    f"fetch_elapsed_ms={microcycle_fetch_time * 1000:.2f}"
+                )
+
+                # Set microcycle generation status to IN_PROGRESS
+                microcycle.generation_status = GenerationStatus.IN_PROGRESS
+                db.add(microcycle)
+                await db.commit()
+                await db.refresh(microcycle)
+
+            status_set_time = time.monotonic() - start_time
+            logger.info(
+                f"[generate_active_microcycle_sessions] MICROCYCLE STATUS SET - program_id={program_id}, "
+                f"microcycle_id={microcycle.id}, status=IN_PROGRESS, "
+                f"status_set_elapsed_ms={status_set_time * 1000:.2f}"
+            )
+
+            # Generate sessions sequentially and track progress
+            generation_start_time = time.monotonic()
+            progress = await self._generate_session_content_async(program_id, microcycle.id, start_time)
+            generation_elapsed_time = time.monotonic() - generation_start_time
+
+            logger.info(
+                f"[generate_active_microcycle_sessions] GENERATION PHASE COMPLETED - program_id={program_id}, "
+                f"microcycle_id={microcycle.id}, "
+                f"generation_elapsed_ms={generation_elapsed_time * 1000:.2f}, "
+                f"status={progress.get('status')}, "
+                f"completed_sessions={progress.get('completed_sessions')}, "
+                f"failed_sessions={progress.get('failed_sessions')}"
+            )
+
+            return progress
+
+        except Exception as e:
+            error_time = time.monotonic() - start_time
+            logger.error(
+                f"[generate_active_microcycle_sessions] EXCEPTION - program_id={program_id}, "
+                f"elapsed_ms={error_time * 1000:.2f}, "
+                f"error_type={type(e).__name__}, "
+                f"error_message={str(e)}",
+                extra={
+                    "event": "generation_exception",
+                    "program_id": program_id,
+                    "exception_type": type(e).__name__,
+                    "exception_message": str(e),
+                    "traceback": traceback.format_exc(),
+                },
+                exc_info=True
+            )
+            raise
+
+        finally:
+            # Release lock
+            try:
+                async with async_session_maker() as unlock_db:
+                    program = await unlock_db.get(Program, program_id)
+                    if program:
+                        program.generation_in_progress = False
+                        unlock_db.add(program)
+                        await unlock_db.commit()
+
+                total_elapsed_time = time.monotonic() - start_time
+                logger.info(
+                    f"[generate_active_microcycle_sessions] LOCK RELEASED - program_id={program_id}, "
+                    f"total_elapsed_ms={total_elapsed_time * 1000:.2f}"
+                )
+            except Exception as unlock_error:
+                logger.error(
+                    f"[generate_active_microcycle_sessions] FAILED TO RELEASE LOCK - program_id={program_id}, "
+                    f"error_type={type(unlock_error).__name__}, "
+                    f"error_message={str(unlock_error)}",
+                    extra={
+                        "event": "lock_release_failed",
+                        "program_id": program_id,
+                        "exception_type": type(unlock_error).__name__,
+                        "exception_message": str(unlock_error),
+                        "traceback": traceback.format_exc(),
+                    },
+                    exc_info=True
+                )
     
     async def _generate_session_content_async(
         self,
         program_id: int,
         microcycle_id: int,
+        overall_start_time: float,
     ) -> dict[str, Any]:
         """
         Generate exercise content for all non-rest sessions in a microcycle.
@@ -518,13 +672,18 @@ class ProgramService:
         Args:
             program_id: ID of the program
             microcycle_id: ID of the microcycle to generate content for
+            overall_start_time: Start time from parent method for elapsed calculation
 
         Returns:
             Progress tracking dict with status and session details
         """
         from app.db.database import async_session_maker
 
-        logger.info(f"[_generate_session_content_async] START - program_id={program_id}, microcycle_id={microcycle_id}")
+        phase_start_time = time.monotonic()
+        logger.info(
+            f"[_generate_session_content_async] START - program_id={program_id}, microcycle_id={microcycle_id}, "
+            f"elapsed_from_parent_ms={(phase_start_time - overall_start_time) * 1000:.2f}"
+        )
 
         # Progress tracking
         progress = {
@@ -539,6 +698,7 @@ class ProgramService:
         }
 
         # Create a new DB session for reading program and sessions
+        fetch_start_time = time.monotonic()
         async with async_session_maker() as db:
             # Fetch program and microcycle
             program = await db.get(Program, program_id)
@@ -557,7 +717,11 @@ class ProgramService:
             )
             sessions = list(sessions_result.scalars().all())
 
-            logger.info(f"[_generate_session_content_async] Found {len(sessions)} sessions to generate")
+            fetch_elapsed = time.monotonic() - fetch_start_time
+            logger.info(
+                f"[_generate_session_content_async] DATA FETCHED - program_id={program_id}, microcycle_id={microcycle_id}, "
+                f"sessions_count={len(sessions)}, fetch_elapsed_ms={fetch_elapsed * 1000:.2f}"
+            )
             progress["total_sessions"] = len(sessions)
 
         # Track used movements to ensure variety
@@ -571,12 +735,22 @@ class ProgramService:
 
         # Generate content for each session SEQUENTIALLY
         for session in sessions:
-            logger.info(f"[_generate_session_content_async] Processing session {session.id} - type={session.session_type}, day={session.day_number}")
+            session_start_time = time.monotonic()
+            logger.info(
+                f"[_generate_session_content_async] SESSION START - program_id={program_id}, microcycle_id={microcycle_id}, "
+                f"session_id={session.id}, session_type={session.session_type}, day={session.day_number}, "
+                f"elapsed_ms={(session_start_time - phase_start_time) * 1000:.2f}"
+            )
             progress["current_session_id"] = session.id
 
             # Skip recovery/rest sessions - they get default content
             if session.session_type == SessionType.RECOVERY:
-                logger.info(f"[_generate_session_content_async] Skipping RECOVERY session {session.id}")
+                session_elapsed = time.monotonic() - session_start_time
+                logger.info(
+                    f"[_generate_session_content_async] SESSION SKIPPED (RECOVERY) - program_id={program_id}, "
+                    f"microcycle_id={microcycle_id}, session_id={session.id}, day={session.day_number}, "
+                    f"session_elapsed_ms={session_elapsed * 1000:.2f}"
+                )
                 # Mark recovery session as completed
                 async with async_session_maker() as db:
                     recovery_session = await db.get(Session, session.id)
@@ -607,10 +781,17 @@ class ProgramService:
 
             try:
                 # Apply inter-session interference rules for main lift patterns
+                interference_start = time.monotonic()
                 async with async_session_maker() as db:
                     session = await self._apply_pattern_interference_rules(
                         db, session, used_main_patterns, microcycle
                     )
+                interference_elapsed = time.monotonic() - interference_start
+                logger.info(
+                    f"[_generate_session_content_async] PATTERN INTERFERENCE APPLIED - program_id={program_id}, "
+                    f"microcycle_id={microcycle_id}, session_id={session.id}, "
+                    f"interference_elapsed_ms={interference_elapsed * 1000:.2f}"
+                )
             except Exception as e:
                 logger.error(
                     f"Failed to apply pattern interference rules for session {session.id}",
@@ -632,6 +813,7 @@ class ProgramService:
             try:
                 # Generate and populate session with exercises
                 # Each call creates its own DB session
+                generation_start = time.monotonic()
                 current_volume = await session_generator.populate_session_by_id(
                     session.id,
                     program_id,
@@ -642,6 +824,7 @@ class ProgramService:
                     used_accessory_movements=dict(used_accessory_movements),
                     previous_day_volume=previous_day_volume,
                 )
+                generation_elapsed = time.monotonic() - generation_start
 
                 # Mark session as COMPLETED after successful generation
                 async with async_session_maker() as db:
@@ -650,6 +833,14 @@ class ProgramService:
                         completed_session.generation_status = GenerationStatus.COMPLETED
                         db.add(completed_session)
                         await db.commit()
+
+                session_elapsed = time.monotonic() - session_start_time
+                logger.info(
+                    f"[_generate_session_content_async] SESSION COMPLETED - program_id={program_id}, "
+                    f"microcycle_id={microcycle_id}, session_id={session.id}, day={session.day_number}, "
+                    f"generation_elapsed_ms={generation_elapsed * 1000:.2f}, "
+                    f"session_elapsed_ms={session_elapsed * 1000:.2f}"
+                )
 
                 progress["completed_sessions"] += 1
                 progress["session_progress"].append({
@@ -660,18 +851,20 @@ class ProgramService:
                 })
 
             except Exception as e:
+                session_elapsed = time.monotonic() - session_start_time
                 logger.error(
                     f"Failed to generate content for session {session.id}",
                     extra={
                         "event": "session_generation_failed",
+                        "program_id": program_id,
+                        "microcycle_id": microcycle_id,
                         "session_id": session.id,
                         "session_type": str(session.session_type),
                         "day_number": session.day_number,
                         "intent_tags": session.intent_tags,
-                        "program_id": program_id,
-                        "microcycle_id": microcycle_id,
                         "used_movements_count": len(used_movements),
                         "previous_day_volume": previous_day_volume,
+                        "session_elapsed_ms": session_elapsed * 1000,
                         "exception_type": type(e).__name__,
                         "exception_message": str(e),
                         "traceback": traceback.format_exc(),
@@ -763,6 +956,7 @@ class ProgramService:
                         )
 
         # Set microcycle generation_status after all sessions complete
+        status_update_start = time.monotonic()
         async with async_session_maker() as db:
             final_microcycle = await db.get(Microcycle, microcycle_id)
             if final_microcycle:
@@ -773,9 +967,17 @@ class ProgramService:
                 db.add(final_microcycle)
                 await db.commit()
 
+        status_update_elapsed = time.monotonic() - status_update_start
+        phase_elapsed = time.monotonic() - phase_start_time
+
         progress["status"] = "completed"
         progress["current_session_id"] = None
-        logger.info(f"[_generate_session_content_async] COMPLETED - {progress['completed_sessions']} sessions completed, {progress['failed_sessions']} failed")
+        logger.info(
+            f"[_generate_session_content_async] COMPLETED - program_id={program_id}, microcycle_id={microcycle_id}, "
+            f"completed_sessions={progress['completed_sessions']}, failed_sessions={progress['failed_sessions']}, "
+            f"phase_elapsed_ms={phase_elapsed * 1000:.2f}, "
+            f"status_update_elapsed_ms={status_update_elapsed * 1000:.2f}"
+        )
 
         return progress
     

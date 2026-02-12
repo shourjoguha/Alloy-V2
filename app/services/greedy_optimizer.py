@@ -18,6 +18,8 @@ import logging
 from collections import defaultdict
 from typing import TYPE_CHECKING
 
+logger = logging.getLogger(__name__)
+
 from app.config.optimization_config_loader import get_optimization_config
 from app.ml.scoring.movement_scorer import (
     GlobalMovementScorer,
@@ -27,6 +29,7 @@ from app.ml.scoring.movement_scorer import (
 from app.models.enums import CircuitType, SkillLevel
 from app.models.movement import Movement
 from app.models.user import UserProfile
+from app.services.time_estimation import TimeEstimationService
 
 if TYPE_CHECKING:
     from app.services.optimization_types import (
@@ -104,20 +107,28 @@ class GreedyOptimizationService:
     - Step 6: Emergency mode - minimal constraints
 
     Example:
-        >>> service = GreedyOptimizationService()
+        >>> from app.services.time_estimation import TimeEstimationService
+        >>> service = GreedyOptimizationService(time_estimation_service=TimeEstimationService())
         >>> request = OptimizationRequestV2(...)
         >>> result = service.solve_session(request)
         >>> print(f"Selected {len(result.selected_movements)} movements")
     """
 
-    def __init__(self, scorer: GlobalMovementScorer | None = None):
+    def __init__(
+        self,
+        scorer: GlobalMovementScorer | None = None,
+        time_estimation_service: TimeEstimationService | None = None
+    ):
         """Initialize greedy optimization service.
 
         Args:
             scorer: Optional GlobalMovementScorer instance. If not provided,
                    a new one will be instantiated.
+            time_estimation_service: Optional TimeEstimationService instance. If not provided,
+                                    a new one will be instantiated.
         """
         self._scorer = scorer or GlobalMovementScorer()
+        self._time_estimation_service = time_estimation_service or TimeEstimationService()
         self._relaxation_config = RelaxationConfig()
         self._config = get_optimization_config()
         logger.info("GreedyOptimizationService initialized")
@@ -225,7 +236,6 @@ class GreedyOptimizationService:
         # Greedy selection
         selected_movements = []
         selected_circuits = []
-        session_muscle_counts = defaultdict(int)
 
         # Calculate budgets
         max_duration = request.session_duration_minutes
@@ -241,7 +251,6 @@ class GreedyOptimizationService:
                 if movement.id == req_id:
                     selected_movements.append(movement)
                     current_duration += self._calculate_movement_duration(movement, request)
-                    session_muscle_counts[movement.primary_muscle] += 1
                     if movement.id in movement_scores:
                         volumes_achieved[movement.primary_muscle] += self._config.or_tools.min_sets_per_movement
 
@@ -268,15 +277,8 @@ class GreedyOptimizationService:
                 if current_duration + movement_duration > max_duration:
                     continue
 
-                # Check muscle coverage constraint
-                primary_muscle = movement.primary_muscle
-                current_count = session_muscle_counts.get(primary_muscle, 0)
-
-                # Primary muscle limit: max 2 per session
-                if current_count >= 2:
-                    continue
-
                 # Check volume target (simplified)
+                primary_muscle = movement.primary_muscle
                 target_volume = reduced_target_volumes.get(primary_muscle, 0)
                 current_volume = volumes_achieved.get(primary_muscle, 0)
 
@@ -286,7 +288,6 @@ class GreedyOptimizationService:
                 # Select movement
                 selected_movements.append(movement)
                 current_duration += movement_duration
-                session_muscle_counts[primary_muscle] = current_count + 1
                 volumes_achieved[primary_muscle] = current_volume + self._config.or_tools.min_sets_per_movement
 
                 # Add circuits if allowed and time remains
@@ -437,12 +438,28 @@ class GreedyOptimizationService:
         Returns:
             Duration in minutes.
         """
-        avg_sets_per_movement = (
-            self._config.or_tools.min_sets_per_movement
-            + self._config.or_tools.max_sets_per_movement
-        ) / 2
-        mins_per_movement = int(avg_sets_per_movement * self._config.constants.seconds_per_set)
-        return mins_per_movement
+        try:
+            avg_sets = (
+                self._config.or_tools.min_sets_per_movement
+                + self._config.or_tools.max_sets_per_movement
+            ) // 2
+
+            total_seconds = self._time_estimation_service.estimate_exercise_time(
+                sets=avg_sets,
+                reps=8,
+                role="main",
+                intent="hypertrophy",
+                metric_type="reps"
+            )
+            return total_seconds // 60
+        except Exception as e:
+            logger.warning(f"TimeEstimationService failed, using fallback: {e}")
+            avg_sets_per_movement = (
+                self._config.or_tools.min_sets_per_movement
+                + self._config.or_tools.max_sets_per_movement
+            ) / 2
+            mins_per_movement = int(avg_sets_per_movement * self._config.constants.seconds_per_set)
+            return mins_per_movement
 
     def _get_movement_by_id(
         self, request: OptimizationRequestV2, movement_id: int
